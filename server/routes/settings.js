@@ -2,14 +2,38 @@ const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
 const Settings = require('../models/Settings');
+const Hotel = require('../models/Hotel');
+const Room = require('../models/Room');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
+async function resolveHotelId(req) {
+  if (req.query.roomUuid) {
+    const room = await Room.findOne({ uuid: req.query.roomUuid, active: true });
+    return room?.hotelId;
+  }
+  if (req.query.hotelId) return req.query.hotelId;
+  if (req.query.hotelSlug) {
+    const hotel = await Hotel.findOne({ slug: req.query.hotelSlug });
+    return hotel?._id;
+  }
+  return null;
+}
+
 router.get('/', async (req, res) => {
-  const settings = await Settings.findOne().sort({ createdAt: -1 });
+  const hotelId = await resolveHotelId(req);
+  const query = hotelId ? { hotelId } : {};
+  const settings = await Settings.findOne(query).sort({ createdAt: -1 });
   if (!settings) {
-    const created = await Settings.create({ hotelName: 'Hestia' });
-    return res.json(created);
+    const hotel = hotelId ? await Hotel.findById(hotelId) : null;
+    return res.json({
+      hotelId,
+      hotelName: hotel?.name || 'Hestia',
+      hotelLogo: '',
+      currency: hotel?.currency || 'XOF',
+      contactPhone: hotel?.contactPhone || '',
+      address: hotel?.address || '',
+    });
   }
   res.json(settings);
 });
@@ -23,6 +47,11 @@ router.put('/',
   body('contactPhone').optional().trim().escape(),
   body('address').optional().trim().escape(),
   async (req, res) => {
+    const isSuperadmin = req.user.role === 'superadmin';
+    const headerHotel = req.headers['x-hotel-id'] || req.query.hotelId;
+    const hotelId = isSuperadmin && headerHotel ? headerHotel : req.user.hotelId;
+    if (!hotelId) return res.status(400).json({ message: 'Hotel ID required' });
+
     const updates = {};
     ['hotelName', 'currency', 'contactPhone', 'address'].forEach(field => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
@@ -32,7 +61,7 @@ router.put('/',
     }
 
     const settings = await Settings.findOneAndUpdate(
-      {},
+      { hotelId },
       updates,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );

@@ -33,6 +33,31 @@
     "Pending": "En attente",
     "Paid": "Payé"
   },
+  "landing": {
+    "staffLogin": "Connexion staff",
+    "headline": "Le room service digital pour hôtels modernes",
+    "subheadline": "Vos clients scannent un QR code, consultent le menu et commandent depuis leur téléphone. Service plus rapide, clients satisfaits, revenus en plus.",
+    "demo": "Demander une démo",
+    "admin": "Tableau de bord admin",
+    "featuresTitle": "Pourquoi les hôtels adorent Hestia",
+    "feature": {
+      "qrOrdering": { "title": "Commande par QR", "desc": "Les clients scannent, parcourent le menu et commandent en quelques secondes. Aucune app à installer." },
+      "staffDashboard": { "title": "Dashboard staff", "desc": "La cuisine et la réception suivent les commandes en temps réel, mettent à jour le statut et gèrent les paiements." },
+      "payment": { "title": "Paiements locaux", "desc": "Paiement à la livraison, Mobile Money ou note de chambre : choisissez ce qui convient à vos clients." }
+    },
+    "pricingTitle": "Tarification simple",
+    "pricingDesc": "Un forfait mensuel fixe par hôtel. Aucune commission cachée.",
+    "plan": "Par hôtel",
+    "price": "49 $",
+    "perMonth": "/ mois",
+    "includes": {
+      "rooms": "Chambres & QR codes illimités",
+      "orders": "Commandes illimitées",
+      "support": "Support email & WhatsApp"
+    },
+    "start": "Commencer",
+    "footer": "© 2025 Hestia. Conçu pour les hôtels du Togo et d'ailleurs."
+  },
   "roomPage": {
     "checking": "Vérification de la chambre...",
     "invalidTitle": "Chambre invalide",
@@ -57,7 +82,11 @@
     "cancelledDesc": "Votre commande a été annulée.",
     "orderAgain": "Commander à nouveau",
     "orderMore": "Commander plus",
-    "items": "Articles"
+    "items": "Articles",
+    "rateOrder": "Noter votre commande",
+    "reviewPlaceholder": "Dites-nous ce que vous avez pensé (optionnel)",
+    "submitReview": "Envoyer l'avis",
+    "reviewThanks": "Merci pour votre retour !"
   },
   "adminLogin": {
     "title": "Connexion staff",
@@ -74,6 +103,9 @@
     "salesReport": "Rapport des ventes",
     "staff": "Personnel",
     "settings": "Paramètres",
+    "hotels": "Hôtels",
+    "reviews": "Avis",
+    "selectHotel": "Sélectionner un hôtel",
     "logout": "Déconnexion"
   },
   "days": ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
@@ -169,5 +201,24 @@
     "logo": "Logo",
     "save": "Enregistrer",
     "saved": "Paramètres enregistrés"
+  },
+  "hotelsPanel": {
+    "title": "Hôtels",
+    "name": "Nom de l'hôtel",
+    "slug": "Identifiant",
+    "currency": "Devise",
+    "contactPhone": "Téléphone de contact",
+    "address": "Adresse",
+    "create": "Créer l'hôtel",
+    "saved": "Hôtel créé",
+    "error": "Erreur lors de la création",
+    "active": "Actif",
+    "inactive": "Inactif"
+  },
+  "reviewsPanel": {
+    "title": "Avis clients",
+    "average": "Note moyenne",
+    "noComment": "Pas de commentaire",
+    "empty": "Aucun avis pour l'instant"
   }
 }

@@ -6,7 +6,7 @@ import useSettings from '../hooks/useSettings'
 
 export default function RoomPage() {
   const { t } = useTranslation()
-  const { settings } = useSettings()
+  const { settings, updateSettings } = useSettings()
   const { uuid } = useParams()
   const navigate = useNavigate()
   const [status, setStatus] = useState('loading')
@@ -16,10 +16,20 @@ export default function RoomPage() {
     api.get(`/room/${uuid}`)
       .then(res => {
         setRoom(res.data.room)
+        if (res.data.hotel) {
+          updateSettings({
+            hotelId: res.data.hotel._id,
+            hotelName: res.data.hotel.name,
+            hotelLogo: res.data.hotel.logo,
+            currency: res.data.hotel.currency,
+            contactPhone: res.data.hotel.contactPhone,
+            address: res.data.hotel.address,
+          })
+        }
         setStatus('valid')
       })
       .catch(() => setStatus('invalid'))
-  }, [uuid])
+  }, [uuid, updateSettings])
 
   if (status === 'loading') {
     return (

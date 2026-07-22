@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import api from '../api'
 import useSettings from '../hooks/useSettings'
 
 export default function SettingsPanel() {
@@ -29,11 +30,7 @@ export default function SettingsPanel() {
     Object.entries(form).forEach(([key, value]) => data.append(key, value))
     if (file) data.append('logo', file)
 
-    await fetch('/api/settings', {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${localStorage.getItem('hestia_token')}` },
-      body: data,
-    })
+    await api.put('/settings', data)
     setFile(null)
     await refresh()
     setMessage(t('settingsPanel.saved'))

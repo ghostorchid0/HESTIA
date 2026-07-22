@@ -11,13 +11,17 @@ export default function SettingsProvider({ children }) {
       .catch(() => setSettings({ hotelName: 'Hestia' }))
   }, [])
 
-  const refresh = async () => {
-    const res = await api.get('/settings')
+  const refresh = async (params = {}) => {
+    const res = await api.get('/settings', { params })
     setSettings(res.data)
   }
 
+  const updateSettings = (data) => {
+    setSettings(data)
+  }
+
   return (
-    <SettingsContext.Provider value={{ settings, refresh }}>
+    <SettingsContext.Provider value={{ settings, refresh, updateSettings }}>
       {children}
     </SettingsContext.Provider>
   )

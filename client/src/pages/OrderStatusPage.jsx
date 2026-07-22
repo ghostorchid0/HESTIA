@@ -12,6 +12,8 @@ export default function OrderStatusPage() {
   const [order, setOrder] = useState(null)
   const [error, setError] = useState(false)
   const [pushEnabled, setPushEnabled] = useState(false)
+  const [review, setReview] = useState({ rating: 5, comment: '' })
+  const [reviewSent, setReviewSent] = useState(false)
 
   const statusSteps = ['Received', 'Preparing', 'On the way', 'Delivered']
 
@@ -26,6 +28,16 @@ export default function OrderStatusPage() {
     })
     return () => socket.off('order_status_updated')
   }, [uuid, orderId])
+
+  const submitReview = async (e) => {
+    e.preventDefault()
+    try {
+      await api.post('/reviews', { orderId, roomUuid: uuid, rating: review.rating, comment: review.comment })
+      setReviewSent(true)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   const subscribePush = async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -138,6 +150,27 @@ export default function OrderStatusPage() {
             Notify me of updates
           </button>
         )}
+
+        {order.status === 'Delivered' && !reviewSent && (
+          <form onSubmit={submitReview} className="card-luxe mt-6 p-8">
+            <h2 className="text-xl font-light text-hestia-navy">{t('orderStatus.rateOrder')}</h2>
+            <div className="mt-4 flex justify-center gap-2">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button key={star} type="button" onClick={() => setReview({ ...review, rating: star })} className={`text-2xl ${star <= review.rating ? 'text-hestia-gold' : 'text-gray-300'}`}>
+                  ★
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={review.comment}
+              onChange={e => setReview({ ...review, comment: e.target.value })}
+              placeholder={t('orderStatus.reviewPlaceholder')}
+              className="input-luxe mt-4 h-24 w-full resize-none"
+            />
+            <button className="btn-primary mt-4 w-full">{t('orderStatus.submitReview')}</button>
+          </form>
+        )}
+        {reviewSent && <p className="mt-6 text-center text-green-600">{t('orderStatus.reviewThanks')}</p>}
 
         <Link to={`/room/${uuid}/menu`} className="btn-primary mt-4 block w-full text-center">
           {t('orderStatus.orderMore')}

@@ -5,6 +5,8 @@ const router = express.Router();
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
+const Hotel = require('../models/Hotel');
+const { sendSms } = require('../services/sms');
 const validateRoom = require('../middleware/validateRoom');
 
 const orderLimit = rateLimit({
@@ -36,7 +38,7 @@ router.post(
     }
 
     const menuIds = items.map(i => i.menuItemId);
-    const menuItems = await MenuItem.find({ _id: { $in: menuIds } });
+    const menuItems = await MenuItem.find({ _id: { $in: menuIds }, hotelId: room.hotelId });
     const menuMap = new Map(menuItems.map(m => [m._id.toString(), m]));
 
     let total = 0;
@@ -59,6 +61,7 @@ router.post(
     }
 
     const order = await Order.create({
+      hotelId: room.hotelId,
       roomUuid,
       roomNumber: room.number,
       items: orderItems,
@@ -72,6 +75,15 @@ router.post(
 
     const io = req.app.get('io');
     io.to('kitchen').emit('new_order', order.toObject());
+
+    try {
+      const hotel = await Hotel.findById(room.hotelId);
+      if (hotel?.contactPhone) {
+        await sendSms(hotel.contactPhone, `Nouvelle commande Hestia - Chambre ${room.number} - Total ${order.total} ${hotel.currency || ''}`);
+      }
+    } catch (err) {
+      console.error('SMS notification error:', err);
+    }
 
     res.status(201).json(order);
   }

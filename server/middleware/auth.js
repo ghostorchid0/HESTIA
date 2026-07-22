@@ -18,10 +18,11 @@ function requireAuth(req, res, next) {
 
 function requireRole(...roles) {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ message: 'Insufficient permissions' });
-    }
-    next();
+    if (!req.user) return res.status(403).json({ message: 'Unauthorized' });
+    const userRole = req.user.role;
+    if (userRole === 'superadmin' && roles.includes('admin')) return next();
+    if (roles.includes(userRole)) return next();
+    return res.status(403).json({ message: 'Insufficient permissions' });
   };
 }
 

@@ -8,10 +8,13 @@ const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { notifyRoom } = require('../services/push');
+const { sendSms } = require('../services/sms');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
 const User = require('../models/User');
+const Hotel = require('../models/Hotel');
+const Settings = require('../models/Settings');
 
 const allowedMenuFields = ['name', 'description', 'price', 'category', 'available', 'imageUrl'];
 
@@ -34,9 +37,25 @@ function handleValidation(req, res) {
 
 router.use(requireAuth);
 
+router.use((req, res, next) => {
+  const isSuperadmin = req.user.role === 'superadmin';
+  const headerHotel = req.headers['x-hotel-id'] || req.query.hotelId;
+  if (isSuperadmin && headerHotel) {
+    req.hotelId = headerHotel;
+  } else {
+    req.hotelId = req.user.hotelId;
+  }
+  next();
+});
+
+function hotelFilter(req) {
+  return req.hotelId ? { hotelId: req.hotelId } : {};
+}
+
 router.get('/orders', async (req, res) => {
   const { status, limit = 100 } = req.query;
-  const filter = status ? { status } : {};
+  const filter = { ...hotelFilter(req) };
+  if (status) filter.status = status;
   const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(parseInt(limit));
   res.json(orders);
 });
@@ -49,8 +68,8 @@ router.patch(
   async (req, res) => {
     if (!handleValidation(req, res)) return;
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, ...hotelFilter(req) },
       {
         status: req.body.status,
         $push: { history: { status: req.body.status, changedBy: req.user.username || 'staff' } },
@@ -69,6 +88,15 @@ router.patch(
       data: { orderId: order._id.toString(), status: order.status },
     }).catch(err => console.error('Failed to send push:', err));
 
+    try {
+      const hotel = await Hotel.findById(order.hotelId);
+      if (hotel?.contactPhone && ['Delivered', 'Cancelled'].includes(order.status)) {
+        await sendSms(hotel.contactPhone, `Commande Hestia chambre ${order.roomNumber} - ${order.status}`);
+      }
+    } catch (err) {
+      console.error('SMS notification error:', err);
+    }
+
     res.json(order);
   }
 );
@@ -80,8 +108,8 @@ router.patch(
   body('paymentStatus').isIn(['Pending', 'Paid']),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, ...hotelFilter(req) },
       { paymentStatus: req.body.paymentStatus },
       { new: true }
     );
@@ -94,7 +122,7 @@ router.patch(
 );
 
 router.get('/rooms', requireRole('admin'), async (req, res) => {
-  const rooms = await Room.find().sort({ number: 1 });
+  const rooms = await Room.find(hotelFilter(req)).sort({ number: 1 });
   res.json(rooms);
 });
 
@@ -103,7 +131,7 @@ router.post('/rooms',
   body('number').trim().notEmpty().escape(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.create({ uuid: uuidv4(), number: req.body.number, active: true });
+    const room = await Room.create({ hotelId: req.hotelId, uuid: uuidv4(), number: req.body.number, active: true });
     res.status(201).json(room);
   });
 
@@ -112,7 +140,7 @@ router.patch('/rooms/:id/toggle',
   param('id').isMongoId(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findOne({ _id: req.params.id, ...hotelFilter(req) });
     if (!room) return res.status(404).json({ message: 'Room not found' });
     room.active = !room.active;
     await room.save();
@@ -125,7 +153,7 @@ router.get('/rooms/:id/qr',
   query('size').optional().isInt({ min: 50, max: 1000 }).toInt(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findOne({ _id: req.params.id, ...hotelFilter(req) });
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
@@ -143,7 +171,7 @@ router.get('/rooms/:id/qr',
   });
 
 router.get('/menu', requireRole('admin'), async (req, res) => {
-  const items = await MenuItem.find().sort({ category: 1, name: 1 });
+  const items = await MenuItem.find(hotelFilter(req)).sort({ category: 1, name: 1 });
   res.json(items);
 });
 
@@ -159,7 +187,7 @@ const menuValidation = [
 router.post('/menu', requireRole('admin'), upload.single('image'), menuValidation, async (req, res) => {
   if (!handleValidation(req, res)) return;
   if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
-  const item = await MenuItem.create(pickMenuFields(req.body));
+  const item = await MenuItem.create({ ...pickMenuFields(req.body), hotelId: req.hotelId });
   res.status(201).json(item);
 });
 
@@ -171,7 +199,7 @@ router.put('/menu/:id',
   async (req, res) => {
     if (!handleValidation(req, res)) return;
     if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
-    const item = await MenuItem.findByIdAndUpdate(req.params.id, pickMenuFields(req.body), { new: true });
+    const item = await MenuItem.findOneAndUpdate({ _id: req.params.id, ...hotelFilter(req) }, pickMenuFields(req.body), { new: true });
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);
   });
@@ -181,15 +209,16 @@ router.delete('/menu/:id',
   param('id').isMongoId(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    await MenuItem.findByIdAndDelete(req.params.id);
+    await MenuItem.findOneAndDelete({ _id: req.params.id, ...hotelFilter(req) });
     res.json({ message: 'Deleted' });
   });
 
 router.get('/analytics', requireRole('admin'), async (req, res) => {
-  const totalOrders = await Order.countDocuments();
-  const deliveredOrders = await Order.countDocuments({ status: 'Delivered' });
-  const revenue = await Order.aggregate([{ $match: { status: 'Delivered' } }, { $group: { _id: null, total: { $sum: '$total' } } }]);
-  const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(10);
+  const baseFilter = hotelFilter(req);
+  const totalOrders = await Order.countDocuments(baseFilter);
+  const deliveredOrders = await Order.countDocuments({ ...baseFilter, status: 'Delivered' });
+  const revenue = await Order.aggregate([{ $match: { ...baseFilter, status: 'Delivered' } }, { $group: { _id: null, total: { $sum: '$total' } } }]);
+  const recentOrders = await Order.find(baseFilter).sort({ createdAt: -1 }).limit(10);
   res.json({
     totalOrders,
     deliveredOrders,
@@ -199,23 +228,12 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
 });
 
 router.get('/analytics/rush', requireRole('admin'), async (req, res) => {
+  const matchStage = { $match: hotelFilter(req) };
   const [hourly, daily, monthly, yearly] = await Promise.all([
-    Order.aggregate([
-      { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]),
-    Order.aggregate([
-      { $group: { _id: { $mod: [{ $add: [{ $dayOfWeek: '$createdAt' }, 5] }, 7] }, count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]),
-    Order.aggregate([
-      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]),
-    Order.aggregate([
-      { $group: { _id: { $year: '$createdAt' }, count: { $sum: 1 } } },
-      { $sort: { _id: 1 } },
-    ]),
+    Order.aggregate([matchStage, { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Order.aggregate([matchStage, { $group: { _id: { $mod: [{ $add: [{ $dayOfWeek: '$createdAt' }, 5] }, 7] }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Order.aggregate([matchStage, { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
+    Order.aggregate([matchStage, { $group: { _id: { $year: '$createdAt' }, count: { $sum: 1 } } }, { $sort: { _id: 1 } }]),
   ]);
 
   const formatHour = (h) => `${String(h).padStart(2, '0')}:00`;
@@ -275,6 +293,7 @@ router.get('/analytics/sales',
     if (!bounds) return res.status(400).json({ message: 'Invalid date or period' });
 
     const matchStage = {
+      ...hotelFilter(req),
       createdAt: { $gte: bounds.start, $lte: bounds.end },
       status: { $ne: 'Cancelled' },
     };
@@ -355,7 +374,8 @@ router.get('/analytics/sales',
   });
 
 router.get('/users', requireRole('admin'), async (req, res) => {
-  const users = await User.find().select('-password').sort({ createdAt: -1 });
+  const filter = req.user.role === 'superadmin' ? {} : hotelFilter(req);
+  const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
   res.json(users);
 });
 
@@ -369,8 +389,9 @@ router.post('/users',
     const { username, password, role } = req.body;
     const existing = await User.findOne({ username });
     if (existing) return res.status(409).json({ message: 'Username already exists' });
-    const user = await User.create({ username, password, role });
-    res.status(201).json({ _id: user._id, username: user.username, role: user.role, createdAt: user.createdAt });
+    const userHotelId = req.user.role === 'superadmin' ? (req.body.hotelId || req.hotelId) : req.hotelId;
+    const user = await User.create({ username, password, role, hotelId: userHotelId });
+    res.status(201).json({ _id: user._id, username: user.username, role: user.role, hotelId: user.hotelId, createdAt: user.createdAt });
   });
 
 router.delete('/users/:id',
@@ -378,13 +399,37 @@ router.delete('/users/:id',
   param('id').isMongoId(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const user = await User.findByIdAndDelete(req.params.id);
+    const filter = { _id: req.params.id };
+    if (req.user.role !== 'superadmin') filter.hotelId = req.hotelId;
+    const user = await User.findOneAndDelete(filter);
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ message: 'Deleted' });
   });
 
+router.get('/hotels', requireRole('admin'), async (req, res) => {
+  const hotels = await Hotel.find().sort({ createdAt: -1 });
+  res.json(hotels);
+});
+
+router.post('/hotels',
+  requireRole('admin'),
+  body('name').trim().notEmpty().escape(),
+  body('slug').trim().notEmpty().escape().matches(/^[a-z0-9-]+$/),
+  body('currency').optional().trim().escape(),
+  body('contactPhone').optional().trim().escape(),
+  body('address').optional().trim().escape(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { name, slug, currency, contactPhone, address } = req.body;
+    const existing = await Hotel.findOne({ slug: slug.toLowerCase() });
+    if (existing) return res.status(409).json({ message: 'Slug already exists' });
+    const hotel = await Hotel.create({ name, slug: slug.toLowerCase(), currency, contactPhone, address });
+    await Settings.create({ hotelId: hotel._id, hotelName: name, currency: currency || 'XOF' });
+    res.status(201).json(hotel);
+  });
+
 router.get('/orders/export', requireRole('admin'), async (req, res) => {
-  const orders = await Order.find().sort({ createdAt: -1 });
+  const orders = await Order.find(hotelFilter(req)).sort({ createdAt: -1 });
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Hestia';

@@ -13,8 +13,8 @@ router.post('/login', async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
-  const token = jwt.sign({ userId: user._id, role: user.role, username: user.username }, config.jwtSecret, { expiresIn: '12h' });
-  res.json({ token, role: user.role, username: user.username });
+  const token = jwt.sign({ userId: user._id, role: user.role, username: user.username, hotelId: user.hotelId?.toString() }, config.jwtSecret, { expiresIn: '12h' });
+  res.json({ token, role: user.role, username: user.username, hotelId: user.hotelId?.toString() });
 });
 
 module.exports = router;

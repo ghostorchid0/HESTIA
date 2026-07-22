@@ -17,6 +17,8 @@ export default function AdminLoginPage() {
       const res = await api.post('/auth/login', form)
       localStorage.setItem('hestia_token', res.data.token)
       localStorage.setItem('hestia_role', res.data.role)
+      if (res.data.hotelId) localStorage.setItem('hestia_hotel', res.data.hotelId)
+      else localStorage.removeItem('hestia_hotel')
       navigate('/admin/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')

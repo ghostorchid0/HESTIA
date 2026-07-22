@@ -18,7 +18,7 @@ export default function MenuPage() {
   const [placing, setPlacing] = useState(false)
 
   useEffect(() => {
-    api.get('/menu')
+    api.get('/menu', { params: { roomUuid: uuid } })
       .then(res => {
         setItems(res.data)
         const cats = [...new Set(res.data.map(i => i.category))]

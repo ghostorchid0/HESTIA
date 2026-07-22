@@ -33,6 +33,31 @@
     "Pending": "Pending",
     "Paid": "Paid"
   },
+  "landing": {
+    "staffLogin": "Staff login",
+    "headline": "Digital room service for modern hotels",
+    "subheadline": "Let your guests order room service from their phone with a simple QR code scan. Faster service, happier guests, more revenue.",
+    "demo": "Request a demo",
+    "admin": "Admin dashboard",
+    "featuresTitle": "Why hotels love Hestia",
+    "feature": {
+      "qrOrdering": { "title": "QR ordering", "desc": "Guests scan, browse the menu and order in seconds. No app download needed." },
+      "staffDashboard": { "title": "Staff dashboard", "desc": "Kitchen and reception track orders in real time, update status and manage payments." },
+      "payment": { "title": "Local payments", "desc": "Cash on delivery, Mobile Money or room charge — choose what works for your guests." }
+    },
+    "pricingTitle": "Simple pricing",
+    "pricingDesc": "One flat monthly fee per hotel. No hidden commissions.",
+    "plan": "Per hotel",
+    "price": "$49",
+    "perMonth": "/ month",
+    "includes": {
+      "rooms": "Unlimited rooms & QR codes",
+      "orders": "Unlimited orders",
+      "support": "Email & WhatsApp support"
+    },
+    "start": "Start now",
+    "footer": "© 2025 Hestia. Built for hotels in Togo and beyond."
+  },
   "roomPage": {
     "checking": "Checking room...",
     "invalidTitle": "Invalid Room",
@@ -57,7 +82,11 @@
     "cancelledDesc": "Your order has been cancelled.",
     "orderAgain": "Order again",
     "orderMore": "Order more",
-    "items": "Items"
+    "items": "Items",
+    "rateOrder": "Rate your order",
+    "reviewPlaceholder": "Tell us about your experience (optional)",
+    "submitReview": "Send review",
+    "reviewThanks": "Thank you for your feedback!"
   },
   "adminLogin": {
     "title": "Staff Login",
@@ -74,6 +103,9 @@
     "salesReport": "Sales Report",
     "staff": "Staff",
     "settings": "Settings",
+    "hotels": "Hotels",
+    "reviews": "Reviews",
+    "selectHotel": "Select hotel",
     "logout": "Logout"
   },
   "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -169,5 +201,24 @@
     "logo": "Logo",
     "save": "Save settings",
     "saved": "Settings saved"
+  },
+  "hotelsPanel": {
+    "title": "Hotels",
+    "name": "Hotel name",
+    "slug": "Slug",
+    "currency": "Currency",
+    "contactPhone": "Contact phone",
+    "address": "Address",
+    "create": "Create hotel",
+    "saved": "Hotel created",
+    "error": "Error creating hotel",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "reviewsPanel": {
+    "title": "Guest Reviews",
+    "average": "Average rating",
+    "noComment": "No comment",
+    "empty": "No reviews yet"
   }
 }

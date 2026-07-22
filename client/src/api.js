@@ -10,6 +10,10 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  const hotelId = localStorage.getItem('hestia_hotel')
+  if (hotelId) {
+    config.headers['X-Hotel-Id'] = hotelId
+  }
   return config
 })
 

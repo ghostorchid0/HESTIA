@@ -9,6 +9,7 @@ import AnalyticsPanel from '../components/AnalyticsPanel'
 
 const ReportsPanel = lazy(() => import('../components/ReportsPanel'))
 const SalesReportPanel = lazy(() => import('../components/SalesReportPanel'))
+const StaffPanel = lazy(() => import('../components/StaffPanel'))
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -63,6 +64,7 @@ function Layout({ children }) {
           {role === 'admin' && <NavItem to="/admin/analytics" label={t('admin.analytics')} />}
           {role === 'admin' && <NavItem to="/admin/reports" label={t('admin.reports')} />}
           {role === 'admin' && <NavItem to="/admin/sales-report" label={t('admin.salesReport')} />}
+          {role === 'admin' && <NavItem to="/admin/staff" label={t('admin.staff')} />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>
@@ -97,6 +99,11 @@ export default function AdminDashboard() {
         <Route path="sales-report" element={
           <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
             <SalesReportPanel />
+          </Suspense>
+        } />
+        <Route path="staff" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <StaffPanel />
           </Suspense>
         } />
         <Route path="*" element={<OrdersPanel />} />

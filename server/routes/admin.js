@@ -11,6 +11,7 @@ const { notifyRoom } = require('../services/push');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
+const User = require('../models/User');
 
 const allowedMenuFields = ['name', 'description', 'price', 'category', 'available', 'imageUrl'];
 
@@ -331,6 +332,35 @@ router.get('/analytics/sales',
       categorySales: categorySales.filter(c => c.category),
       orders,
     });
+  });
+
+router.get('/users', requireRole('admin'), async (req, res) => {
+  const users = await User.find().select('-password').sort({ createdAt: -1 });
+  res.json(users);
+});
+
+router.post('/users',
+  requireRole('admin'),
+  body('username').trim().notEmpty().escape().isLength({ min: 3 }),
+  body('password').isLength({ min: 6 }),
+  body('role').isIn(['admin', 'kitchen']),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { username, password, role } = req.body;
+    const existing = await User.findOne({ username });
+    if (existing) return res.status(409).json({ message: 'Username already exists' });
+    const user = await User.create({ username, password, role });
+    res.status(201).json({ _id: user._id, username: user.username, role: user.role, createdAt: user.createdAt });
+  });
+
+router.delete('/users/:id',
+  requireRole('admin'),
+  param('id').isMongoId(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ message: 'Deleted' });
   });
 
 router.get('/orders/export', requireRole('admin'), async (req, res) => {

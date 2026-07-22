@@ -62,6 +62,7 @@
     "analytics": "Analyses",
     "reports": "Rapports d'affluence",
     "salesReport": "Rapport des ventes",
+    "staff": "Personnel",
     "logout": "Déconnexion"
   },
   "days": ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
@@ -130,5 +131,19 @@
     "monthly": "Par mois",
     "yearly": "Par année",
     "orders": "Commandes"
+  },
+  "staffPanel": {
+    "title": "Gestion du personnel",
+    "create": "Créer un compte",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "role": "Rôle",
+    "admin": "Admin",
+    "kitchen": "Cuisine",
+    "delete": "Supprimer",
+    "created": "Créé le",
+    "success": "Compte créé",
+    "error": "Erreur",
+    "empty": "Aucun compte personnel"
   }
 }

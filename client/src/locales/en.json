@@ -62,6 +62,7 @@
     "analytics": "Analytics",
     "reports": "Rush Reports",
     "salesReport": "Sales Report",
+    "staff": "Staff",
     "logout": "Logout"
   },
   "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -130,5 +131,19 @@
     "monthly": "By month",
     "yearly": "By year",
     "orders": "Orders"
+  },
+  "staffPanel": {
+    "title": "Staff Management",
+    "create": "Create account",
+    "username": "Username",
+    "password": "Password",
+    "role": "Role",
+    "admin": "Admin",
+    "kitchen": "Kitchen",
+    "delete": "Delete",
+    "created": "Created",
+    "success": "Account created",
+    "error": "Error",
+    "empty": "No staff accounts yet"
   }
 }

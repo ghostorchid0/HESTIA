@@ -2,7 +2,7 @@ const express = require('express');
 const { body, param, validationResult, query } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -180,24 +180,76 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
 router.get('/orders/export', requireRole('admin'), async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
 
-  const rows = orders.map(order => ({
-    'Order ID': order._id.toString(),
-    'Room': order.roomNumber,
-    'Status': order.status,
-    'Total': order.total,
-    'Items': order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
-    'Notes': order.notes || '',
-    'Created At': order.createdAt,
-  }));
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Hestia';
+  workbook.created = new Date();
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+  const sheet = workbook.addWorksheet('Orders');
+  sheet.columns = [
+    { header: 'Order ID', key: 'orderId', width: 28 },
+    { header: 'Room', key: 'room', width: 12 },
+    { header: 'Status', key: 'status', width: 16 },
+    { header: 'Total', key: 'total', width: 14 },
+    { header: 'Items', key: 'items', width: 50 },
+    { header: 'Notes', key: 'notes', width: 40 },
+    { header: 'Created At', key: 'createdAt', width: 22 },
+  ];
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1A2A' } };
+    cell.font = { bold: true, color: { argb: 'FFC9A227' }, size: 12 };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+
+  orders.forEach(order => {
+    sheet.addRow({
+      orderId: order._id.toString(),
+      room: order.roomNumber,
+      status: order.status,
+      total: order.total,
+      items: order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
+      notes: order.notes || '',
+      createdAt: order.createdAt,
+    });
+  });
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    const statusCell = row.getCell('status');
+    const statusStyles = {
+      Received: 'FF0B1A2A',
+      Preparing: 'FFB45309',
+      'On the way': 'FFC9A227',
+      Delivered: 'FF166534',
+      Cancelled: 'FF991B1B',
+    };
+    if (statusStyles[statusCell.value]) {
+      statusCell.font = { bold: true, color: { argb: statusStyles[statusCell.value] } };
+    }
+
+    const totalCell = row.getCell('total');
+    totalCell.numFmt = '$#,##0.00';
+    totalCell.alignment = { horizontal: 'right' };
+
+    const createdCell = row.getCell('createdAt');
+    createdCell.numFmt = 'yyyy-mm-dd hh:mm:ss';
+    createdCell.alignment = { horizontal: 'center' };
+
+    if (rowNumber % 2 === 0) {
+      row.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F5F0' } };
+      });
+    }
+  });
+
+  sheet.autoFilter = { from: 'A1', to: 'G1' };
+  sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
 
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.xlsx"');
-  res.send(buffer);
+  await workbook.xlsx.write(res);
+  res.end();
 });
 
 module.exports = router;

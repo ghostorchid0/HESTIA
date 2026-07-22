@@ -1,27 +1,44 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
 
-const statuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
+const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 
 export default function OrdersPanel() {
+  const { t } = useTranslation()
   const [orders, setOrders] = useState([])
   const [filter, setFilter] = useState('')
-  const [audio] = useState(() => typeof Audio !== 'undefined' ? new Audio('/notification.mp3') : null)
+  const [audio] = useState(() => (typeof Audio !== 'undefined' ? new Audio('/notification.mp3') : null))
 
   const fetchOrders = async () => {
     const res = await api.get('/admin/orders?limit=200')
     setOrders(res.data)
   }
 
+  const downloadCsv = async () => {
+    const token = localStorage.getItem('hestia_token')
+    const res = await fetch('/api/admin/orders/export', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'hestia-orders.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
   useEffect(() => {
     fetchOrders()
     socket.on('new_order', (order) => {
-      setOrders(prev => [order, ...prev])
+      setOrders((prev) => [order, ...prev])
       if (audio) audio.play().catch(() => {})
     })
     socket.on('order_status_updated', (order) => {
-      setOrders(prev => prev.map(o => o._id === order._id ? order : o))
+      setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
     })
     return () => {
       socket.off('new_order')
@@ -34,61 +51,87 @@ export default function OrdersPanel() {
     fetchOrders()
   }
 
-  const filtered = filter ? orders.filter(o => o.status === filter) : orders
+  const filtered = filter ? orders.filter((o) => o.status === filter) : orders
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-        >
-          <option value="">All</option>
-          {statuses.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{t('ordersPanel.title')}</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={downloadCsv} className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium hover:bg-gray-200">
+            CSV
+          </button>
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          >
+            <option value="">{t('ordersPanel.all')}</option>
+            {allStatuses.map((s) => (
+              <option key={s} value={s}>
+                {t(`status.${s}`)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div className="space-y-4">
-        {filtered.map(order => (
+        {filtered.map((order) => (
           <div key={order._id} className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div>
-                <span className="text-lg font-bold">Room {order.roomNumber}</span>
-                <span className="ml-3 rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">{order.status}</span>
+                <span className="text-lg font-bold">
+                  {t('room')} {order.roomNumber}
+                </span>
+                <span className="ml-3 rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                  {t(`status.${order.status}`)}
+                </span>
               </div>
               <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleString()}</span>
             </div>
             <ul className="mb-3 text-sm text-gray-700">
               {order.items.map((item, idx) => (
-                <li key={idx}>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</li>
+                <li key={idx}>
+                  {item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}
+                </li>
               ))}
             </ul>
-            {order.notes && <p className="mb-3 text-sm text-gray-500">Note: {order.notes}</p>}
+            {order.notes && (
+              <p className="mb-3 text-sm text-gray-500">
+                {t('note')}: {order.notes}
+              </p>
+            )}
             {order.history && order.history.length > 0 && (
               <div className="mb-3">
-                <p className="text-xs font-medium text-gray-500 mb-1">Status history</p>
+                <p className="mb-1 text-xs font-medium text-gray-500">{t('ordersPanel.statusHistory')}</p>
                 <div className="flex flex-wrap gap-2">
                   {order.history.map((h, idx) => (
                     <span key={idx} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                      {h.status} <span className="text-gray-400">({h.changedBy})</span>
+                      {t(`status.${h.status}`)}{' '}
+                      <span className="text-gray-400">
+                        ({t('ordersPanel.by')} {h.changedBy})
+                      </span>
                     </span>
                   ))}
                 </div>
               </div>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="font-semibold">Total: ${order.total.toFixed(2)}</span>
+              <span className="font-semibold">
+                {t('total')}: ${order.total.toFixed(2)}
+              </span>
               <div className="flex flex-wrap gap-2">
-                {statuses.filter(s => s !== order.status).map(s => (
-                  <button
-                    key={s}
-                    onClick={() => updateStatus(order._id, s)}
-                    className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium hover:bg-gray-200"
-                  >
-                    {s}
-                  </button>
-                ))}
+                {allStatuses
+                  .filter((s) => s !== order.status)
+                  .map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => updateStatus(order._id, s)}
+                      className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium hover:bg-gray-200"
+                    >
+                      {t(`status.${s}`)}
+                    </button>
+                  ))}
               </div>
             </div>
           </div>

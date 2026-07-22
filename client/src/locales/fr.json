@@ -1,0 +1,96 @@
+{
+  "appName": "Hestia",
+  "tagline": "Service de chambre numérique",
+  "loading": "Chargement...",
+  "back": "Retour",
+  "error": "Erreur",
+  "save": "Enregistrer",
+  "add": "Ajouter",
+  "update": "Mettre à jour",
+  "delete": "Supprimer",
+  "copy": "Copier",
+  "print": "Imprimer",
+  "active": "Actif",
+  "inactive": "Inactif",
+  "activate": "Activer",
+  "deactivate": "Désactiver",
+  "room": "Chambre",
+  "total": "Total",
+  "note": "Note",
+  "status": {
+    "Received": "Reçue",
+    "Preparing": "En préparation",
+    "On the way": "En chemin",
+    "Delivered": "Livrée",
+    "Cancelled": "Annulée"
+  },
+  "roomPage": {
+    "checking": "Vérification de la chambre...",
+    "invalidTitle": "Chambre invalide",
+    "invalidDesc": "Ce QR code ne correspond pas à une chambre active.",
+    "openMenu": "Ouvrir le menu"
+  },
+  "menuPage": {
+    "title": "Menu Hestia",
+    "subtitle": "Service de chambre",
+    "add": "Ajouter",
+    "free": "Gratuit",
+    "yourOrder": "Votre commande",
+    "notesPlaceholder": "Notes",
+    "additionalRequest": "Demande supplémentaire (optionnel)",
+    "placeOrder": "Passer commande",
+    "placing": "Envoi..."
+  },
+  "orderStatus": {
+    "title": "Statut de la commande",
+    "cancelledTitle": "Commande annulée",
+    "cancelledDesc": "Votre commande a été annulée.",
+    "orderAgain": "Commander à nouveau",
+    "orderMore": "Commander plus",
+    "items": "Articles"
+  },
+  "adminLogin": {
+    "title": "Connexion staff",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "login": "Connexion"
+  },
+  "admin": {
+    "orders": "Commandes",
+    "menu": "Menu",
+    "rooms": "Chambres & QR",
+    "analytics": "Analyses",
+    "logout": "Déconnexion"
+  },
+  "ordersPanel": {
+    "title": "Commandes",
+    "all": "Toutes",
+    "statusHistory": "Historique des statuts",
+    "by": "par"
+  },
+  "menuPanel": {
+    "title": "Menu & Inventaire",
+    "name": "Nom",
+    "category": "Catégorie",
+    "price": "Prix",
+    "imageUrl": "URL de l'image",
+    "description": "Description",
+    "available": "Disponible",
+    "addItem": "Ajouter un article",
+    "updateItem": "Mettre à jour l'article"
+  },
+  "roomsPanel": {
+    "title": "Chambres & QR Codes",
+    "roomNumber": "Numéro de chambre",
+    "addRoom": "Ajouter une chambre",
+    "qrBaseUrl": "URL de base du QR",
+    "loadingQr": "Chargement du QR..."
+  },
+  "analyticsPanel": {
+    "title": "Analyses",
+    "totalOrders": "Total commandes",
+    "delivered": "Livrées",
+    "revenue": "Revenus",
+    "recentOrders": "Commandes récentes"
+  }
+}

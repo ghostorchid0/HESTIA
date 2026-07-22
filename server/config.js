@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const webpush = require('web-push');
 
 function getConfig() {
   const isProd = process.env.NODE_ENV === 'production';
@@ -24,6 +25,19 @@ function getConfig() {
     throw new Error('JWT_SECRET must be at least 32 characters in production');
   }
 
+  let vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
+  let vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    const keys = webpush.generateVAPIDKeys();
+    vapidPublicKey = keys.publicKey;
+    vapidPrivateKey = keys.privateKey;
+    if (!isProd) {
+      console.warn('VAPID keys not set. New VAPID keys have been generated for this dev session.');
+      console.log('VAPID_PUBLIC_KEY=', vapidPublicKey);
+    }
+  }
+  const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@hestia.local';
+
   const clientUrl = process.env.CLIENT_URL || (isProd ? null : '*');
   if (isProd && !clientUrl) {
     throw new Error('CLIENT_URL must be set in production');
@@ -37,6 +51,9 @@ function getConfig() {
     clientUrl,
     adminUsername: process.env.ADMIN_USERNAME || 'admin',
     adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+    vapidPublicKey,
+    vapidPrivateKey,
+    vapidSubject,
   };
 }
 

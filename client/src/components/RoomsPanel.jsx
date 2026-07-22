@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import api from '../api'
 
 export default function RoomsPanel() {
+  const { t } = useTranslation()
   const [rooms, setRooms] = useState([])
   const [number, setNumber] = useState('')
   const [host, setHost] = useState(window.location.origin)
@@ -44,7 +46,7 @@ export default function RoomsPanel() {
     const data = qrData[room._id]
     if (!data) return
     const w = window.open('', '', 'width=400,height=500')
-    w.document.write(`<html><head><title>Room ${room.number} QR</title></head><body style="text-align:center;font-family:sans-serif"><h2>Room ${room.number}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px">${data.url}</p></body></html>`)
+    w.document.write(`<html><head><title>${t('room')} ${room.number} QR</title></head><body style="text-align:center;font-family:sans-serif"><h2>${t('room')} ${room.number}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px">${data.url}</p></body></html>`)
     w.document.close()
     w.focus()
     w.print()
@@ -58,20 +60,20 @@ export default function RoomsPanel() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">Rooms & QR Codes</h1>
+      <h1 className="mb-4 text-2xl font-bold">{t('roomsPanel.title')}</h1>
       <form onSubmit={addRoom} className="mb-6 flex gap-2">
         <input
-          placeholder="Room number"
+          placeholder={t('roomsPanel.roomNumber')}
           value={number}
           onChange={e => setNumber(e.target.value)}
           className="flex-1 rounded border p-2"
           required
         />
-        <button className="rounded-xl bg-amber-600 px-5 py-2 font-semibold text-white">Add Room</button>
+        <button className="rounded-xl bg-amber-600 px-5 py-2 font-semibold text-white">{t('roomsPanel.addRoom')}</button>
       </form>
 
       <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
-        <label className="text-sm font-medium">QR base URL</label>
+        <label className="text-sm font-medium">{t('roomsPanel.qrBaseUrl')}</label>
         <input value={host} onChange={e => setHost(e.target.value)} className="mt-1 w-full rounded border p-2" />
       </div>
 
@@ -81,8 +83,8 @@ export default function RoomsPanel() {
           return (
             <div key={room._id} className="rounded-2xl bg-white p-4 shadow-sm">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-lg font-bold">Room {room.number}</span>
-                <span className={`rounded px-2 py-0.5 text-xs ${room.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{room.active ? 'Active' : 'Inactive'}</span>
+                <span className="text-lg font-bold">{t('room')} {room.number}</span>
+                <span className={`rounded px-2 py-0.5 text-xs ${room.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{room.active ? t('active') : t('inactive')}</span>
               </div>
               <div className="mb-3 flex flex-col items-center rounded bg-gray-100 p-4">
                 {data ? (
@@ -91,18 +93,18 @@ export default function RoomsPanel() {
                     <p className="break-all text-center text-xs text-gray-700">{data.url}</p>
                   </>
                 ) : (
-                  <p className="text-sm text-gray-500">Loading QR...</p>
+                  <p className="text-sm text-gray-500">{t('roomsPanel.loadingQr')}</p>
                 )}
               </div>
               <div className="flex gap-2">
                 <button onClick={() => toggle(room._id)} className="flex-1 rounded bg-gray-100 py-1.5 text-sm hover:bg-gray-200">
-                  {room.active ? 'Deactivate' : 'Activate'}
+                  {room.active ? t('deactivate') : t('activate')}
                 </button>
                 <button onClick={() => printQr(room)} className="flex-1 rounded bg-amber-50 py-1.5 text-sm text-amber-700 hover:bg-amber-100">
-                  Print
+                  {t('print')}
                 </button>
                 <button onClick={() => copyUrl(room)} className="flex-1 rounded bg-gray-100 py-1.5 text-sm hover:bg-gray-200">
-                  Copy
+                  {t('copy')}
                 </button>
               </div>
             </div>

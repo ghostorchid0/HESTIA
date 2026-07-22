@@ -31,12 +31,19 @@ The Vite dev server proxies `/api` to `http://localhost:5000`.
 Copy `server/.env.example` to `server/.env` and update `JWT_SECRET` for production.
 Set `USE_MEMORY_DB=false` and `MONGO_URI` to your real MongoDB instance.
 Set `CLIENT_URL` to the frontend origin (e.g. `http://localhost:5173`) to restrict CORS in production.
+For push notifications, generate VAPID keys with `npx web-push generate-vapid-keys` and fill `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`.
 
 ## Lint & format
 ```bash
 cd client
 npm run lint
 npm run format
+```
+
+## Backend tests
+```bash
+cd server
+npm test
 ```
 
 ## Key URLs

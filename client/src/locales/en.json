@@ -1,0 +1,96 @@
+{
+  "appName": "Hestia",
+  "tagline": "Digital Room Service",
+  "loading": "Loading...",
+  "back": "Back",
+  "error": "Error",
+  "save": "Save",
+  "add": "Add",
+  "update": "Update",
+  "delete": "Delete",
+  "copy": "Copy",
+  "print": "Print",
+  "active": "Active",
+  "inactive": "Inactive",
+  "activate": "Activate",
+  "deactivate": "Deactivate",
+  "room": "Room",
+  "total": "Total",
+  "note": "Note",
+  "status": {
+    "Received": "Received",
+    "Preparing": "Preparing",
+    "On the way": "On the way",
+    "Delivered": "Delivered",
+    "Cancelled": "Cancelled"
+  },
+  "roomPage": {
+    "checking": "Checking room...",
+    "invalidTitle": "Invalid Room",
+    "invalidDesc": "This QR code does not link to an active room.",
+    "openMenu": "Open Menu"
+  },
+  "menuPage": {
+    "title": "Hestia Menu",
+    "subtitle": "Room service",
+    "add": "Add",
+    "free": "Free",
+    "yourOrder": "Your order",
+    "notesPlaceholder": "Notes",
+    "additionalRequest": "Additional request (optional)",
+    "placeOrder": "Place Order",
+    "placing": "Placing..."
+  },
+  "orderStatus": {
+    "title": "Order Status",
+    "cancelledTitle": "Order Cancelled",
+    "cancelledDesc": "Your order has been cancelled.",
+    "orderAgain": "Order again",
+    "orderMore": "Order more",
+    "items": "Items"
+  },
+  "adminLogin": {
+    "title": "Staff Login",
+    "username": "Username",
+    "password": "Password",
+    "login": "Login"
+  },
+  "admin": {
+    "orders": "Orders",
+    "menu": "Menu",
+    "rooms": "Rooms & QR",
+    "analytics": "Analytics",
+    "logout": "Logout"
+  },
+  "ordersPanel": {
+    "title": "Orders",
+    "all": "All",
+    "statusHistory": "Status history",
+    "by": "by"
+  },
+  "menuPanel": {
+    "title": "Menu & Inventory",
+    "name": "Name",
+    "category": "Category",
+    "price": "Price",
+    "imageUrl": "Image URL",
+    "description": "Description",
+    "available": "Available",
+    "addItem": "Add Item",
+    "updateItem": "Update Item"
+  },
+  "roomsPanel": {
+    "title": "Rooms & QR Codes",
+    "roomNumber": "Room number",
+    "addRoom": "Add Room",
+    "qrBaseUrl": "QR base URL",
+    "loadingQr": "Loading QR..."
+  },
+  "analyticsPanel": {
+    "title": "Analytics",
+    "totalOrders": "Total Orders",
+    "delivered": "Delivered",
+    "revenue": "Revenue",
+    "recentOrders": "Recent Orders"
+  }
+}

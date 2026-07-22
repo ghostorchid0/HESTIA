@@ -12,6 +12,7 @@ const roomRoutes = require('./routes/room');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
+const pushRoutes = require('./routes/push');
 const seedData = require('./seed');
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/room', roomRoutes);
 app.use('/api/orders', orderRoutes);
@@ -69,14 +71,16 @@ mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB disconnected');
 });
 
-startDatabase()
-  .then(() => {
+let dbReadyPromise = startDatabase().catch(err => {
+  console.error('Fatal: unable to start database:', err.message);
+  process.exit(1);
+});
+
+if (process.env.NODE_ENV !== 'test') {
+  dbReadyPromise.then(() => {
     server.listen(config.port, () => console.log(`Server running on port ${config.port}`));
-  })
-  .catch(err => {
-    console.error('Fatal: unable to start database:', err.message);
-    process.exit(1);
   });
+}
 
 io.on('connection', (socket) => {
   socket.on('join_room_channel', (roomUuid) => {
@@ -98,3 +102,5 @@ function gracefulShutdown(signal) {
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+module.exports = { app, server, memoryServer: () => memoryServer, dbReadyPromise };

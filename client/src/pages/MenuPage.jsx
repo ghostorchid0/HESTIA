@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../api'
 
 export default function MenuPage() {
+  const { t } = useTranslation()
   const { uuid } = useParams()
   const navigate = useNavigate()
   const [items, setItems] = useState([])
@@ -61,7 +63,7 @@ export default function MenuPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Loading menu...</p>
+        <p className="text-gray-500">{t('loading')}</p>
       </div>
     )
   }
@@ -69,8 +71,8 @@ export default function MenuPage() {
   return (
     <div className="mx-auto max-w-md pb-32">
       <div className="sticky top-0 z-10 bg-white p-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-amber-600">Hestia Menu</h1>
-        <p className="text-sm text-gray-500">Room service</p>
+        <h1 className="text-2xl font-bold text-amber-600">{t('menuPage.title')}</h1>
+        <p className="text-sm text-gray-500">{t('menuPage.subtitle')}</p>
       </div>
 
       <div className="p-4 space-y-6">
@@ -83,13 +85,13 @@ export default function MenuPage() {
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.name}</h3>
                     <p className="text-sm text-gray-500">{item.description}</p>
-                    <p className="mt-1 font-medium text-amber-700">{item.price === 0 ? 'Free' : `$${item.price.toFixed(2)}`}</p>
+                    <p className="mt-1 font-medium text-amber-700">{item.price === 0 ? t('menuPage.free') : `$${item.price.toFixed(2)}`}</p>
                   </div>
                   <button
                     onClick={() => addToCart(item)}
                     className="ml-4 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
                   >
-                    Add
+                    {t('menuPage.add')}
                   </button>
                 </div>
               ))}
@@ -100,7 +102,7 @@ export default function MenuPage() {
 
       {cart.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-          <h3 className="mb-2 font-semibold">Your order</h3>
+          <h3 className="mb-2 font-semibold">{t('menuPage.yourOrder')}</h3>
           <div className="max-h-40 overflow-y-auto space-y-2 mb-3">
             {cart.map(item => (
               <div key={item.menuItemId} className="flex items-center justify-between text-sm">
@@ -109,7 +111,7 @@ export default function MenuPage() {
                   <input
                     value={item.notes}
                     onChange={(e) => updateNotes(item.menuItemId, e.target.value)}
-                    placeholder="Notes"
+                    placeholder={t('menuPage.notesPlaceholder')}
                     className="mt-1 block w-full rounded border border-gray-200 px-2 py-1 text-xs"
                   />
                 </div>
@@ -125,17 +127,17 @@ export default function MenuPage() {
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Additional request (optional)"
+            placeholder={t('menuPage.additionalRequest')}
             className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm"
           />
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">Total: ${total.toFixed(2)}</span>
+            <span className="text-lg font-bold">{t('total')}: ${total.toFixed(2)}</span>
             <button
               onClick={placeOrder}
               disabled={placing}
               className="rounded-xl bg-amber-600 px-6 py-3 font-semibold text-white shadow hover:bg-amber-700 disabled:opacity-60"
             >
-              {placing ? 'Placing...' : 'Place Order'}
+              {placing ? t('menuPage.placing') : t('menuPage.placeOrder')}
             </button>
           </div>
         </div>

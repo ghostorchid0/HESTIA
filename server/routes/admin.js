@@ -5,6 +5,7 @@ const QRCode = require('qrcode');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { notifyRoom } = require('../services/push');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
@@ -58,6 +59,12 @@ router.patch(
     const io = req.app.get('io');
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
     io.to('kitchen').emit('order_status_updated', order.toObject());
+
+    notifyRoom(order.roomUuid, {
+      title: 'Hestia',
+      body: `Order status updated to ${order.status}`,
+      data: { orderId: order._id.toString(), status: order.status },
+    }).catch(err => console.error('Failed to send push:', err));
 
     res.json(order);
   }
@@ -163,6 +170,34 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
     revenue: revenue.length ? revenue[0].total : 0,
     recentOrders,
   });
+});
+
+function escapeCsv(value) {
+  const str = value === undefined || value === null ? '' : String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+router.get('/orders/export', requireRole('admin'), async (req, res) => {
+  const orders = await Order.find().sort({ createdAt: -1 });
+  const headers = ['Order ID', 'Room', 'Status', 'Total', 'Items', 'Notes', 'Created At'];
+  const rows = orders.map(order => [
+    order._id.toString(),
+    order.roomNumber,
+    order.status,
+    order.total.toFixed(2),
+    order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
+    order.notes || '',
+    order.createdAt.toISOString(),
+  ]);
+
+  const csv = [headers.map(escapeCsv).join(','), ...rows.map(r => r.map(escapeCsv).join(','))].join('\n');
+
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.csv"');
+  res.send(csv);
 });
 
 module.exports = router;

@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import RoomPage from './pages/RoomPage'
 import MenuPage from './pages/MenuPage'
 import OrderStatusPage from './pages/OrderStatusPage'
@@ -21,11 +22,12 @@ function App() {
 }
 
 function RoomEntry() {
+  const { t } = useTranslation()
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-        <h1 className="text-3xl font-bold text-amber-600 mb-2">Hestia</h1>
-        <p className="text-gray-600 mb-6">Digital Room Service</p>
+        <h1 className="text-3xl font-bold text-amber-600 mb-2">{t('appName')}</h1>
+        <p className="text-gray-600 mb-6">{t('tagline')}</p>
         <p className="text-sm text-gray-500">Scan your room QR code to continue.</p>
       </div>
     </div>

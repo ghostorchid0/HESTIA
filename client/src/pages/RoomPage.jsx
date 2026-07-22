@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import api from '../api'
 
 export default function RoomPage() {
+  const { t } = useTranslation()
   const { uuid } = useParams()
   const navigate = useNavigate()
   const [status, setStatus] = useState('loading')
@@ -20,7 +22,7 @@ export default function RoomPage() {
   if (status === 'loading') {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">Checking room...</p>
+        <p className="text-gray-500">{t('roomPage.checking')}</p>
       </div>
     )
   }
@@ -29,8 +31,8 @@ export default function RoomPage() {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Invalid Room</h1>
-          <p className="text-gray-600">This QR code does not link to an active room.</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-2">{t('roomPage.invalidTitle')}</h1>
+          <p className="text-gray-600">{t('roomPage.invalidDesc')}</p>
         </div>
       </div>
     )
@@ -39,13 +41,13 @@ export default function RoomPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-        <h1 className="text-3xl font-bold text-amber-600 mb-2">Hestia</h1>
-        <p className="text-gray-600 mb-6">Room {room.number}</p>
+        <h1 className="text-3xl font-bold text-amber-600 mb-2">{t('appName')}</h1>
+        <p className="text-gray-600 mb-6">{t('room')} {room.number}</p>
         <button
           onClick={() => navigate(`/room/${uuid}/menu`)}
           className="w-full rounded-xl bg-amber-600 py-3 font-semibold text-white shadow hover:bg-amber-700"
         >
-          Open Menu
+          {t('roomPage.openMenu')}
         </button>
       </div>
     </div>

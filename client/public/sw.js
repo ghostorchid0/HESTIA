@@ -23,3 +23,22 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : { title: 'Hestia', body: 'New update' };
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/favicon.svg',
+      data: data.data || {},
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const { orderId } = event.notification.data || {};
+  event.waitUntil(
+    self.clients.openWindow(orderId ? `/room/${orderId}` : '/')
+  );
+});

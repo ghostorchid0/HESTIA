@@ -34,9 +34,12 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/dist')));
+  const isServerDir = path.basename(__dirname) === 'server';
+  const projectRoot = isServerDir ? path.join(__dirname, '..') : __dirname;
+  const staticDir = path.join(projectRoot, 'client/dist');
+  app.use(express.static(staticDir));
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/dist', 'index.html'));
+    res.sendFile(path.join(staticDir, 'index.html'));
   });
 }
 

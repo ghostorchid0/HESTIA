@@ -16,7 +16,7 @@ export default function OrdersPanel() {
     setOrders(res.data)
   }
 
-  const downloadCsv = async () => {
+  const downloadExcel = async () => {
     const token = localStorage.getItem('hestia_token')
     const res = await fetch('/api/admin/orders/export', {
       headers: { Authorization: `Bearer ${token}` },
@@ -26,7 +26,7 @@ export default function OrdersPanel() {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'hestia-orders.csv'
+    a.download = 'hestia-orders.xlsx'
     a.click()
     window.URL.revokeObjectURL(url)
   }
@@ -58,8 +58,8 @@ export default function OrdersPanel() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-2">
-          <button onClick={downloadCsv} className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium hover:bg-gray-200">
-            CSV
+          <button onClick={downloadExcel} className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium hover:bg-gray-200">
+            Excel
           </button>
           <select
             value={filter}

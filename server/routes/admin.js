@@ -2,6 +2,7 @@ const express = require('express');
 const { body, param, validationResult, query } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
+const XLSX = require('xlsx');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -172,32 +173,27 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
   });
 });
 
-function escapeCsv(value) {
-  const str = value === undefined || value === null ? '' : String(value);
-  if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-    return '"' + str.replace(/"/g, '""') + '"';
-  }
-  return str;
-}
-
 router.get('/orders/export', requireRole('admin'), async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
-  const headers = ['Order ID', 'Room', 'Status', 'Total', 'Items', 'Notes', 'Created At'];
-  const rows = orders.map(order => [
-    order._id.toString(),
-    order.roomNumber,
-    order.status,
-    order.total.toFixed(2),
-    order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
-    order.notes || '',
-    order.createdAt.toISOString(),
-  ]);
 
-  const csv = [headers.map(escapeCsv).join(','), ...rows.map(r => r.map(escapeCsv).join(','))].join('\n');
+  const rows = orders.map(order => ({
+    'Order ID': order._id.toString(),
+    'Room': order.roomNumber,
+    'Status': order.status,
+    'Total': order.total,
+    'Items': order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
+    'Notes': order.notes || '',
+    'Created At': order.createdAt,
+  }));
 
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.csv"');
-  res.send(csv);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, 'Orders');
+  const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.xlsx"');
+  res.send(buffer);
 });
 
 module.exports = router;

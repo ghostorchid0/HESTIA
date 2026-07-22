@@ -21,7 +21,8 @@
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.0",
     "uuid": "^11.0.3",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

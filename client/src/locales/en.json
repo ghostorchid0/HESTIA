@@ -24,6 +24,15 @@
     "Delivered": "Delivered",
     "Cancelled": "Cancelled"
   },
+  "paymentMethods": {
+    "cashOnDelivery": "Cash on delivery",
+    "mobileMoney": "Mobile Money",
+    "roomCharge": "Room charge"
+  },
+  "paymentStatus": {
+    "Pending": "Pending",
+    "Paid": "Paid"
+  },
   "roomPage": {
     "checking": "Checking room...",
     "invalidTitle": "Invalid Room",
@@ -38,6 +47,7 @@
     "yourOrder": "Your order",
     "notesPlaceholder": "Notes",
     "additionalRequest": "Additional request (optional)",
+    "paymentMethod": "Payment method",
     "placeOrder": "Place Order",
     "placing": "Placing..."
   },
@@ -70,7 +80,10 @@
     "title": "Orders",
     "all": "All",
     "statusHistory": "Status history",
-    "by": "by"
+    "by": "by",
+    "payment": "Payment",
+    "markPaid": "Mark paid",
+    "markPending": "Mark pending"
   },
   "menuPanel": {
     "title": "Menu & Inventory",

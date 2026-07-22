@@ -23,6 +23,16 @@ const orderSchema = new mongoose.Schema({
     enum: ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled'],
     default: 'Received',
   },
+  paymentMethod: {
+    type: String,
+    enum: ['Cash on delivery', 'Mobile Money', 'Room charge'],
+    default: 'Cash on delivery',
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid'],
+    default: 'Pending',
+  },
   history: [statusHistorySchema],
   total: { type: Number, required: true, min: 0 },
   notes: String,

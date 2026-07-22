@@ -73,6 +73,26 @@ router.patch(
   }
 );
 
+router.patch(
+  '/orders/:id/payment',
+  requireRole('admin', 'kitchen'),
+  param('id').isMongoId(),
+  body('paymentStatus').isIn(['Pending', 'Paid']),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { paymentStatus: req.body.paymentStatus },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    const io = req.app.get('io');
+    io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
+    io.to('kitchen').emit('order_status_updated', order.toObject());
+    res.json(order);
+  }
+);
+
 router.get('/rooms', requireRole('admin'), async (req, res) => {
   const rooms = await Room.find().sort({ number: 1 });
   res.json(rooms);
@@ -375,6 +395,8 @@ router.get('/orders/export', requireRole('admin'), async (req, res) => {
     { header: 'Order ID', key: 'orderId', width: 28 },
     { header: 'Room', key: 'room', width: 12 },
     { header: 'Status', key: 'status', width: 16 },
+    { header: 'Payment Method', key: 'paymentMethod', width: 20 },
+    { header: 'Payment Status', key: 'paymentStatus', width: 16 },
     { header: 'Total', key: 'total', width: 14 },
     { header: 'Items', key: 'items', width: 50 },
     { header: 'Notes', key: 'notes', width: 40 },
@@ -393,6 +415,8 @@ router.get('/orders/export', requireRole('admin'), async (req, res) => {
       orderId: order._id.toString(),
       room: order.roomNumber,
       status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
       total: order.total,
       items: order.items.map(i => `${i.quantity}x ${i.name}`).join('; '),
       notes: order.notes || '',
@@ -429,7 +453,7 @@ router.get('/orders/export', requireRole('admin'), async (req, res) => {
     }
   });
 
-  sheet.autoFilter = { from: 'A1', to: 'G1' };
+  sheet.autoFilter = { from: 'A1', to: 'I1' };
   sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
 
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

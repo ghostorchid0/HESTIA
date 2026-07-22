@@ -24,6 +24,15 @@
     "Delivered": "Livrée",
     "Cancelled": "Annulée"
   },
+  "paymentMethods": {
+    "cashOnDelivery": "Paiement à la livraison",
+    "mobileMoney": "Mobile Money",
+    "roomCharge": "Note de chambre"
+  },
+  "paymentStatus": {
+    "Pending": "En attente",
+    "Paid": "Payé"
+  },
   "roomPage": {
     "checking": "Vérification de la chambre...",
     "invalidTitle": "Chambre invalide",
@@ -38,6 +47,7 @@
     "yourOrder": "Votre commande",
     "notesPlaceholder": "Notes",
     "additionalRequest": "Demande supplémentaire (optionnel)",
+    "paymentMethod": "Mode de paiement",
     "placeOrder": "Passer commande",
     "placing": "Envoi..."
   },
@@ -70,7 +80,10 @@
     "title": "Commandes",
     "all": "Toutes",
     "statusHistory": "Historique des statuts",
-    "by": "par"
+    "by": "par",
+    "payment": "Paiement",
+    "markPaid": "Marquer payé",
+    "markPending": "Marquer en attente"
   },
   "menuPanel": {
     "title": "Menu & Inventaire",

@@ -11,6 +11,7 @@ export default function MenuPage() {
   const [categories, setCategories] = useState([])
   const [cart, setCart] = useState([])
   const [notes, setNotes] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('Cash on delivery')
   const [loading, setLoading] = useState(true)
   const [placing, setPlacing] = useState(false)
 
@@ -51,7 +52,7 @@ export default function MenuPage() {
     if (cart.length === 0) return
     setPlacing(true)
     try {
-      const res = await api.post('/orders', { roomUuid: uuid, items: cart, notes })
+      const res = await api.post('/orders', { roomUuid: uuid, items: cart, notes, paymentMethod })
       navigate(`/room/${uuid}/order/${res.data._id}`)
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to place order')
@@ -142,6 +143,18 @@ export default function MenuPage() {
               placeholder={t('menuPage.additionalRequest')}
               className="input-luxe mt-4 w-full"
             />
+            <div className="mt-4">
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPage.paymentMethod')}</label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="input-luxe w-full"
+              >
+                <option value="Cash on delivery">{t('paymentMethods.cashOnDelivery')}</option>
+                <option value="Mobile Money">{t('paymentMethods.mobileMoney')}</option>
+                <option value="Room charge">{t('paymentMethods.roomCharge')}</option>
+              </select>
+            </div>
             <div className="mt-5 flex items-center justify-between">
               <span className="font-serif text-2xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${total.toFixed(2)}</span></span>
               <button

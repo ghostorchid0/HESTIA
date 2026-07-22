@@ -20,6 +20,7 @@ router.post(
   body('items').isArray({ min: 1 }),
   body('items.*.menuItemId').isString().notEmpty(),
   body('items.*.quantity').isInt({ min: 1 }),
+  body('paymentMethod').optional().isIn(['Cash on delivery', 'Mobile Money', 'Room charge']),
   body('notes').optional().isString().trim().escape(),
   async (req, res) => {
     const errors = validationResult(req);
@@ -27,7 +28,7 @@ router.post(
       return res.status(400).json({ message: 'Invalid input', errors: errors.array() });
     }
 
-    const { roomUuid, items, notes } = req.body;
+    const { roomUuid, items, notes, paymentMethod } = req.body;
 
     const room = await Room.findOne({ uuid: roomUuid, active: true });
     if (!room) {
@@ -64,6 +65,8 @@ router.post(
       total,
       notes: notes || '',
       status: 'Received',
+      paymentMethod: paymentMethod || 'Cash on delivery',
+      paymentStatus: 'Pending',
       history: [{ status: 'Received', changedBy: 'guest' }],
     });
 

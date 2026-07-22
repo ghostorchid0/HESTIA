@@ -5,6 +5,11 @@ import { socket } from '../socket'
 import { playBeep } from '../utils/beep'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
+const paymentMethodKeys = {
+  'Cash on delivery': 'cashOnDelivery',
+  'Mobile Money': 'mobileMoney',
+  'Room charge': 'roomCharge',
+}
 
 export default function OrdersPanel() {
   const { t } = useTranslation()
@@ -61,6 +66,12 @@ export default function OrdersPanel() {
     fetchOrders()
   }
 
+  const togglePayment = async (order) => {
+    const next = order.paymentStatus === 'Paid' ? 'Pending' : 'Paid'
+    await api.patch(`/admin/orders/${order._id}/payment`, { paymentStatus: next })
+    fetchOrders()
+  }
+
   const statusBadge = (status) => {
     const base = 'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider'
     const map = {
@@ -114,6 +125,10 @@ export default function OrdersPanel() {
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
+                <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}
+                </span>
                 <span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</span>
               </div>
             </div>
@@ -141,7 +156,10 @@ export default function OrdersPanel() {
             )}
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
-              <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span></span>
+              <div>
+                <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span></span>
+                <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {allStatuses
                   .filter((s) => s !== order.status)
@@ -154,6 +172,12 @@ export default function OrdersPanel() {
                       {t(`status.${s}`)}
                     </button>
                   ))}
+                <button
+                  onClick={() => togglePayment(order)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${order.paymentStatus === 'Paid' ? 'border border-hestia-linen bg-white text-hestia-navy hover:bg-hestia-linen' : 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white'}`}
+                >
+                  {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
+                </button>
               </div>
             </div>
           </div>

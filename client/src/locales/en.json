@@ -60,8 +60,10 @@
     "menu": "Menu",
     "rooms": "Rooms & QR",
     "analytics": "Analytics",
+    "reports": "Rush Reports",
     "logout": "Logout"
   },
+  "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
   "ordersPanel": {
     "title": "Orders",
     "all": "All",
@@ -92,5 +94,13 @@
     "delivered": "Delivered",
     "revenue": "Revenue",
     "recentOrders": "Recent Orders"
+  },
+  "reportsPanel": {
+    "title": "Rush Reports",
+    "hourly": "By hour of day",
+    "daily": "By day of week",
+    "monthly": "By month",
+    "yearly": "By year",
+    "orders": "Orders"
   }
 }

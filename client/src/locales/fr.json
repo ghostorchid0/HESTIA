@@ -60,8 +60,10 @@
     "menu": "Menu",
     "rooms": "Chambres & QR",
     "analytics": "Analyses",
+    "reports": "Rapports d'affluence",
     "logout": "Déconnexion"
   },
+  "days": ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
   "ordersPanel": {
     "title": "Commandes",
     "all": "Toutes",
@@ -92,5 +94,13 @@
     "delivered": "Livrées",
     "revenue": "Revenus",
     "recentOrders": "Commandes récentes"
+  },
+  "reportsPanel": {
+    "title": "Rapports d'affluence",
+    "hourly": "Par heure de la journée",
+    "daily": "Par jour de la semaine",
+    "monthly": "Par mois",
+    "yearly": "Par année",
+    "orders": "Commandes"
   }
 }

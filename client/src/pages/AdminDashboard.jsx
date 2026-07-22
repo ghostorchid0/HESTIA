@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { socket } from '../socket'
@@ -6,6 +6,8 @@ import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
 import AnalyticsPanel from '../components/AnalyticsPanel'
+
+const ReportsPanel = lazy(() => import('../components/ReportsPanel'))
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -58,6 +60,7 @@ function Layout({ children }) {
           {role === 'admin' && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {role === 'admin' && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}
           {role === 'admin' && <NavItem to="/admin/analytics" label={t('admin.analytics')} />}
+          {role === 'admin' && <NavItem to="/admin/reports" label={t('admin.reports')} />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>
@@ -84,6 +87,11 @@ export default function AdminDashboard() {
         <Route path="menu" element={<MenuPanel />} />
         <Route path="rooms" element={<RoomsPanel />} />
         <Route path="analytics" element={<AnalyticsPanel />} />
+        <Route path="reports" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <ReportsPanel />
+          </Suspense>
+        } />
         <Route path="*" element={<OrdersPanel />} />
       </Routes>
     </Layout>

@@ -177,6 +177,37 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
   });
 });
 
+router.get('/analytics/rush', requireRole('admin'), async (req, res) => {
+  const [hourly, daily, monthly, yearly] = await Promise.all([
+    Order.aggregate([
+      { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+    Order.aggregate([
+      { $group: { _id: { $mod: [{ $add: [{ $dayOfWeek: '$createdAt' }, 5] }, 7] }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+    Order.aggregate([
+      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+    Order.aggregate([
+      { $group: { _id: { $year: '$createdAt' }, count: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]),
+  ]);
+
+  const formatHour = (h) => `${String(h).padStart(2, '0')}:00`;
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  res.json({
+    hourly: hourly.map(h => ({ hour: h._id, label: formatHour(h._id), count: h.count })),
+    daily: daily.map(d => ({ day: d._id, label: daysOfWeek[d._id] || d._id, count: d.count })),
+    monthly: monthly.map(m => ({ month: m._id, label: m._id, count: m.count })),
+    yearly: yearly.map(y => ({ year: y._id, label: String(y._id), count: y.count })),
+  });
+});
+
 router.get('/orders/export', requireRole('admin'), async (req, res) => {
   const orders = await Order.find().sort({ createdAt: -1 });
 

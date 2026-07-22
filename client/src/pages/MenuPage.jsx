@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import useSettings from '../hooks/useSettings'
 
 export default function MenuPage() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const { uuid } = useParams()
   const navigate = useNavigate()
   const [items, setItems] = useState([])
@@ -73,7 +75,7 @@ export default function MenuPage() {
     <div className="min-h-screen bg-hestia-cream pb-40">
       <header className="sticky top-0 z-20 border-b border-hestia-linen bg-white/80 px-6 py-5 backdrop-blur-md">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('menuPage.subtitle')}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
           <h1 className="mt-1 text-3xl font-light text-hestia-navy">{t('menuPage.title')}</h1>
         </div>
       </header>

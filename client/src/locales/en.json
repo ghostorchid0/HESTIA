@@ -73,6 +73,7 @@
     "reports": "Rush Reports",
     "salesReport": "Sales Report",
     "staff": "Staff",
+    "settings": "Settings",
     "logout": "Logout"
   },
   "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -158,5 +159,15 @@
     "success": "Account created",
     "error": "Error",
     "empty": "No staff accounts yet"
+  },
+  "settingsPanel": {
+    "title": "Hotel Settings",
+    "hotelName": "Hotel name",
+    "currency": "Currency symbol",
+    "contactPhone": "Contact phone",
+    "address": "Address",
+    "logo": "Logo",
+    "save": "Save settings",
+    "saved": "Settings saved"
   }
 }

@@ -73,6 +73,7 @@
     "reports": "Rapports d'affluence",
     "salesReport": "Rapport des ventes",
     "staff": "Personnel",
+    "settings": "Paramètres",
     "logout": "Déconnexion"
   },
   "days": ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
@@ -158,5 +159,15 @@
     "success": "Compte créé",
     "error": "Erreur",
     "empty": "Aucun compte personnel"
+  },
+  "settingsPanel": {
+    "title": "Paramètres de l'hôtel",
+    "hotelName": "Nom de l'hôtel",
+    "currency": "Symbole monétaire",
+    "contactPhone": "Téléphone de contact",
+    "address": "Adresse",
+    "logo": "Logo",
+    "save": "Enregistrer",
+    "saved": "Paramètres enregistrés"
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { socket } from '../socket'
+import useSettings from '../hooks/useSettings'
 import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
@@ -10,9 +11,11 @@ import AnalyticsPanel from '../components/AnalyticsPanel'
 const ReportsPanel = lazy(() => import('../components/ReportsPanel'))
 const SalesReportPanel = lazy(() => import('../components/SalesReportPanel'))
 const StaffPanel = lazy(() => import('../components/StaffPanel'))
+const SettingsPanel = lazy(() => import('../components/SettingsPanel'))
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
+  const { settings } = useSettings()
   const role = localStorage.getItem('hestia_role')
   const location = useLocation()
   const path = location.pathname
@@ -45,7 +48,10 @@ function Layout({ children }) {
       <header className="sticky top-0 z-30 border-b border-hestia-linen bg-hestia-navy px-6 py-4 shadow-soft">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="font-serif text-2xl text-white">Hestia</span>
+            {settings?.hotelLogo ? (
+              <img src={settings.hotelLogo} alt="logo" className="h-10 w-10 rounded-full object-cover" />
+            ) : null}
+            <span className="font-serif text-2xl text-white">{settings?.hotelName || 'Hestia'}</span>
             <span className="rounded border border-hestia-gold/30 px-2 py-0.5 text-xs uppercase tracking-wider text-hestia-gold">{role}</span>
           </div>
           <div className="flex items-center gap-3">
@@ -65,6 +71,7 @@ function Layout({ children }) {
           {role === 'admin' && <NavItem to="/admin/reports" label={t('admin.reports')} />}
           {role === 'admin' && <NavItem to="/admin/sales-report" label={t('admin.salesReport')} />}
           {role === 'admin' && <NavItem to="/admin/staff" label={t('admin.staff')} />}
+          {role === 'admin' && <NavItem to="/admin/settings" label={t('admin.settings')} />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>
@@ -104,6 +111,11 @@ export default function AdminDashboard() {
         <Route path="staff" element={
           <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
             <StaffPanel />
+          </Suspense>
+        } />
+        <Route path="settings" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <SettingsPanel />
           </Suspense>
         } />
         <Route path="*" element={<OrdersPanel />} />

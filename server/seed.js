@@ -3,6 +3,7 @@ const config = require('./config');
 const Room = require('./models/Room');
 const MenuItem = require('./models/MenuItem');
 const User = require('./models/User');
+const Settings = require('./models/Settings');
 
 async function seedData() {
   try {
@@ -37,6 +38,11 @@ async function seedData() {
         role: 'admin',
       });
       console.log('Seeded admin user');
+    }
+
+    if ((await Settings.countDocuments()) === 0) {
+      await Settings.create({ hotelName: 'Hestia' });
+      console.log('Seeded settings');
     }
   } catch (err) {
     console.error('Seed error:', err);

@@ -3,9 +3,11 @@ import { useParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
+import useSettings from '../hooks/useSettings'
 
 export default function OrderStatusPage() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const { uuid, orderId } = useParams()
   const [order, setOrder] = useState(null)
   const [error, setError] = useState(false)
@@ -84,7 +86,8 @@ export default function OrderStatusPage() {
     <div className="min-h-screen bg-hestia-cream p-6 pt-12">
       <div className="mx-auto max-w-xl">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('room')} {order.roomNumber}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
+          <p className="mt-1 text-sm text-gray-500">{t('room')} {order.roomNumber}</p>
           <h1 className="mt-2 text-4xl font-light text-hestia-navy">{t('orderStatus.title')}</h1>
         </div>
 

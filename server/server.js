@@ -14,6 +14,7 @@ const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const pushRoutes = require('./routes/push');
+const settingsRoutes = require('./routes/settings');
 const seedData = require('./seed');
 
 const app = express();
@@ -31,6 +32,7 @@ app.use('/api/push', pushRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/room', roomRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/settings', settingsRoutes);
 app.use('/api/admin', adminRoutes);
 
 if (process.env.NODE_ENV === 'production') {

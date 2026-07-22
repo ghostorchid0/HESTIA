@@ -4,8 +4,8 @@
   "description": "Premium digital room service for hotels",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#d97706",
+  "background_color": "#F7F5F0",
+  "theme_color": "#0B1A2A",
   "orientation": "portrait",
   "icons": [
     {

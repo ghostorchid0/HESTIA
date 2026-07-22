@@ -51,6 +51,8 @@ function getConfig() {
     clientUrl,
     adminUsername: process.env.ADMIN_USERNAME || 'admin',
     adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+    superadminUsername: process.env.SUPERADMIN_USERNAME || 'superadmin',
+    superadminPassword: process.env.SUPERADMIN_PASSWORD || 'superadmin123',
     vapidPublicKey,
     vapidPrivateKey,
     vapidSubject,

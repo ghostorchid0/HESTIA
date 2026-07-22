@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: hestia
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: CLIENT_URL
+        value: https://hestia.onrender.com
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: admin123
+      - key: SUPERADMIN_USERNAME
+        value: superadmin
+      - key: SUPERADMIN_PASSWORD
+        value: superadmin123
+      - key: VAPID_SUBJECT
+        value: mailto:admin@hestia.local
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: SMS_PROVIDER
+        value: console
+      - key: SMS_HTTP_URL
+        sync: false
+      - key: SMS_HTTP_KEY
+        sync: false
+      - key: SMS_SENDER
+        value: Hestia

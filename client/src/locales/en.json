@@ -58,6 +58,14 @@
     "start": "Start now",
     "footer": "© 2025 Hestia. Built for hotels in Togo and beyond."
   },
+  "demoPage": {
+    "tagline": "Live demo",
+    "instructions": "Choose a demo room below to see exactly what your guests will experience when they scan their QR code.",
+    "scanOrClick": "Scan the QR code or click to open",
+    "openRoom": "Open as guest",
+    "tryStaff": "Try the staff dashboard",
+    "notFound": "Demo not configured"
+  },
   "roomPage": {
     "checking": "Checking room...",
     "invalidTitle": "Invalid Room",

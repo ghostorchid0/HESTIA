@@ -58,6 +58,14 @@
     "start": "Commencer",
     "footer": "© 2025 Hestia. Conçu pour les hôtels du Togo et d'ailleurs."
   },
+  "demoPage": {
+    "tagline": "Démo en direct",
+    "instructions": "Choisissez une chambre de démo ci-dessous pour voir exactement ce que vos clients verront en scannant leur QR code.",
+    "scanOrClick": "Scannez le QR code ou cliquez pour ouvrir",
+    "openRoom": "Ouvrir en tant qu'invité",
+    "tryStaff": "Essayer le dashboard staff",
+    "notFound": "Démo non configurée"
+  },
   "roomPage": {
     "checking": "Vérification de la chambre...",
     "invalidTitle": "Chambre invalide",

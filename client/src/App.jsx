@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import LandingPage from './pages/LandingPage'
+import DemoPage from './pages/DemoPage'
 import RoomPage from './pages/RoomPage'
 import MenuPage from './pages/MenuPage'
 import OrderStatusPage from './pages/OrderStatusPage'
@@ -10,6 +11,7 @@ function App() {
   return (
     <div className="min-h-screen bg-hestia-cream">
       <Routes>
+        <Route path="/demo" element={<DemoPage />} />
         <Route path="/room/:uuid" element={<RoomPage />} />
         <Route path="/room/:uuid/menu" element={<MenuPage />} />
         <Route path="/room/:uuid/order/:orderId" element={<OrderStatusPage />} />

@@ -61,6 +61,7 @@
     "rooms": "Rooms & QR",
     "analytics": "Analytics",
     "reports": "Rush Reports",
+    "salesReport": "Sales Report",
     "logout": "Logout"
   },
   "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
@@ -94,6 +95,25 @@
     "delivered": "Delivered",
     "revenue": "Revenue",
     "recentOrders": "Recent Orders"
+  },
+  "salesReportPanel": {
+    "title": "Sales Report",
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "totalOrders": "Total orders",
+    "totalRevenue": "Total revenue",
+    "averageOrder": "Average order",
+    "topItems": "Top selling items",
+    "salesByCategory": "Sales by category",
+    "recentOrders": "Recent orders",
+    "item": "Item",
+    "category": "Category",
+    "quantity": "Qty",
+    "revenue": "Revenue",
+    "noData": "No sales for this period",
+    "download": "Download report .txt"
   },
   "reportsPanel": {
     "title": "Rush Reports",

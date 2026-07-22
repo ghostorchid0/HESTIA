@@ -61,6 +61,7 @@
     "rooms": "Chambres & QR",
     "analytics": "Analyses",
     "reports": "Rapports d'affluence",
+    "salesReport": "Rapport des ventes",
     "logout": "Déconnexion"
   },
   "days": ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"],
@@ -94,6 +95,25 @@
     "delivered": "Livrées",
     "revenue": "Revenus",
     "recentOrders": "Commandes récentes"
+  },
+  "salesReportPanel": {
+    "title": "Rapport des ventes",
+    "day": "Jour",
+    "week": "Semaine",
+    "month": "Mois",
+    "year": "Année",
+    "totalOrders": "Total commandes",
+    "totalRevenue": "Chiffre d'affaires",
+    "averageOrder": "Panier moyen",
+    "topItems": "Articles les plus vendus",
+    "salesByCategory": "Ventes par catégorie",
+    "recentOrders": "Commandes récentes",
+    "item": "Article",
+    "category": "Catégorie",
+    "quantity": "Qté",
+    "revenue": "Revenu",
+    "noData": "Aucune vente sur cette période",
+    "download": "Télécharger le rapport .txt"
   },
   "reportsPanel": {
     "title": "Rapports d'affluence",

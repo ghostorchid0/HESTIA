@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
+import { playBeep } from '../utils/beep'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 
@@ -9,11 +10,20 @@ export default function OrdersPanel() {
   const { t } = useTranslation()
   const [orders, setOrders] = useState([])
   const [filter, setFilter] = useState('')
-  const [audio] = useState(() => (typeof Audio !== 'undefined' ? new Audio('/notification.mp3') : null))
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const stored = localStorage.getItem('hestia_sound')
+    return stored === null ? true : stored === 'true'
+  })
 
   const fetchOrders = async () => {
     const res = await api.get('/admin/orders?limit=200')
     setOrders(res.data)
+  }
+
+  const toggleSound = () => {
+    const next = !soundEnabled
+    setSoundEnabled(next)
+    localStorage.setItem('hestia_sound', next)
   }
 
   const downloadExcel = async () => {
@@ -35,7 +45,7 @@ export default function OrdersPanel() {
     fetchOrders()
     socket.on('new_order', (order) => {
       setOrders((prev) => [order, ...prev])
-      if (audio) audio.play().catch(() => {})
+      if (soundEnabled) playBeep()
     })
     socket.on('order_status_updated', (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
@@ -44,7 +54,7 @@ export default function OrdersPanel() {
       socket.off('new_order')
       socket.off('order_status_updated')
     }
-  }, [audio])
+  }, [soundEnabled])
 
   const updateStatus = async (id, status) => {
     await api.patch(`/admin/orders/${id}/status`, { status })
@@ -58,6 +68,13 @@ export default function OrdersPanel() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-2">
+          <button
+            onClick={toggleSound}
+            className={`rounded-lg px-3 py-2 text-sm font-medium ${soundEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
+            title={soundEnabled ? 'Sound on' : 'Sound off'}
+          >
+            {soundEnabled ? 'Son ON' : 'Son OFF'}
+          </button>
           <button onClick={downloadExcel} className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium hover:bg-gray-200">
             Excel
           </button>

@@ -81,7 +81,8 @@ export default function MenuPage() {
             <h2 className="mb-3 text-lg font-semibold text-gray-700">{cat}</h2>
             <div className="space-y-3">
               {items.filter(i => i.category === cat).map(item => (
-                <div key={item._id} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm">
+                <div key={item._id} className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
+                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="h-16 w-16 flex-shrink-0 rounded object-cover" />}
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.name}</h3>
                     <p className="text-sm text-gray-500">{item.description}</p>
@@ -89,7 +90,7 @@ export default function MenuPage() {
                   </div>
                   <button
                     onClick={() => addToCart(item)}
-                    className="ml-4 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+                    className="ml-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
                   >
                     {t('menuPage.add')}
                   </button>

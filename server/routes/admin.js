@@ -6,6 +6,7 @@ const XLSX = require('xlsx');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 const { notifyRoom } = require('../services/push');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
@@ -131,11 +132,12 @@ const menuValidation = [
   body('price').isFloat({ min: 0 }).toFloat(),
   body('category').trim().notEmpty().escape(),
   body('available').optional().isBoolean().toBoolean(),
-  body('imageUrl').optional().trim().isURL().withMessage('imageUrl must be a valid URL'),
+  body('imageUrl').optional().trim(),
 ];
 
-router.post('/menu', requireRole('admin'), menuValidation, async (req, res) => {
+router.post('/menu', requireRole('admin'), upload.single('image'), menuValidation, async (req, res) => {
   if (!handleValidation(req, res)) return;
+  if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
   const item = await MenuItem.create(pickMenuFields(req.body));
   res.status(201).json(item);
 });
@@ -143,9 +145,11 @@ router.post('/menu', requireRole('admin'), menuValidation, async (req, res) => {
 router.put('/menu/:id',
   requireRole('admin'),
   param('id').isMongoId(),
+  upload.single('image'),
   menuValidation,
   async (req, res) => {
     if (!handleValidation(req, res)) return;
+    if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
     const item = await MenuItem.findByIdAndUpdate(req.params.id, pickMenuFields(req.body), { new: true });
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);

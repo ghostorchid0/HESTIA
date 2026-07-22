@@ -46,6 +46,17 @@ cd server
 npm test
 ```
 
+## Docker / production deploy
+A root `Dockerfile` builds the client and serves both frontend and backend from port 5000.
+```bash
+docker build -t hestia .
+docker run -p 5000:5000 -e NODE_ENV=production -e MONGO_URI=... -e JWT_SECRET=... -e VAPID_PUBLIC_KEY=... -e VAPID_PRIVATE_KEY=... hestia
+```
+Set `CLIENT_URL` to your deployed domain in production.
+
+## CI
+`.github/workflows/ci.yml` runs backend tests, frontend lint and build on push/PR.
+
 ## Key URLs
 - Guest room: `http://localhost:5173/room/:uuid`
 - Staff login: `http://localhost:5173/admin/login`

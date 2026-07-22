@@ -1,0 +1,3 @@
+🏛️ Project Identity: Hestia
+Tagline: Elevating In-Room Hospitality.
+Description: Hestia is a premium, web-based digital room service platform designed to modernize the hotel guest experience through effortless QR code ordering and real-time kitchen operations.

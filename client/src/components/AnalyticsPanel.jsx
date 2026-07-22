@@ -10,32 +10,33 @@ export default function AnalyticsPanel() {
     api.get('/admin/analytics').then(res => setData(res.data))
   }, [])
 
-  if (!data) return <p className="text-gray-500">{t('loading')}</p>
+  if (!data) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">{t('analyticsPanel.title')}</h1>
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">{t('analyticsPanel.totalOrders')}</p>
-          <p className="text-3xl font-bold text-amber-600">{data.totalOrders}</p>
+      <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('analyticsPanel.title')}</h1>
+      <div className="mb-8 grid gap-6 sm:grid-cols-3">
+        <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.totalOrders')}</p>
+          <p className="mt-2 font-serif text-4xl text-hestia-navy">{data.totalOrders}</p>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">{t('analyticsPanel.delivered')}</p>
-          <p className="text-3xl font-bold text-green-600">{data.deliveredOrders}</p>
+        <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.delivered')}</p>
+          <p className="mt-2 font-serif text-4xl text-green-700">{data.deliveredOrders}</p>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm text-gray-500">{t('analyticsPanel.revenue')}</p>
-          <p className="text-3xl font-bold text-amber-600">${data.revenue.toFixed(2)}</p>
+        <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.revenue')}</p>
+          <p className="mt-2 font-serif text-4xl text-hestia-gold">${data.revenue.toFixed(2)}</p>
         </div>
       </div>
-      <h2 className="mb-3 text-lg font-semibold">{t('analyticsPanel.recentOrders')}</h2>
+
+      <h2 className="mb-4 text-xl font-light text-hestia-navy">{t('analyticsPanel.recentOrders')}</h2>
       <div className="space-y-3">
         {data.recentOrders.map(order => (
-          <div key={order._id} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm text-sm">
-            <span>{t('room')} {order.roomNumber}</span>
-            <span className="rounded bg-gray-100 px-2 py-1">{t(`status.${order.status}`)}</span>
-            <span className="font-medium">${order.total.toFixed(2)}</span>
+          <div key={order._id} className="card-luxe flex items-center justify-between p-4 text-sm transition hover:shadow-luxe">
+            <span className="font-serif text-lg text-hestia-navy">{t('room')} {order.roomNumber}</span>
+            <span className="rounded-full bg-hestia-cream px-3 py-1 text-xs font-medium text-hestia-navy">{t(`status.${order.status}`)}</span>
+            <span className="font-serif text-hestia-gold">${order.total.toFixed(2)}</span>
           </div>
         ))}
       </div>

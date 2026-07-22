@@ -22,26 +22,35 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={login} className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
-        <h1 className="mb-6 text-2xl font-bold text-amber-600">{t('adminLogin.title')}</h1>
-        {error && <p className="mb-4 rounded bg-red-50 p-2 text-sm text-red-600">{error}</p>}
-        <label className="mb-2 block text-sm font-medium">{t('adminLogin.username')}</label>
-        <input
-          value={form.username}
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
-          className="mb-4 w-full rounded-lg border border-gray-300 p-3"
-          required
-        />
-        <label className="mb-2 block text-sm font-medium">{t('adminLogin.password')}</label>
-        <input
-          type="password"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          className="mb-6 w-full rounded-lg border border-gray-300 p-3"
-          required
-        />
-        <button className="w-full rounded-xl bg-amber-600 py-3 font-semibold text-white hover:bg-amber-700">{t('adminLogin.login')}</button>
+    <div className="flex min-h-screen items-center justify-center bg-hestia-cream p-6">
+      <form onSubmit={login} className="card-luxe w-full max-w-md p-10">
+        <div className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">Hestia Staff</p>
+          <h1 className="mt-2 text-3xl font-light text-hestia-navy">{t('adminLogin.title')}</h1>
+        </div>
+        {error && <p className="mt-5 rounded bg-red-50 p-3 text-center text-sm text-red-700">{error}</p>}
+        <div className="mt-8 space-y-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('adminLogin.username')}</label>
+            <input
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="input-luxe w-full"
+              required
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('adminLogin.password')}</label>
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="input-luxe w-full"
+              required
+            />
+          </div>
+        </div>
+        <button className="btn-primary mt-8 w-full">{t('adminLogin.login')}</button>
       </form>
     </div>
   )

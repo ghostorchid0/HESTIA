@@ -61,27 +61,38 @@ export default function OrdersPanel() {
     fetchOrders()
   }
 
+  const statusBadge = (status) => {
+    const base = 'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider'
+    const map = {
+      Received: 'bg-hestia-navy/10 text-hestia-navy',
+      Preparing: 'bg-amber-100 text-amber-700',
+      'On the way': 'bg-hestia-gold/10 text-hestia-gold',
+      Delivered: 'bg-green-100 text-green-700',
+      Cancelled: 'bg-red-100 text-red-700',
+    }
+    return `${base} ${map[status] || 'bg-gray-100 text-gray-600'}`
+  }
+
   const filtered = filter ? orders.filter((o) => o.status === filter) : orders
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{t('ordersPanel.title')}</h1>
-        <div className="flex items-center gap-2">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-light text-hestia-navy">{t('ordersPanel.title')}</h1>
+        <div className="flex items-center gap-3">
           <button
             onClick={toggleSound}
-            className={`rounded-lg px-3 py-2 text-sm font-medium ${soundEnabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}
-            title={soundEnabled ? 'Sound on' : 'Sound off'}
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold' : 'bg-gray-100 text-gray-600'}`}
           >
             {soundEnabled ? 'Son ON' : 'Son OFF'}
           </button>
-          <button onClick={downloadExcel} className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium hover:bg-gray-200">
+          <button onClick={downloadExcel} className="rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen">
             Excel
           </button>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            className="input-luxe"
           >
             <option value="">{t('ordersPanel.all')}</option>
             {allStatuses.map((s) => (
@@ -92,51 +103,45 @@ export default function OrdersPanel() {
           </select>
         </div>
       </div>
-      <div className="space-y-4">
+
+      <div className="space-y-5">
         {filtered.map((order) => (
-          <div key={order._id} className="rounded-2xl bg-white p-5 shadow-sm">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <span className="text-lg font-bold">
-                  {t('room')} {order.roomNumber}
-                </span>
-                <span className="ml-3 rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
-                  {t(`status.${order.status}`)}
-                </span>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
               </div>
-              <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleString()}</span>
+              <div className="flex flex-col items-end gap-2">
+                <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
+                <span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</span>
+              </div>
             </div>
-            <ul className="mb-3 text-sm text-gray-700">
+
+            <ul className="space-y-2 border-t border-hestia-linen pt-4 text-sm text-gray-700">
               {order.items.map((item, idx) => (
-                <li key={idx}>
-                  {item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}
+                <li key={idx} className="flex justify-between">
+                  <span>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</span>
                 </li>
               ))}
             </ul>
-            {order.notes && (
-              <p className="mb-3 text-sm text-gray-500">
-                {t('note')}: {order.notes}
-              </p>
-            )}
+            {order.notes && <p className="mt-3 text-sm text-gray-500">{t('note')}: {order.notes}</p>}
+
             {order.history && order.history.length > 0 && (
-              <div className="mb-3">
-                <p className="mb-1 text-xs font-medium text-gray-500">{t('ordersPanel.statusHistory')}</p>
+              <div className="mt-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.statusHistory')}</p>
                 <div className="flex flex-wrap gap-2">
                   {order.history.map((h, idx) => (
-                    <span key={idx} className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                      {t(`status.${h.status}`)}{' '}
-                      <span className="text-gray-400">
-                        ({t('ordersPanel.by')} {h.changedBy})
-                      </span>
+                    <span key={idx} className="rounded-full bg-hestia-cream px-3 py-1 text-xs text-gray-600">
+                      {t(`status.${h.status}`)} <span className="text-gray-400">({t('ordersPanel.by')} {h.changedBy})</span>
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <span className="font-semibold">
-                {t('total')}: ${order.total.toFixed(2)}
-              </span>
+
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
+              <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span></span>
               <div className="flex flex-wrap gap-2">
                 {allStatuses
                   .filter((s) => s !== order.status)
@@ -144,7 +149,7 @@ export default function OrdersPanel() {
                     <button
                       key={s}
                       onClick={() => updateStatus(order._id, s)}
-                      className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium hover:bg-gray-200"
+                      className="rounded-lg border border-hestia-linen bg-white px-3 py-1.5 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen"
                     >
                       {t(`status.${s}`)}
                     </button>

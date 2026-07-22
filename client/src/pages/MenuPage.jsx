@@ -62,35 +62,45 @@ export default function MenuPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">{t('loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-hestia-cream">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" />
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-md pb-32">
-      <div className="sticky top-0 z-10 bg-white p-4 shadow-sm">
-        <h1 className="text-2xl font-bold text-amber-600">{t('menuPage.title')}</h1>
-        <p className="text-sm text-gray-500">{t('menuPage.subtitle')}</p>
-      </div>
+    <div className="min-h-screen bg-hestia-cream pb-40">
+      <header className="sticky top-0 z-20 border-b border-hestia-linen bg-white/80 px-6 py-5 backdrop-blur-md">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('menuPage.subtitle')}</p>
+          <h1 className="mt-1 text-3xl font-light text-hestia-navy">{t('menuPage.title')}</h1>
+        </div>
+      </header>
 
-      <div className="p-4 space-y-6">
+      <main className="mx-auto max-w-2xl px-6 pt-10">
         {categories.map(cat => (
-          <section key={cat}>
-            <h2 className="mb-3 text-lg font-semibold text-gray-700">{cat}</h2>
-            <div className="space-y-3">
+          <section key={cat} className="mb-10">
+            <h2 className="mb-5 border-b border-hestia-linen pb-2 text-2xl font-light text-hestia-navy">{cat}</h2>
+            <div className="space-y-4">
               {items.filter(i => i.category === cat).map(item => (
-                <div key={item._id} className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="h-16 w-16 flex-shrink-0 rounded object-cover" />}
+                <div key={item._id} className="card-luxe flex items-center gap-5 p-5 transition hover:shadow-luxe">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-hestia-linen text-2xl text-hestia-gold">✦</div>
+                  )}
                   <div className="flex-1">
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-sm text-gray-500">{item.description}</p>
-                    <p className="mt-1 font-medium text-amber-700">{item.price === 0 ? t('menuPage.free') : `$${item.price.toFixed(2)}`}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
+                      <span className="font-serif text-lg text-hestia-gold">
+                        {item.price === 0 ? t('menuPage.free') : `$${item.price.toFixed(2)}`}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-gray-600">{item.description}</p>
                   </div>
                   <button
                     onClick={() => addToCart(item)}
-                    className="ml-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+                    className="btn-outline"
                   >
                     {t('menuPage.add')}
                   </button>
@@ -99,47 +109,49 @@ export default function MenuPage() {
             </div>
           </section>
         ))}
-      </div>
+      </main>
 
       {cart.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl bg-white p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]">
-          <h3 className="mb-2 font-semibold">{t('menuPage.yourOrder')}</h3>
-          <div className="max-h-40 overflow-y-auto space-y-2 mb-3">
-            {cart.map(item => (
-              <div key={item.menuItemId} className="flex items-center justify-between text-sm">
-                <div className="flex-1">
-                  <span className="font-medium">{item.name}</span>
-                  <input
-                    value={item.notes}
-                    onChange={(e) => updateNotes(item.menuItemId, e.target.value)}
-                    placeholder={t('menuPage.notesPlaceholder')}
-                    className="mt-1 block w-full rounded border border-gray-200 px-2 py-1 text-xs"
-                  />
+        <div className="fixed inset-x-0 bottom-0 z-30 rounded-t-4xl bg-white p-6 shadow-luxe">
+          <div className="mx-auto max-w-2xl">
+            <h3 className="text-xl font-light text-hestia-navy">{t('menuPage.yourOrder')}</h3>
+            <div className="mt-4 max-h-40 space-y-3 overflow-y-auto">
+              {cart.map(item => (
+                <div key={item.menuItemId} className="flex items-center justify-between text-sm">
+                  <div className="flex-1">
+                    <span className="font-medium text-hestia-navy">{item.name}</span>
+                    <input
+                      value={item.notes}
+                      onChange={(e) => updateNotes(item.menuItemId, e.target.value)}
+                      placeholder={t('menuPage.notesPlaceholder')}
+                      className="input-luxe mt-1 w-full"
+                    />
+                  </div>
+                  <div className="ml-4 flex items-center gap-2">
+                    <button onClick={() => updateQuantity(item.menuItemId, -1)} className="h-8 w-8 rounded-full bg-hestia-cream text-hestia-navy transition hover:bg-hestia-linen">−</button>
+                    <span className="w-4 text-center">{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.menuItemId, 1)} className="h-8 w-8 rounded-full bg-hestia-cream text-hestia-navy transition hover:bg-hestia-linen">+</button>
+                    <button onClick={() => removeFromCart(item.menuItemId)} className="ml-2 text-sm text-red-500">×</button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 ml-2">
-                  <button onClick={() => updateQuantity(item.menuItemId, -1)} className="rounded bg-gray-100 px-2 py-1">-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.menuItemId, 1)} className="rounded bg-gray-100 px-2 py-1">+</button>
-                  <button onClick={() => removeFromCart(item.menuItemId)} className="ml-1 text-red-500">x</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder={t('menuPage.additionalRequest')}
-            className="mb-3 w-full rounded-lg border border-gray-200 p-2 text-sm"
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-lg font-bold">{t('total')}: ${total.toFixed(2)}</span>
-            <button
-              onClick={placeOrder}
-              disabled={placing}
-              className="rounded-xl bg-amber-600 px-6 py-3 font-semibold text-white shadow hover:bg-amber-700 disabled:opacity-60"
-            >
-              {placing ? t('menuPage.placing') : t('menuPage.placeOrder')}
-            </button>
+              ))}
+            </div>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder={t('menuPage.additionalRequest')}
+              className="input-luxe mt-4 w-full"
+            />
+            <div className="mt-5 flex items-center justify-between">
+              <span className="font-serif text-2xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${total.toFixed(2)}</span></span>
+              <button
+                onClick={placeOrder}
+                disabled={placing}
+                className="btn-primary disabled:opacity-50"
+              >
+                {placing ? t('menuPage.placing') : t('menuPage.placeOrder')}
+              </button>
+            </div>
           </div>
         </div>
       )}

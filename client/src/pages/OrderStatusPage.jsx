@@ -49,10 +49,10 @@ export default function OrderStatusPage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">{t('orderStatus.title')}</h1>
-          <Link to={`/room/${uuid}/menu`} className="mt-4 inline-block text-amber-600 underline">{t('orderStatus.orderMore')}</Link>
+      <div className="flex min-h-screen items-center justify-center bg-hestia-cream p-6">
+        <div className="card-luxe w-full max-w-md p-10 text-center">
+          <h1 className="text-3xl text-hestia-navy">{t('orderStatus.title')}</h1>
+          <Link to={`/room/${uuid}/menu`} className="btn-outline mt-6 inline-block">{t('orderStatus.orderMore')}</Link>
         </div>
       </div>
     )
@@ -60,19 +60,19 @@ export default function OrderStatusPage() {
 
   if (!order) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-gray-500">{t('loading')}</p>
+      <div className="flex min-h-screen items-center justify-center bg-hestia-cream">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" />
       </div>
     )
   }
 
   if (order.status === 'Cancelled') {
     return (
-      <div className="mx-auto max-w-md p-4">
-        <div className="rounded-2xl bg-white p-6 shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-2">{t('orderStatus.cancelledTitle')}</h1>
-          <p className="text-gray-600 mb-4">{t('orderStatus.cancelledDesc')}</p>
-          <Link to={`/room/${uuid}/menu`} className="inline-block rounded-xl bg-amber-600 px-6 py-3 text-white font-semibold">{t('orderStatus.orderAgain')}</Link>
+      <div className="flex min-h-screen items-center justify-center bg-hestia-cream p-6">
+        <div className="card-luxe w-full max-w-md p-10 text-center">
+          <h1 className="text-3xl text-red-800">{t('orderStatus.cancelledTitle')}</h1>
+          <p className="mt-3 text-gray-600">{t('orderStatus.cancelledDesc')}</p>
+          <Link to={`/room/${uuid}/menu`} className="btn-primary mt-8 inline-block">{t('orderStatus.orderAgain')}</Link>
         </div>
       </div>
     )
@@ -81,44 +81,64 @@ export default function OrderStatusPage() {
   const currentStep = statusSteps.indexOf(order.status)
 
   return (
-    <div className="mx-auto max-w-md p-4">
-      <div className="rounded-2xl bg-white p-6 shadow-lg">
-        <h1 className="text-2xl font-bold text-amber-600 mb-2">{t('orderStatus.title')}</h1>
-        <p className="text-sm text-gray-500 mb-6">{t('room')} {order.roomNumber} &middot; {new Date(order.createdAt).toLocaleString()}</p>
-
-        <div className="relative mb-8">
-          <div className="absolute left-4 top-0 h-full w-0.5 bg-gray-200"></div>
-          {statusSteps.map((step, idx) => (
-            <div key={step} className="relative mb-6 flex items-center">
-              <div className={`z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 ${idx <= currentStep ? 'border-amber-600 bg-amber-600 text-white' : 'border-gray-300 bg-white text-gray-400'}`}>
-                {idx + 1}
-              </div>
-              <span className={`ml-4 font-medium ${idx <= currentStep ? 'text-gray-900' : 'text-gray-400'}`}>{t(`status.${step}`)}</span>
-            </div>
-          ))}
+    <div className="min-h-screen bg-hestia-cream p-6 pt-12">
+      <div className="mx-auto max-w-xl">
+        <div className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('room')} {order.roomNumber}</p>
+          <h1 className="mt-2 text-4xl font-light text-hestia-navy">{t('orderStatus.title')}</h1>
         </div>
 
-        <h2 className="font-semibold mb-2">{t('orderStatus.items')}</h2>
-        <ul className="mb-4 space-y-1">
-          {order.items.map((item, idx) => (
-            <li key={idx} className="flex justify-between text-sm">
-              <span>{item.quantity}x {item.name}</span>
-              <span className="text-gray-600">${(item.price * item.quantity).toFixed(2)}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="text-right font-bold">{t('total')}: ${order.total.toFixed(2)}</p>
+        <div className="card-luxe mt-10 p-8">
+          <div className="relative mt-4">
+            <div className="absolute left-6 top-4 bottom-4 w-px bg-hestia-linen" />
+            {statusSteps.map((step, idx) => (
+              <div key={step} className="relative mb-8 flex items-center">
+                <div
+                  className={`z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-serif font-medium transition ${
+                    idx <= currentStep
+                      ? 'border-hestia-gold bg-hestia-gold text-white'
+                      : 'border-hestia-linen bg-white text-gray-400'
+                  }`}
+                >
+                  {idx + 1}
+                </div>
+                <div className="ml-5">
+                  <p className={`font-serif text-lg ${idx <= currentStep ? 'text-hestia-navy' : 'text-gray-400'}`}>
+                    {t(`status.${step}`)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card-luxe mt-6 p-8">
+          <h2 className="text-xl font-light text-hestia-navy">{t('orderStatus.items')}</h2>
+          <ul className="mt-4 space-y-3">
+            {order.items.map((item, idx) => (
+              <li key={idx} className="flex justify-between border-b border-hestia-linen pb-2 text-sm">
+                <span className="text-gray-700">{item.quantity}x {item.name}</span>
+                <span className="font-serif text-hestia-navy">${(item.price * item.quantity).toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-right font-serif text-2xl text-hestia-navy">
+            {t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span>
+          </p>
+        </div>
 
         {!pushEnabled && (
           <button
             onClick={subscribePush}
-            className="mt-4 w-full rounded-xl bg-blue-50 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+            className="btn-outline mt-6 w-full"
           >
             Notify me of updates
           </button>
         )}
 
-        <Link to={`/room/${uuid}/menu`} className="mt-4 block w-full rounded-xl bg-gray-100 py-3 text-center font-semibold text-gray-700">{t('orderStatus.orderMore')}</Link>
+        <Link to={`/room/${uuid}/menu`} className="btn-primary mt-4 block w-full text-center">
+          {t('orderStatus.orderMore')}
+        </Link>
       </div>
     </div>
   )

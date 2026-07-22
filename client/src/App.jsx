@@ -8,7 +8,7 @@ import AdminDashboard from './pages/AdminDashboard'
 
 function App() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-hestia-cream">
       <Routes>
         <Route path="/room/:uuid" element={<RoomPage />} />
         <Route path="/room/:uuid/menu" element={<MenuPage />} />
@@ -24,11 +24,15 @@ function App() {
 function RoomEntry() {
   const { t } = useTranslation()
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-        <h1 className="text-3xl font-bold text-amber-600 mb-2">{t('appName')}</h1>
-        <p className="text-gray-600 mb-6">{t('tagline')}</p>
-        <p className="text-sm text-gray-500">Scan your room QR code to continue.</p>
+    <div className="relative flex min-h-screen items-center justify-center p-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-hestia-linen/60 via-transparent to-transparent" />
+      <div className="card-luxe relative z-10 w-full max-w-md p-12 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('tagline')}</p>
+        <h1 className="mt-4 text-5xl font-light text-hestia-navy">{t('appName')}</h1>
+        <div className="mx-auto mt-6 h-px w-16 bg-hestia-gold" />
+        <p className="mt-6 text-sm leading-relaxed text-gray-600">
+          Scan your room QR code to enjoy an refined in-room dining experience.
+        </p>
       </div>
     </div>
   )

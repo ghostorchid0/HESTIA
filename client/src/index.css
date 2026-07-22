@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-gray-50 text-gray-900 antialiased;
+@layer base {
+  body {
+    @apply bg-hestia-cream font-sans text-hestia-charcoal antialiased;
+  }
+
+  h1, h2, h3 {
+    @apply font-serif tracking-tight;
+  }
+}
+
+@layer components {
+  .card-luxe {
+    @apply rounded-3xl bg-white/90 shadow-soft backdrop-blur-sm border border-hestia-linen;
+  }
+
+  .btn-primary {
+    @apply rounded-2xl bg-hestia-navy px-8 py-3.5 font-sans text-sm font-semibold uppercase tracking-widest text-white shadow-soft transition-all hover:bg-hestia-navy-light hover:shadow-luxe;
+  }
+
+  .btn-outline {
+    @apply rounded-2xl border border-hestia-gold px-6 py-3 font-sans text-sm font-medium uppercase tracking-widest text-hestia-navy transition-all hover:bg-hestia-gold hover:text-white;
+  }
+
+  .input-luxe {
+    @apply rounded-xl border-hestia-linen bg-white px-4 py-3 text-sm outline-none transition focus:border-hestia-gold focus:ring-1 focus:ring-hestia-gold;
+  }
 }

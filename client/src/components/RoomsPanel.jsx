@@ -46,7 +46,7 @@ export default function RoomsPanel() {
     const data = qrData[room._id]
     if (!data) return
     const w = window.open('', '', 'width=400,height=500')
-    w.document.write(`<html><head><title>${t('room')} ${room.number} QR</title></head><body style="text-align:center;font-family:sans-serif"><h2>${t('room')} ${room.number}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px">${data.url}</p></body></html>`)
+    w.document.write(`<html><head><title>${t('room')} ${room.number} QR</title></head><body style="text-align:center;font-family:Georgia,serif"><h2 style="color:#0B1A2A">${t('room')} ${room.number}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px;color:#666">${data.url}</p></body></html>`)
     w.document.close()
     w.focus()
     w.print()
@@ -60,50 +60,56 @@ export default function RoomsPanel() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">{t('roomsPanel.title')}</h1>
-      <form onSubmit={addRoom} className="mb-6 flex gap-2">
-        <input
-          placeholder={t('roomsPanel.roomNumber')}
-          value={number}
-          onChange={e => setNumber(e.target.value)}
-          className="flex-1 rounded border p-2"
-          required
-        />
-        <button className="rounded-xl bg-amber-600 px-5 py-2 font-semibold text-white">{t('roomsPanel.addRoom')}</button>
+      <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('roomsPanel.title')}</h1>
+
+      <form onSubmit={addRoom} className="card-luxe mb-6 flex gap-4 p-6">
+        <div className="flex-1">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.roomNumber')}</label>
+          <input
+            value={number}
+            onChange={e => setNumber(e.target.value)}
+            className="input-luxe w-full"
+            required
+          />
+        </div>
+        <button className="btn-primary self-end">{t('roomsPanel.addRoom')}</button>
       </form>
 
-      <div className="mb-4 rounded-2xl bg-white p-4 shadow-sm">
-        <label className="text-sm font-medium">{t('roomsPanel.qrBaseUrl')}</label>
-        <input value={host} onChange={e => setHost(e.target.value)} className="mt-1 w-full rounded border p-2" />
+      <div className="card-luxe mb-6 p-6">
+        <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.qrBaseUrl')}</label>
+        <input value={host} onChange={e => setHost(e.target.value)} className="input-luxe mt-1 w-full" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {rooms.map(room => {
           const data = qrData[room._id]
           return (
-            <div key={room._id} className="rounded-2xl bg-white p-4 shadow-sm">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-lg font-bold">{t('room')} {room.number}</span>
-                <span className={`rounded px-2 py-0.5 text-xs ${room.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{room.active ? t('active') : t('inactive')}</span>
+            <div key={room._id} className="card-luxe p-6 transition hover:shadow-luxe">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                  <p className="font-serif text-2xl text-hestia-navy">{room.number}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${room.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{room.active ? t('active') : t('inactive')}</span>
               </div>
-              <div className="mb-3 flex flex-col items-center rounded bg-gray-100 p-4">
+              <div className="mb-5 flex flex-col items-center rounded-2xl bg-hestia-cream p-6">
                 {data ? (
                   <>
-                    <img src={data.dataUrl} alt="QR code" className="mb-2 h-32 w-32" />
-                    <p className="break-all text-center text-xs text-gray-700">{data.url}</p>
+                    <img src={data.dataUrl} alt="QR code" className="mb-3 h-36 w-36" />
+                    <p className="break-all text-center text-xs text-gray-500">{data.url}</p>
                   </>
                 ) : (
                   <p className="text-sm text-gray-500">{t('roomsPanel.loadingQr')}</p>
                 )}
               </div>
-              <div className="flex gap-2">
-                <button onClick={() => toggle(room._id)} className="flex-1 rounded bg-gray-100 py-1.5 text-sm hover:bg-gray-200">
+              <div className="grid grid-cols-3 gap-2">
+                <button onClick={() => toggle(room._id)} className="rounded-lg border border-hestia-linen bg-white py-2 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen">
                   {room.active ? t('deactivate') : t('activate')}
                 </button>
-                <button onClick={() => printQr(room)} className="flex-1 rounded bg-amber-50 py-1.5 text-sm text-amber-700 hover:bg-amber-100">
+                <button onClick={() => printQr(room)} className="rounded-lg bg-hestia-gold/10 py-2 text-xs font-medium text-hestia-gold transition hover:bg-hestia-gold hover:text-white">
                   {t('print')}
                 </button>
-                <button onClick={() => copyUrl(room)} className="flex-1 rounded bg-gray-100 py-1.5 text-sm hover:bg-gray-200">
+                <button onClick={() => copyUrl(room)} className="rounded-lg border border-hestia-linen bg-white py-2 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen">
                   {t('copy')}
                 </button>
               </div>

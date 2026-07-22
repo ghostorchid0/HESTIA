@@ -60,48 +60,64 @@ export default function MenuPanel() {
 
   return (
     <div>
-      <h1 className="mb-4 text-2xl font-bold">{t('menuPanel.title')}</h1>
-      <form onSubmit={save} className="mb-6 rounded-2xl bg-white p-5 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-2">
-          <input placeholder={t('menuPanel.name')} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="rounded border p-2" required />
-          <input placeholder={t('menuPanel.category')} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="rounded border p-2" required />
-          <input placeholder={t('menuPanel.price')} type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="rounded border p-2" required />
-          <input placeholder={t('menuPanel.imageUrl')} value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} className="rounded border p-2" />
+      <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('menuPanel.title')}</h1>
+
+      <form onSubmit={save} className="card-luxe mb-8 p-8">
+        <div className="grid gap-5 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.name')}</label>
+            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-luxe w-full" required />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.category')}</label>
+            <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="input-luxe w-full" required />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.price')}</label>
+            <input type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="input-luxe w-full" required />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.imageUrl')}</label>
+            <input value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} className="input-luxe w-full" />
+          </div>
         </div>
-        <textarea placeholder={t('menuPanel.description')} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-4 w-full rounded border p-2" />
-        <div className="mt-4">
-          <label className="block text-sm font-medium">{t('menuPanel.imageUrl')} (file)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files[0])}
-            className="mt-1 block w-full text-sm"
-          />
-          {imagePreview && (
-            <img src={imagePreview} alt="preview" className="mt-3 h-32 w-32 rounded object-cover" />
-          )}
+        <div className="mt-5">
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.description')}</label>
+          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-luxe w-full" />
         </div>
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-5 flex items-center gap-4">
+          <div className="flex-1">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Image file</label>
+            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} className="w-full text-sm" />
+          </div>
+          {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-2xl object-cover shadow-sm" />}
+        </div>
+        <div className="mt-5 flex items-center gap-2">
           <input id="available" type="checkbox" checked={form.available} onChange={e => setForm({ ...form, available: e.target.checked })} />
-          <label htmlFor="available" className="text-sm">{t('menuPanel.available')}</label>
+          <label htmlFor="available" className="text-sm text-gray-600">{t('menuPanel.available')}</label>
         </div>
-        <button className="mt-4 rounded-xl bg-amber-600 px-5 py-2 font-semibold text-white">{editingId ? t('menuPanel.updateItem') : t('menuPanel.addItem')}</button>
+        <button className="btn-primary mt-8">{editingId ? t('menuPanel.updateItem') : t('menuPanel.addItem')}</button>
       </form>
 
-      <div className="space-y-3">
+      <div className="grid gap-5 md:grid-cols-2">
         {items.map(item => (
-          <div key={item._id} className="flex items-center justify-between rounded-2xl bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="h-16 w-16 rounded object-cover" />}
-              <div>
-                <h3 className="font-semibold">{item.name} <span className="text-sm font-normal text-gray-500">({item.category})</span></h3>
-                <p className="text-sm text-gray-500">{item.description}</p>
-                <p className="text-sm font-medium">${item.price.toFixed(2)} &middot; {item.available ? t('active') : t('inactive')}</p>
+          <div key={item._id} className="card-luxe flex flex-col p-6 transition hover:shadow-luxe">
+            <div className="flex items-start gap-4">
+              {item.imageUrl ? (
+                <img src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
+              ) : (
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-hestia-linen text-2xl text-hestia-gold">✦</div>
+              )}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
+                <p className="text-xs uppercase tracking-wider text-gray-400">{item.category}</p>
+                <p className="mt-1 text-sm text-gray-600">{item.description}</p>
+                <p className="mt-2 font-serif text-lg text-hestia-gold">${item.price.toFixed(2)} <span className="text-sm text-gray-400">&middot; {item.available ? t('active') : t('inactive')}</span></p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => edit(item)} className="rounded bg-gray-100 px-3 py-1 text-sm hover:bg-gray-200">{t('update')}</button>
-              <button onClick={() => remove(item._id)} className="rounded bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100">{t('delete')}</button>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => edit(item)} className="rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm text-hestia-navy transition hover:bg-hestia-linen">{t('update')}</button>
+              <button onClick={() => remove(item._id)} className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600 transition hover:bg-red-100">{t('delete')}</button>
             </div>
           </div>
         ))}

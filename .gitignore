@@ -8,3 +8,7 @@ dist/
 .devin/config.local.json
 uploads/
 coverage/
+/*.jpg
+/*.jpeg
+/*.png
+/*.gif

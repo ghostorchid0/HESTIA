@@ -9,7 +9,7 @@ let orderId;
 
 beforeAll(async () => {
   await dbReadyPromise;
-});
+}, 60000);
 
 describe('Auth', () => {
   it('should login with default admin credentials', async () => {

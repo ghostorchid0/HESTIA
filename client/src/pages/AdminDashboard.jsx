@@ -78,7 +78,7 @@ function Layout({ children }) {
           </div>
           <div className="flex items-center gap-3">
             {isSuperadmin && hotels.length > 0 && (
-              <select value={activeHotel} onChange={e => changeHotel(e.target.value)} className="rounded-lg border border-white/10 bg-transparent px-3 py-1.5 text-sm text-white">
+              <select value={activeHotel} onChange={e => changeHotel(e.target.value)} className="rounded-lg border border-white/10 bg-hestia-navy px-3 py-1.5 text-sm text-white">
                 <option value="">{t('admin.selectHotel')}</option>
                 {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
               </select>

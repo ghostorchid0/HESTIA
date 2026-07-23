@@ -15,7 +15,45 @@ function offlineResponse() {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  if (event.request.url.includes('/api/')) {
+  const url = new URL(event.request.url);
+
+  // Désactiver le service worker en dev pour éviter les conflits avec Vite HMR
+  if (self.location.hostname === 'localhost') {
+    return;
+  }
+
+  // Ne jamais intercepter les assets du Vite dev server
+  if (
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/__vite') ||
+    url.pathname.includes('/node_modules/.vite') ||
+    url.search.includes('__vite') ||
+    url.search.includes('v=') ||
+    url.search.includes('t=') ||
+    url.search.includes('import')
+  ) {
+    return;
+  }
+
+  if (url.pathname.includes('/api/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(event.request).then((cached) => cached || offlineResponse())
+        )
+    );
+    return;
+  }
+
+  // Pour les pages HTML (navigation), network-first pour éviter un index.html obsolète
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

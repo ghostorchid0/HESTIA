@@ -7,9 +7,15 @@ import './i18n'
 import './index.css'
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch((err) => {
-    console.error('Service worker registration failed:', err)
-  })
+  if (import.meta.env.PROD) {
+    navigator.serviceWorker.register('/sw.js').catch((err) => {
+      console.error('Service worker registration failed:', err)
+    })
+  } else {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((reg) => reg.unregister())
+    })
+  }
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

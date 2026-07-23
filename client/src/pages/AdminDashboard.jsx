@@ -73,9 +73,6 @@ function Layout({ children }) {
       <header className="sticky top-0 z-30 border-b border-hestia-linen bg-hestia-navy px-6 py-4 shadow-soft">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            {settings?.hotelLogo ? (
-              <img src={settings.hotelLogo} alt="logo" className="h-10 w-10 rounded-full object-cover" />
-            ) : null}
             <span className="font-serif text-2xl text-white">{settings?.hotelName || 'Hestia'}</span>
             <span className="rounded border border-hestia-gold/30 px-2 py-0.5 text-xs uppercase tracking-wider text-hestia-gold">{role}</span>
           </div>

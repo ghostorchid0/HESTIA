@@ -20,7 +20,6 @@ export default function RoomPage() {
           updateSettings({
             hotelId: res.data.hotel._id,
             hotelName: res.data.hotel.name,
-            hotelLogo: res.data.hotel.logo,
             currency: res.data.hotel.currency,
             contactPhone: res.data.hotel.contactPhone,
             address: res.data.hotel.address,

@@ -19,7 +19,6 @@ router.get('/:uuid', publicLimiter, validateRoom, async (req, res) => {
       _id: hotel._id,
       name: hotel.name,
       slug: hotel.slug,
-      logo: hotel.logo,
       currency: hotel.currency,
       contactPhone: hotel.contactPhone,
       address: hotel.address,

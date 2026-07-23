@@ -6,7 +6,6 @@ const Settings = require('../models/Settings');
 const Hotel = require('../models/Hotel');
 const Room = require('../models/Room');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const upload = require('../middleware/upload');
 
 async function resolveHotelId(req) {
   if (req.query.roomUuid) {
@@ -39,7 +38,6 @@ router.get('/', async (req, res) => {
     return res.json({
       hotelId,
       hotelName: hotel?.name || 'Hestia',
-      hotelLogo: '',
       currency: hotel?.currency || 'XOF',
       contactPhone: hotel?.contactPhone || '',
       address: hotel?.address || '',
@@ -51,7 +49,6 @@ router.get('/', async (req, res) => {
 router.put('/',
   requireAuth,
   requireRole('admin'),
-  upload.single('logo'),
   body('hotelName').optional().trim().notEmpty().escape(),
   body('currency').optional().trim().escape(),
   body('contactPhone').optional().trim().escape(),
@@ -69,9 +66,6 @@ router.put('/',
     ['hotelName', 'currency', 'contactPhone', 'address'].forEach(field => {
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
-    if (req.file) {
-      updates.hotelLogo = `/uploads/${req.file.filename}`;
-    }
 
     const settings = await Settings.findOneAndUpdate(
       { hotelId },

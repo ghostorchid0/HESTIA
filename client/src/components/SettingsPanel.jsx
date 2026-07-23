@@ -7,8 +7,6 @@ export default function SettingsPanel() {
   const { t } = useTranslation()
   const { settings, refresh } = useSettings()
   const [form, setForm] = useState({ hotelName: '', currency: '$', contactPhone: '', address: '' })
-  const [file, setFile] = useState(null)
-  const [preview, setPreview] = useState('')
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -19,24 +17,16 @@ export default function SettingsPanel() {
         contactPhone: settings.contactPhone || '',
         address: settings.address || '',
       })
-      setPreview(settings.hotelLogo || '')
     }
   }, [settings])
 
   const save = async (e) => {
     e.preventDefault()
     setMessage('')
-    const data = new FormData()
-    Object.entries(form).forEach(([key, value]) => data.append(key, value))
-    if (file) data.append('logo', file)
-
-    await api.put('/settings', data)
-    setFile(null)
+    await api.put('/settings', form)
     await refresh()
     setMessage(t('settingsPanel.saved'))
   }
-
-  const imagePreview = file ? URL.createObjectURL(file) : preview || null
 
   return (
     <div>
@@ -60,13 +50,6 @@ export default function SettingsPanel() {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('settingsPanel.address')}</label>
             <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="input-luxe w-full" />
           </div>
-        </div>
-        <div className="mt-5 flex items-center gap-4">
-          <div className="flex-1">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('settingsPanel.logo')}</label>
-            <input type="file" accept="image/*" onChange={e => setFile(e.target.files[0])} className="w-full text-sm" />
-          </div>
-          {imagePreview && <img src={imagePreview} alt="logo preview" className="h-20 w-20 rounded-2xl object-cover shadow-sm" />}
         </div>
         {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
         <button className="btn-primary mt-8">{t('settingsPanel.save')}</button>

@@ -465,7 +465,7 @@ router.post('/hotels',
     res.status(201).json({ hotel, admin: admin ? { username: admin.username, role: admin.role, hotelId: admin.hotelId } : null });
   });
 
-router.get('/orders/export', requireRole('admin'), async (req, res) => {
+router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) => {
   const orders = await Order.find(hotelFilter(req)).sort({ createdAt: -1 });
 
   const workbook = new ExcelJS.Workbook();

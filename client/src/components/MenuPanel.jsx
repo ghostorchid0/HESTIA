@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
+import CategorySelect from './CategorySelect'
 
 const emptyItem = { name: '', description: '', price: '', category: '', available: true, imageUrl: '' }
 
@@ -20,6 +21,8 @@ export default function MenuPanel() {
     const res = await api.get('/admin/menu')
     setItems(res.data)
   }
+
+  const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))], [items])
 
   const buildFormData = () => {
     const data = new FormData()
@@ -72,8 +75,12 @@ export default function MenuPanel() {
             <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-luxe w-full" required />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.category')}</label>
-            <input value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="input-luxe w-full" required />
+            <CategorySelect
+              label={t('menuPanel.category')}
+              value={form.category}
+              onChange={category => setForm({ ...form, category })}
+              options={categories}
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.price')}</label>

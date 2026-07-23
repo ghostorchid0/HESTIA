@@ -1,9 +1,16 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const Room = require('../models/Room');
 const validateRoom = require('../middleware/validateRoom');
 
-router.get('/:uuid', validateRoom, async (req, res) => {
+const publicLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 60,
+  message: { message: 'Too many requests, please slow down.' },
+});
+
+router.get('/:uuid', publicLimiter, validateRoom, async (req, res) => {
   const hotel = req.room.hotelId || {};
   res.json({
     valid: true,

@@ -1,5 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Settings = require('../models/Settings');
 const Hotel = require('../models/Hotel');
@@ -12,9 +13,13 @@ async function resolveHotelId(req) {
     const room = await Room.findOne({ uuid: req.query.roomUuid, active: true });
     return room?.hotelId;
   }
-  if (req.query.hotelId) return req.query.hotelId;
+  if (req.query.hotelId) {
+    if (!mongoose.isValidObjectId(req.query.hotelId)) return null;
+    const hotel = await Hotel.findOne({ _id: req.query.hotelId, active: true });
+    return hotel?._id;
+  }
   if (req.query.hotelSlug) {
-    const hotel = await Hotel.findOne({ slug: req.query.hotelSlug });
+    const hotel = await Hotel.findOne({ slug: req.query.hotelSlug, active: true });
     return hotel?._id;
   }
   return null;
@@ -49,6 +54,9 @@ router.put('/',
   async (req, res) => {
     const isSuperadmin = req.user.role === 'superadmin';
     const headerHotel = req.headers['x-hotel-id'] || req.query.hotelId;
+    if (headerHotel && !mongoose.isValidObjectId(headerHotel)) {
+      return res.status(400).json({ message: 'Invalid hotel id' });
+    }
     const hotelId = isSuperadmin && headerHotel ? headerHotel : req.user.hotelId;
     if (!hotelId) return res.status(400).json({ message: 'Hotel ID required' });
 

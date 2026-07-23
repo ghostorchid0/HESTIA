@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
 import useSettings from '../hooks/useSettings'
+import { formatCurrency } from '../utils/format'
 
 export default function OrderStatusPage() {
   const { t } = useTranslation()
@@ -23,10 +24,14 @@ export default function OrderStatusPage() {
       .catch(() => setError(true))
 
     socket.emit('join_room_channel', uuid)
-    socket.on('order_status_updated', (updated) => {
+    const handler = (updated) => {
       if (updated._id === orderId) setOrder(updated)
-    })
-    return () => socket.off('order_status_updated')
+    }
+    socket.on('order_status_updated', handler)
+    return () => {
+      socket.off('order_status_updated', handler)
+      socket.emit('leave_room_channel', uuid)
+    }
   }, [uuid, orderId])
 
   const submitReview = async (e) => {
@@ -133,12 +138,12 @@ export default function OrderStatusPage() {
             {order.items.map((item, idx) => (
               <li key={idx} className="flex justify-between border-b border-hestia-linen pb-2 text-sm">
                 <span className="text-gray-700">{item.quantity}x {item.name}</span>
-                <span className="font-serif text-hestia-navy">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="font-serif text-hestia-navy">{formatCurrency(item.price * item.quantity, settings?.currency)}</span>
               </li>
             ))}
           </ul>
           <p className="mt-6 text-right font-serif text-2xl text-hestia-navy">
-            {t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span>
+            {t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span>
           </p>
         </div>
 

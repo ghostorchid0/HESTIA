@@ -25,7 +25,7 @@ describe('Auth', () => {
 
 describe('Public routes', () => {
   it('should return active menu items', async () => {
-    const res = await request(app).get('/api/menu').expect(200);
+    const res = await request(app).get('/api/menu?hotelSlug=default').expect(200);
     expect(res.body.length).toBeGreaterThan(0);
     menuItemId = res.body[0]._id;
   });

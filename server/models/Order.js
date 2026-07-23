@@ -5,7 +5,7 @@ const orderItemSchema = new mongoose.Schema({
   name: { type: String, required: true },
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
-  notes: String,
+  notes: { type: String, maxlength: 500 },
 }, { _id: false });
 
 const statusHistorySchema = new mongoose.Schema({
@@ -36,7 +36,10 @@ const orderSchema = new mongoose.Schema({
   },
   history: [statusHistorySchema],
   total: { type: Number, required: true, min: 0 },
-  notes: String,
+  notes: { type: String, maxlength: 1000 },
 }, { timestamps: true });
+
+orderSchema.index({ hotelId: 1, status: 1, createdAt: -1 });
+orderSchema.index({ roomUuid: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Order', orderSchema);

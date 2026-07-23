@@ -4,10 +4,13 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
+const jwt = require('jsonwebtoken');
 const config = require('./config');
+const Room = require('./models/Room');
 const menuRoutes = require('./routes/menu');
 const roomRoutes = require('./routes/room');
 const orderRoutes = require('./routes/orders');
@@ -24,6 +27,20 @@ const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: config.clientUrl } });
 
 app.set('io', io);
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      connectSrc: ["'self'", 'ws:', 'wss:', ...(config.clientUrl === '*' ? [] : [config.clientUrl])],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({ origin: config.clientUrl }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -100,12 +117,56 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
+io.use((socket, next) => {
+  socket.authenticated = false;
+  const token =
+    socket.handshake.auth?.token ||
+    socket.handshake.headers?.authorization?.split(' ')[1];
+  if (token) {
+    try {
+      socket.user = jwt.verify(token, config.jwtSecret);
+      socket.authenticated = true;
+    } catch (err) {
+      // invité sans token autorisé à se connecter
+    }
+  }
+  next();
+});
+
 io.on('connection', (socket) => {
-  socket.on('join_room_channel', (roomUuid) => {
+  socket.on('join_room_channel', async (roomUuid) => {
+    if (!roomUuid || typeof roomUuid !== 'string') return;
+    const room = await Room.findOne({ uuid: roomUuid, active: true }).lean();
+    if (!room) return;
+    if (
+      socket.authenticated &&
+      socket.user.role !== 'superadmin' &&
+      socket.user.hotelId &&
+      room.hotelId.toString() !== socket.user.hotelId
+    ) {
+      return;
+    }
     socket.join(`room_${roomUuid}`);
   });
+
   socket.on('join_kitchen', () => {
-    socket.join('kitchen');
+    if (
+      !socket.authenticated ||
+      !['admin', 'kitchen', 'superadmin'].includes(socket.user.role)
+    ) {
+      return;
+    }
+    const hotelId = socket.user.hotelId ? socket.user.hotelId.toString() : 'all';
+    socket.join(`kitchen_${hotelId}`);
+  });
+
+  socket.on('leave_room_channel', (roomUuid) => {
+    if (roomUuid && typeof roomUuid === 'string') socket.leave(`room_${roomUuid}`);
+  });
+
+  socket.on('leave_kitchen', () => {
+    const hotelId = socket.user?.hotelId ? socket.user.hotelId.toString() : 'all';
+    socket.leave(`kitchen_${hotelId}`);
   });
 });
 

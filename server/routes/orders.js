@@ -1,5 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const Order = require('../models/Order');
@@ -23,7 +24,8 @@ router.post(
   body('items.*.menuItemId').isString().notEmpty(),
   body('items.*.quantity').isInt({ min: 1 }),
   body('paymentMethod').optional().isIn(['Cash on delivery', 'Mobile Money', 'Room charge']),
-  body('notes').optional().isString().trim().escape(),
+  body('notes').optional().isString().trim().escape().isLength({ max: 1000 }),
+  body('items.*.notes').optional().isString().trim().escape().isLength({ max: 500 }),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -74,7 +76,7 @@ router.post(
     });
 
     const io = req.app.get('io');
-    io.to('kitchen').emit('new_order', order.toObject());
+    io.to(`kitchen_${order.hotelId}`).emit('new_order', order.toObject());
 
     try {
       const hotel = await Hotel.findById(room.hotelId);
@@ -92,6 +94,9 @@ router.post(
 router.get('/:id', async (req, res) => {
   const { roomUuid } = req.query;
   if (!roomUuid) return res.status(400).json({ message: 'roomUuid required' });
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
   const room = await Room.findOne({ uuid: roomUuid, active: true });
   if (!room) return res.status(404).json({ message: 'Invalid room' });
   const order = await Order.findOne({ _id: req.params.id, roomUuid });

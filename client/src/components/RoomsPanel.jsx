@@ -42,11 +42,21 @@ export default function RoomsPanel() {
     fetchRooms()
   }
 
+  const escapeHtml = (str) =>
+    String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
   const printQr = (room) => {
     const data = qrData[room._id]
     if (!data) return
+    const title = escapeHtml(`${t('room')} ${room.number} QR`)
+    const heading = escapeHtml(`${t('room')} ${room.number}`)
     const w = window.open('', '', 'width=400,height=500')
-    w.document.write(`<html><head><title>${t('room')} ${room.number} QR</title></head><body style="text-align:center;font-family:Georgia,serif"><h2 style="color:#0B1A2A">${t('room')} ${room.number}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px;color:#666">${data.url}</p></body></html>`)
+    w.document.write(`<html><head><title>${title}</title></head><body style="text-align:center;font-family:Georgia,serif"><h2 style="color:#0B1A2A">${heading}</h2><img src="${data.dataUrl}" /><p style="word-break:break-all;font-size:12px;color:#666">${escapeHtml(data.url)}</p></body></html>`)
     w.document.close()
     w.focus()
     w.print()

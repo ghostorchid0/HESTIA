@@ -1,5 +1,6 @@
 const express = require('express');
 const { body, param, validationResult, query } = require('express-validator');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
@@ -40,6 +41,9 @@ router.use(requireAuth);
 router.use((req, res, next) => {
   const isSuperadmin = req.user.role === 'superadmin';
   const headerHotel = req.headers['x-hotel-id'] || req.query.hotelId;
+  if (headerHotel && !mongoose.isValidObjectId(headerHotel)) {
+    return res.status(400).json({ message: 'Invalid hotel id' });
+  }
   if (isSuperadmin && headerHotel) {
     req.hotelId = headerHotel;
   } else {
@@ -52,13 +56,17 @@ function hotelFilter(req) {
   return req.hotelId ? { hotelId: req.hotelId } : {};
 }
 
-router.get('/orders', async (req, res) => {
-  const { status, limit = 100 } = req.query;
-  const filter = { ...hotelFilter(req) };
-  if (status) filter.status = status;
-  const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(parseInt(limit));
-  res.json(orders);
-});
+router.get('/orders',
+  query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
+  query('status').optional().isIn(['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { status, limit = 100 } = req.query;
+    const filter = { ...hotelFilter(req) };
+    if (status) filter.status = status;
+    const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(parseInt(limit));
+    res.json(orders);
+  });
 
 router.patch(
   '/orders/:id/status',
@@ -68,19 +76,17 @@ router.patch(
   async (req, res) => {
     if (!handleValidation(req, res)) return;
 
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, ...hotelFilter(req) },
-      {
-        status: req.body.status,
-        $push: { history: { status: req.body.status, changedBy: req.user.username || 'staff' } },
-      },
-      { new: true }
-    );
+    const order = await Order.findOne({ _id: req.params.id, ...hotelFilter(req) });
     if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.status === req.body.status) return res.json(order);
+
+    order.status = req.body.status;
+    order.history.push({ status: req.body.status, changedBy: req.user.username || 'staff' });
+    await order.save();
 
     const io = req.app.get('io');
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
-    io.to('kitchen').emit('order_status_updated', order.toObject());
+    io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
 
     notifyRoom(order.roomUuid, {
       title: 'Hestia',
@@ -108,15 +114,16 @@ router.patch(
   body('paymentStatus').isIn(['Pending', 'Paid']),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, ...hotelFilter(req) },
-      { paymentStatus: req.body.paymentStatus },
-      { new: true }
-    );
+    const order = await Order.findOne({ _id: req.params.id, ...hotelFilter(req) });
     if (!order) return res.status(404).json({ message: 'Order not found' });
+    if (order.paymentStatus === req.body.paymentStatus) return res.json(order);
+
+    order.paymentStatus = req.body.paymentStatus;
+    await order.save();
+
     const io = req.app.get('io');
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
-    io.to('kitchen').emit('order_status_updated', order.toObject());
+    io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
     res.json(order);
   }
 );
@@ -158,7 +165,22 @@ router.get('/rooms/:id/qr',
 
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     const fallbackBase = `${protocol}://${req.get('host')}`;
-    const baseUrl = req.query.baseUrl || (config.clientUrl === '*' ? fallbackBase : config.clientUrl) || fallbackBase;
+    let baseUrl;
+    if (config.clientUrl === '*') {
+      baseUrl = fallbackBase;
+    } else {
+      const allowed = new URL(config.clientUrl).origin;
+      if (req.query.baseUrl) {
+        try {
+          const provided = new URL(req.query.baseUrl).origin;
+          baseUrl = provided === allowed ? provided : allowed;
+        } catch {
+          baseUrl = allowed;
+        }
+      } else {
+        baseUrl = allowed;
+      }
+    }
     const url = `${baseUrl}/room/${room.uuid}`;
     const size = req.query.size || 200;
 
@@ -181,7 +203,7 @@ const menuValidation = [
   body('price').isFloat({ min: 0 }).toFloat(),
   body('category').trim().notEmpty().escape(),
   body('available').optional().isBoolean().toBoolean(),
-  body('imageUrl').optional().trim(),
+  body('imageUrl').optional().trim().isURL({ protocols: ['http','https'], require_protocol: true }),
 ];
 
 router.post('/menu', requireRole('admin'), upload.single('image'), menuValidation, async (req, res) => {
@@ -406,13 +428,13 @@ router.delete('/users/:id',
     res.json({ message: 'Deleted' });
   });
 
-router.get('/hotels', requireRole('admin'), async (req, res) => {
+router.get('/hotels', requireRole('superadmin'), async (req, res) => {
   const hotels = await Hotel.find().sort({ createdAt: -1 });
   res.json(hotels);
 });
 
 router.post('/hotels',
-  requireRole('admin'),
+  requireRole('superadmin'),
   body('name').trim().notEmpty().escape(),
   body('slug').trim().notEmpty().escape().matches(/^[a-z0-9-]+$/),
   body('currency').optional().trim().escape(),

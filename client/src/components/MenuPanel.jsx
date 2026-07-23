@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import useSettings from '../hooks/useSettings'
+import { formatCurrency } from '../utils/format'
 
 const emptyItem = { name: '', description: '', price: '', category: '', available: true, imageUrl: '' }
 
 export default function MenuPanel() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const [items, setItems] = useState([])
   const [form, setForm] = useState(emptyItem)
   const [file, setFile] = useState(null)
@@ -112,7 +115,7 @@ export default function MenuPanel() {
                 <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
                 <p className="text-xs uppercase tracking-wider text-gray-400">{item.category}</p>
                 <p className="mt-1 text-sm text-gray-600">{item.description}</p>
-                <p className="mt-2 font-serif text-lg text-hestia-gold">${item.price.toFixed(2)} <span className="text-sm text-gray-400">&middot; {item.available ? t('active') : t('inactive')}</span></p>
+                <p className="mt-2 font-serif text-lg text-hestia-gold">{formatCurrency(item.price, settings?.currency)} <span className="text-sm text-gray-400">&middot; {item.available ? t('active') : t('inactive')}</span></p>
               </div>
             </div>
             <div className="mt-4 flex gap-2">

@@ -1,5 +1,6 @@
 const express = require('express');
 const { body, param, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 const router = express.Router();
 const Review = require('../models/Review');
 const Order = require('../models/Order');
@@ -9,7 +10,7 @@ router.post('/',
   body('orderId').isMongoId(),
   body('roomUuid').isString().trim().notEmpty(),
   body('rating').isInt({ min: 1, max: 5 }).toInt(),
-  body('comment').optional().isString().trim().escape(),
+  body('comment').optional().isString().trim().escape().isLength({ max: 1000 }),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ message: 'Invalid input', errors: errors.array() });
@@ -35,7 +36,11 @@ router.post('/',
 
 router.get('/admin/reviews', requireAuth, requireRole('admin'), async (req, res) => {
   const filter = {};
-  const hotelId = req.headers['x-hotel-id'] || req.user.hotelId;
+  const headerHotel = req.headers['x-hotel-id'];
+  if (headerHotel && !mongoose.isValidObjectId(headerHotel)) {
+    return res.status(400).json({ message: 'Invalid hotel id' });
+  }
+  const hotelId = (req.user.role === 'superadmin' && headerHotel) ? headerHotel : req.user.hotelId;
   if (req.user.role !== 'superadmin' && hotelId) filter.hotelId = hotelId;
   const reviews = await Review.find(filter).sort({ createdAt: -1 }).limit(200);
   res.json(reviews);

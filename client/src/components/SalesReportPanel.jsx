@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import api from '../api'
+import useSettings from '../hooks/useSettings'
+import { formatCurrency } from '../utils/format'
 
 const PERIODS = ['day', 'week', 'month', 'year']
 const PIE_COLORS = ['#0B1A2A', '#C9A227', '#E3C65D', '#EAE6DD', '#2C2C2C', '#B45309', '#166534']
@@ -10,12 +12,9 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
-function formatCurrency(value) {
-  return `$${Number(value).toFixed(2)}`
-}
-
 export default function SalesReportPanel() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const [date, setDate] = useState(today())
   const [period, setPeriod] = useState('day')
   const [report, setReport] = useState(null)
@@ -38,17 +37,17 @@ export default function SalesReportPanel() {
       '================================================',
       '',
       `${t('salesReportPanel.totalOrders')}: ${report.totalOrders}`,
-      `${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue)}`,
-      `${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue)}`,
+      `${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue, settings?.currency)}`,
+      `${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue, settings?.currency)}`,
       '',
       t('salesReportPanel.topItems'),
-      report.topItems.map((it, i) => `${i + 1}. ${it.name} (${it.category || '-'}) — ${it.quantity}x — ${formatCurrency(it.revenue)}`).join('\n'),
+      report.topItems.map((it, i) => `${i + 1}. ${it.name} (${it.category || '-'}) — ${it.quantity}x — ${formatCurrency(it.revenue, settings?.currency)}`).join('\n'),
       '',
       t('salesReportPanel.salesByCategory'),
-      report.categorySales.map(c => `${c.category}: ${c.quantity}x — ${formatCurrency(c.revenue)}`).join('\n'),
+      report.categorySales.map(c => `${c.category}: ${c.quantity}x — ${formatCurrency(c.revenue, settings?.currency)}`).join('\n'),
       '',
       t('salesReportPanel.recentOrders'),
-      report.orders.map(o => `${o.roomNumber} — ${formatCurrency(o.total)} — ${new Date(o.createdAt).toLocaleString()}`).join('\n'),
+      report.orders.map(o => `${o.roomNumber} — ${formatCurrency(o.total, settings?.currency)} — ${new Date(o.createdAt).toLocaleString()}`).join('\n'),
     ]
     const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
     const url = window.URL.createObjectURL(blob)
@@ -124,8 +123,8 @@ export default function SalesReportPanel() {
         <>
           <div className="mb-8 grid gap-5 sm:grid-cols-3">
             <Stat label={t('salesReportPanel.totalOrders')} value={report.totalOrders} />
-            <Stat label={t('salesReportPanel.totalRevenue')} value={formatCurrency(report.totalRevenue)} />
-            <Stat label={t('salesReportPanel.averageOrder')} value={formatCurrency(report.averageOrderValue)} />
+            <Stat label={t('salesReportPanel.totalRevenue')} value={formatCurrency(report.totalRevenue, settings?.currency)} />
+            <Stat label={t('salesReportPanel.averageOrder')} value={formatCurrency(report.averageOrderValue, settings?.currency)} />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -137,7 +136,7 @@ export default function SalesReportPanel() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#EAE6DD" />
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#666' }} interval={0} angle={-15} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 11, fill: '#666' }} />
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatCurrency(v)} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatCurrency(v, settings?.currency)} />
                     <Bar dataKey="revenue" fill="#C9A227" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -157,7 +156,7 @@ export default function SalesReportPanel() {
                       <td className="py-2 font-medium text-hestia-navy">{it.name}</td>
                       <td className="py-2 text-gray-500">{it.category || '-'}</td>
                       <td className="py-2 text-right">{it.quantity}</td>
-                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(it.revenue)}</td>
+                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(it.revenue, settings?.currency)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -182,7 +181,7 @@ export default function SalesReportPanel() {
                         <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatCurrency(v)} />
+                    <Tooltip contentStyle={tooltipStyle} formatter={(v) => formatCurrency(v, settings?.currency)} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -199,7 +198,7 @@ export default function SalesReportPanel() {
                     <tr key={c.category} className="border-b border-hestia-linen last:border-0">
                       <td className="py-2 font-medium text-hestia-navy">{c.category}</td>
                       <td className="py-2 text-right">{c.quantity}</td>
-                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(c.revenue)}</td>
+                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(c.revenue, settings?.currency)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -224,7 +223,7 @@ export default function SalesReportPanel() {
                     <tr key={o._id} className="border-b border-hestia-linen last:border-0">
                       <td className="py-2 font-medium text-hestia-navy">{o.roomNumber}</td>
                       <td className="py-2 text-gray-600">{o.items.map(i => `${i.quantity}x ${i.name}`).join(', ')}</td>
-                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(o.total)}</td>
+                      <td className="py-2 text-right font-serif text-hestia-gold">{formatCurrency(o.total, settings?.currency)}</td>
                       <td className="py-2 text-right text-gray-500">{new Date(o.createdAt).toLocaleString()}</td>
                     </tr>
                   ))}

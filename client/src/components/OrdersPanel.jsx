@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
 import { playBeep } from '../utils/beep'
+import { formatCurrency } from '../utils/format'
+import useSettings from '../hooks/useSettings'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 const paymentMethodKeys = {
@@ -13,6 +15,7 @@ const paymentMethodKeys = {
 
 export default function OrdersPanel() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const [orders, setOrders] = useState([])
   const [filter, setFilter] = useState('')
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -157,7 +160,7 @@ export default function OrdersPanel() {
 
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
               <div>
-                <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${order.total.toFixed(2)}</span></span>
+                <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span></span>
                 <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
               </div>
               <div className="flex flex-wrap gap-2">

@@ -9,7 +9,7 @@ function getConfig() {
     required.push('MONGO_URI');
   }
   if (isProd) {
-    required.push('JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD');
+    required.push('JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'SUPERADMIN_USERNAME', 'SUPERADMIN_PASSWORD');
   }
 
   const missing = required.filter(key => !process.env[key]);
@@ -43,16 +43,25 @@ function getConfig() {
     throw new Error('CLIENT_URL must be set in production');
   }
 
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const superadminUsername = process.env.SUPERADMIN_USERNAME || 'superadmin';
+  const superadminPassword = process.env.SUPERADMIN_PASSWORD || 'superadmin123';
+
+  if (isProd && (adminPassword === 'admin123' || superadminPassword === 'superadmin123')) {
+    throw new Error('Default admin/superadmin passwords are not allowed in production');
+  }
+
   return {
     port: parseInt(process.env.PORT, 10) || 5000,
     mongoUri: process.env.MONGO_URI,
     useMemoryDb: process.env.USE_MEMORY_DB === 'true',
     jwtSecret,
     clientUrl,
-    adminUsername: process.env.ADMIN_USERNAME || 'admin',
-    adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
-    superadminUsername: process.env.SUPERADMIN_USERNAME || 'superadmin',
-    superadminPassword: process.env.SUPERADMIN_PASSWORD || 'superadmin123',
+    adminUsername,
+    adminPassword,
+    superadminUsername,
+    superadminPassword,
     vapidPublicKey,
     vapidPrivateKey,
     vapidSubject,

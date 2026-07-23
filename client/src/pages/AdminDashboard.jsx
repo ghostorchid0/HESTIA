@@ -122,6 +122,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     socket.emit('join_kitchen')
+    return () => {
+      socket.emit('leave_kitchen')
+    }
   }, [])
 
   return (

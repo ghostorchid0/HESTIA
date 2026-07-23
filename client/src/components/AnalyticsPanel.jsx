@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import useSettings from '../hooks/useSettings'
+import { formatCurrency } from '../utils/format'
 
 export default function AnalyticsPanel() {
   const { t } = useTranslation()
+  const { settings } = useSettings()
   const [data, setData] = useState(null)
 
   useEffect(() => {
@@ -26,7 +29,7 @@ export default function AnalyticsPanel() {
         </div>
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.revenue')}</p>
-          <p className="mt-2 font-serif text-4xl text-hestia-gold">${data.revenue.toFixed(2)}</p>
+          <p className="mt-2 font-serif text-4xl text-hestia-gold">{formatCurrency(data.revenue, settings?.currency)}</p>
         </div>
       </div>
 
@@ -36,7 +39,7 @@ export default function AnalyticsPanel() {
           <div key={order._id} className="card-luxe flex items-center justify-between p-4 text-sm transition hover:shadow-luxe">
             <span className="font-serif text-lg text-hestia-navy">{t('room')} {order.roomNumber}</span>
             <span className="rounded-full bg-hestia-cream px-3 py-1 text-xs font-medium text-hestia-navy">{t(`status.${order.status}`)}</span>
-            <span className="font-serif text-hestia-gold">${order.total.toFixed(2)}</span>
+            <span className="font-serif text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span>
           </div>
         ))}
       </div>

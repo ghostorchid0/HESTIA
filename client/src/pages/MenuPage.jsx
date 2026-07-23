@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
+import { formatCurrency } from '../utils/format'
 
 export default function MenuPage() {
   const { t } = useTranslation()
@@ -96,7 +97,7 @@ export default function MenuPage() {
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
                       <span className="font-serif text-lg text-hestia-gold">
-                        {item.price === 0 ? t('menuPage.free') : `$${item.price.toFixed(2)}`}
+                        {item.price === 0 ? t('menuPage.free') : formatCurrency(item.price, settings?.currency)}
                       </span>
                     </div>
                     <p className="mt-1 text-sm leading-relaxed text-gray-600">{item.description}</p>
@@ -158,7 +159,7 @@ export default function MenuPage() {
               </select>
             </div>
             <div className="mt-5 flex items-center justify-between">
-              <span className="font-serif text-2xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">${total.toFixed(2)}</span></span>
+              <span className="font-serif text-2xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(total, settings?.currency)}</span></span>
               <button
                 onClick={placeOrder}
                 disabled={placing}

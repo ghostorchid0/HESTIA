@@ -440,14 +440,29 @@ router.post('/hotels',
   body('currency').optional().trim().escape(),
   body('contactPhone').optional().trim().escape(),
   body('address').optional().trim().escape(),
+  body('adminUsername').optional().trim().notEmpty().escape(),
+  body('adminPassword').optional().trim().isLength({ min: 6 }),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const { name, slug, currency, contactPhone, address } = req.body;
+    const { name, slug, currency, contactPhone, address, adminUsername, adminPassword } = req.body;
     const existing = await Hotel.findOne({ slug: slug.toLowerCase() });
     if (existing) return res.status(409).json({ message: 'Slug already exists' });
+
     const hotel = await Hotel.create({ name, slug: slug.toLowerCase(), currency, contactPhone, address });
     await Settings.create({ hotelId: hotel._id, hotelName: name, currency: currency || 'XOF' });
-    res.status(201).json(hotel);
+
+    let admin = null;
+    if (adminUsername && adminPassword) {
+      const existingUser = await User.findOne({ username: adminUsername });
+      if (existingUser) {
+        await Hotel.findByIdAndDelete(hotel._id);
+        await Settings.findOneAndDelete({ hotelId: hotel._id });
+        return res.status(409).json({ message: 'Admin username already exists' });
+      }
+      admin = await User.create({ username: adminUsername, password: adminPassword, role: 'admin', hotelId: hotel._id });
+    }
+
+    res.status(201).json({ hotel, admin: admin ? { username: admin.username, role: admin.role, hotelId: admin.hotelId } : null });
   });
 
 router.get('/orders/export', requireRole('admin'), async (req, res) => {

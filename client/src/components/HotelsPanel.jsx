@@ -5,8 +5,9 @@ import api from '../api'
 export default function HotelsPanel() {
   const { t } = useTranslation()
   const [hotels, setHotels] = useState([])
-  const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '' })
+  const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
   const [message, setMessage] = useState('')
+  const [createdAdmin, setCreatedAdmin] = useState(null)
 
   const load = () => api.get('/admin/hotels').then(res => setHotels(res.data))
 
@@ -15,10 +16,14 @@ export default function HotelsPanel() {
   const create = async (e) => {
     e.preventDefault()
     setMessage('')
+    setCreatedAdmin(null)
     try {
-      await api.post('/admin/hotels', form)
-      setForm({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '' })
-      setMessage(t('hotelsPanel.saved'))
+      const adminPasswordPlain = form.adminPassword
+      const res = await api.post('/admin/hotels', form)
+      setForm({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
+      setHotels(prev => [res.data.hotel, ...prev])
+      if (res.data.admin) setCreatedAdmin({ ...res.data.admin, password: adminPasswordPlain })
+      else setMessage(t('hotelsPanel.saved'))
       load()
     } catch (err) {
       setMessage(err.response?.data?.message || t('hotelsPanel.error'))
@@ -50,8 +55,23 @@ export default function HotelsPanel() {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('hotelsPanel.address')}</label>
             <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="input-luxe w-full" />
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('hotelsPanel.adminUsername')}</label>
+            <input value={form.adminUsername} onChange={e => setForm({ ...form, adminUsername: e.target.value })} className="input-luxe w-full" minLength={3} />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('hotelsPanel.adminPassword')}</label>
+            <input type="password" value={form.adminPassword} onChange={e => setForm({ ...form, adminPassword: e.target.value })} className="input-luxe w-full" minLength={6} />
+          </div>
         </div>
         {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
+        {createdAdmin && (
+          <div className="mt-4 rounded-lg bg-green-50 p-4 text-sm text-green-700">
+            <p className="font-medium">{t('hotelsPanel.adminCreated')}</p>
+            <p>{t('hotelsPanel.username')}: {createdAdmin.username}</p>
+            <p>{t('hotelsPanel.password')}: {createdAdmin.password}</p>
+          </div>
+        )}
         <button className="btn-primary mt-8">{t('hotelsPanel.create')}</button>
       </form>
 

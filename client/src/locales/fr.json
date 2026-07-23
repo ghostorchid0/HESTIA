@@ -217,11 +217,16 @@
     "currency": "Devise",
     "contactPhone": "Téléphone de contact",
     "address": "Adresse",
+    "adminUsername": "Identifiant admin (optionnel)",
+    "adminPassword": "Mot de passe admin (optionnel)",
     "create": "Créer l'hôtel",
     "saved": "Hôtel créé",
     "error": "Erreur lors de la création",
     "active": "Actif",
-    "inactive": "Inactif"
+    "inactive": "Inactif",
+    "adminCreated": "Compte admin créé pour cet hôtel",
+    "username": "Identifiant",
+    "password": "Mot de passe"
   },
   "reviewsPanel": {
     "title": "Avis clients",

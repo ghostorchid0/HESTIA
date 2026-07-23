@@ -22,6 +22,11 @@ async function resolveHotelId(req) {
     const hotel = await Hotel.findOne({ slug: req.query.hotelSlug, active: true });
     return hotel?._id;
   }
+  const headerHotel = req.headers['x-hotel-id'];
+  if (headerHotel && mongoose.isValidObjectId(headerHotel)) {
+    const hotel = await Hotel.findOne({ _id: headerHotel, active: true });
+    return hotel?._id;
+  }
   return null;
 }
 

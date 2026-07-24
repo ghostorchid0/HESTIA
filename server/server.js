@@ -20,6 +20,7 @@ const pushRoutes = require('./routes/push');
 const settingsRoutes = require('./routes/settings');
 const reviewsRoutes = require('./routes/reviews');
 const demoRoutes = require('./routes/demo');
+const billingRoutes = require('./routes/billing');
 const seedData = require('./seed');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/demo', demoRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/billing', billingRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   const isServerDir = path.basename(__dirname) === 'server';
@@ -113,7 +115,10 @@ let dbReadyPromise = startDatabase().catch(err => {
 
 if (process.env.NODE_ENV !== 'test') {
   dbReadyPromise.then(() => {
-    server.listen(config.port, () => console.log(`Server running on port ${config.port}`));
+    server.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`);
+      require('./jobs/billingJobs').startBillingJobs();
+    });
   });
 }
 

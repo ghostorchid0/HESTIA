@@ -52,6 +52,9 @@ function getConfig() {
     throw new Error('Default admin/superadmin passwords are not allowed in production');
   }
 
+  const subscriptionPrice = parseInt(process.env.SUBSCRIPTION_PRICE_XOF, 10) || 30000;
+  const subscriptionCurrency = process.env.SUBSCRIPTION_CURRENCY || 'XOF';
+
   return {
     port: parseInt(process.env.PORT, 10) || 5000,
     mongoUri: process.env.MONGO_URI,
@@ -65,6 +68,23 @@ function getConfig() {
     vapidPublicKey,
     vapidPrivateKey,
     vapidSubject,
+    qosic: {
+      baseUrl: process.env.QOSIC_BASE_URL || 'https://api.qosic.com',
+      username: process.env.QOSIC_USERNAME || '',
+      password: process.env.QOSIC_PASSWORD || '',
+      clientId: process.env.QOSIC_CLIENT_ID || '',
+    },
+    billing: {
+      price: subscriptionPrice,
+      currency: subscriptionCurrency,
+    },
+    smtp: {
+      host: process.env.SMTP_HOST || '',
+      port: parseInt(process.env.SMTP_PORT, 10) || 587,
+      user: process.env.SMTP_USER || '',
+      pass: process.env.SMTP_PASS || '',
+      from: process.env.SMTP_FROM || 'noreply@hestia.local',
+    },
   };
 }
 

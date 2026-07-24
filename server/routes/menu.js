@@ -12,19 +12,26 @@ const publicLimiter = rateLimit({
   message: { message: 'Too many requests, please slow down.' },
 });
 
+function isSubscriptionActive(hotel) {
+  if (!hotel) return false;
+  const now = new Date();
+  return hotel.subscriptionStatus === 'active' ||
+    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now);
+}
+
 async function resolveHotelId(req) {
   if (req.query.roomUuid) {
-    const room = await Room.findOne({ uuid: req.query.roomUuid, active: true });
-    return room?.hotelId;
+    const room = await Room.findOne({ uuid: req.query.roomUuid, active: true }).populate('hotelId');
+    return isSubscriptionActive(room?.hotelId) ? room?.hotelId?._id : null;
   }
   if (req.query.hotelSlug) {
     const hotel = await Hotel.findOne({ slug: req.query.hotelSlug, active: true });
-    return hotel?._id;
+    return isSubscriptionActive(hotel) ? hotel?._id : null;
   }
   if (req.query.hotelId) {
     if (!mongoose.isValidObjectId(req.query.hotelId)) return null;
     const hotel = await Hotel.findOne({ _id: req.query.hotelId, active: true });
-    return hotel?._id;
+    return isSubscriptionActive(hotel) ? hotel?._id : null;
   }
   return null;
 }

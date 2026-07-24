@@ -26,6 +26,7 @@ router.post(
   body('paymentMethod').optional().isIn(['Cash on delivery', 'Mobile Money', 'Room charge']),
   body('notes').optional().isString().trim().escape().isLength({ max: 1000 }),
   body('items.*.notes').optional().isString().trim().escape().isLength({ max: 500 }),
+  validateRoom,
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -33,11 +34,7 @@ router.post(
     }
 
     const { roomUuid, items, notes, paymentMethod } = req.body;
-
-    const room = await Room.findOne({ uuid: roomUuid, active: true });
-    if (!room) {
-      return res.status(404).json({ message: 'Invalid or inactive room' });
-    }
+    const room = req.room;
 
     const menuIds = items.map(i => i.menuItemId);
     const menuItems = await MenuItem.find({ _id: { $in: menuIds }, hotelId: room.hotelId });

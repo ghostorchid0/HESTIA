@@ -52,6 +52,19 @@ router.use((req, res, next) => {
   next();
 });
 
+router.use(async (req, res, next) => {
+  if (req.user.role === 'superadmin') return next();
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (!req.hotelId) return next();
+  const hotel = await Hotel.findById(req.hotelId);
+  if (!hotel) return next();
+  const now = new Date();
+  const isActive = hotel.subscriptionStatus === 'active' ||
+    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now);
+  if (isActive) return next();
+  return res.status(403).json({ message: 'Subscription expired or cancelled. Please renew your plan.' });
+});
+
 function hotelFilter(req) {
   return req.hotelId ? { hotelId: req.hotelId } : {};
 }

@@ -15,6 +15,8 @@ const StaffPanel = lazy(() => import('../components/StaffPanel'))
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'))
 const HotelsPanel = lazy(() => import('../components/HotelsPanel'))
 const ReviewsPanel = lazy(() => import('../components/ReviewsPanel'))
+const BillingPanel = lazy(() => import('../components/BillingPanel'))
+const SubscriptionsPanel = lazy(() => import('../components/SubscriptionsPanel'))
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -101,7 +103,9 @@ function Layout({ children }) {
           {isAdmin && <NavItem to="/admin/staff" label={t('admin.staff')} />}
           {isAdmin && <NavItem to="/admin/settings" label={t('admin.settings')} />}
           {isAdmin && <NavItem to="/admin/reviews" label={t('admin.reviews')} />}
+          {isAdmin && <NavItem to="/admin/billing" label={t('admin.billing')} />}
           {isSuperadmin && <NavItem to="/admin/hotels" label={t('admin.hotels')} />}
+          {isSuperadmin && <NavItem to="/admin/subscriptions" label={t('admin.subscriptions')} />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>
@@ -159,6 +163,16 @@ export default function AdminDashboard() {
         <Route path="reviews" element={
           <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
             <ReviewsPanel />
+          </Suspense>
+        } />
+        <Route path="billing" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <BillingPanel />
+          </Suspense>
+        } />
+        <Route path="subscriptions" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <SubscriptionsPanel />
           </Suspense>
         } />
         <Route path="*" element={<OrdersPanel />} />

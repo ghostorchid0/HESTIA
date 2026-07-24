@@ -9,6 +9,15 @@ async function validateRoom(req, res, next) {
   if (!room) {
     return res.status(404).json({ message: 'Invalid or inactive room' });
   }
+
+  const hotel = room.hotelId;
+  const now = new Date();
+  const isActive = hotel && (hotel.subscriptionStatus === 'active' ||
+    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now));
+  if (!isActive) {
+    return res.status(403).json({ message: 'This hotel service is temporarily unavailable.' });
+  }
+
   req.room = room;
   next();
 }

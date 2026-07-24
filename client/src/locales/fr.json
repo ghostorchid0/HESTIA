@@ -249,6 +249,7 @@
     "price": "Prix",
     "paymentInfo": "Informations de paiement",
     "phone": "Numéro Mobile Money",
+    "email": "Email de facturation",
     "operator": "Opérateur",
     "selectOperator": "Sélectionner l'opérateur",
     "togocel": "Togocel",

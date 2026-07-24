@@ -34,6 +34,7 @@ export default function BillingPanel() {
   const [state, setState] = useState(null)
   const [payments, setPayments] = useState([])
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [operator, setOperator] = useState('')
   const [detected, setDetected] = useState('')
   const [loading, setLoading] = useState(false)
@@ -45,6 +46,7 @@ export default function BillingPanel() {
     const res = await api.get('/billing/state')
     setState(res.data)
     setPhone(res.data.billingPhone || '')
+    setEmail(res.data.billingEmail || '')
     setOperator(res.data.billingOperator || '')
   }
 
@@ -85,7 +87,7 @@ export default function BillingPanel() {
     setMessage('')
     setError('')
     try {
-      await api.put('/billing/info', { billingPhone: phone, billingOperator: operator || detected })
+      await api.put('/billing/info', { billingPhone: phone, billingEmail: email, billingOperator: operator || detected })
       setMessage(t('billing.infoSaved'))
     } catch (err) {
       setError(err.response?.data?.message || t('billing.error'))
@@ -149,6 +151,10 @@ export default function BillingPanel() {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.phone')}</label>
             <input value={phone} onChange={e => setPhone(e.target.value)} className="input-luxe w-full" placeholder="22890XXXXXX" />
             {detected && <p className="mt-1 text-xs text-hestia-gold">{t(`billing.${detected}`)}</p>}
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.email') || 'Email'}</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-luxe w-full" placeholder="facturation@hotel.tg" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.operator')}</label>

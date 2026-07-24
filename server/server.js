@@ -178,8 +178,12 @@ io.on('connection', (socket) => {
 function gracefulShutdown(signal) {
   console.log(`${signal} received. Shutting down gracefully...`);
   server.close(async () => {
-    await mongoose.connection.close(false);
-    if (memoryServer) await memoryServer.stop();
+    try {
+      await mongoose.connection.close(false);
+      if (memoryServer) await memoryServer.stop();
+    } catch (err) {
+      console.error('Graceful shutdown error:', err.message);
+    }
     process.exit(0);
   });
 }

@@ -74,6 +74,7 @@ router.post(
 
     const io = req.app.get('io');
     io.to(`kitchen_${order.hotelId}`).emit('new_order', order.toObject());
+    io.to('kitchen_all').emit('new_order', order.toObject());
 
     try {
       const hotel = await Hotel.findById(room.hotelId);

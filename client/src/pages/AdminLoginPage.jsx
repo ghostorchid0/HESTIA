@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import { socket } from '../socket'
 import useSettings from '../hooks/useSettings'
 
 export default function AdminLoginPage() {
@@ -19,6 +20,7 @@ export default function AdminLoginPage() {
       localStorage.setItem('hestia_role', res.data.role)
       if (res.data.hotelId) localStorage.setItem('hestia_hotel', res.data.hotelId)
       else localStorage.removeItem('hestia_hotel')
+      socket.disconnect().connect()
       navigate('/admin/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')

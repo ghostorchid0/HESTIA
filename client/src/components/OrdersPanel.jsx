@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
-import { playBeep } from '../utils/beep'
+import { playBeep, unlockAudio } from '../utils/beep'
 import { formatCurrency } from '../utils/format'
 import useSettings from '../hooks/useSettings'
 
@@ -48,6 +48,12 @@ export default function OrdersPanel() {
     a.click()
     window.URL.revokeObjectURL(url)
   }
+
+  useEffect(() => {
+    const handleUnlock = () => unlockAudio()
+    document.addEventListener('click', handleUnlock, { once: true })
+    return () => document.removeEventListener('click', handleUnlock)
+  }, [])
 
   useEffect(() => {
     fetchOrders()

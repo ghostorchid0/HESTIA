@@ -122,11 +122,15 @@ export default function AdminDashboard() {
   }, [token, navigate])
 
   useEffect(() => {
-    socket.emit('join_kitchen')
+    if (!token) return
+    const joinKitchen = () => socket.emit('join_kitchen')
+    socket.on('connect', joinKitchen)
+    socket.disconnect().connect()
     return () => {
+      socket.off('connect', joinKitchen)
       socket.emit('leave_kitchen')
     }
-  }, [])
+  }, [token])
 
   return (
     <Layout>

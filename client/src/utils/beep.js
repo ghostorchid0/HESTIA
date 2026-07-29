@@ -52,3 +52,11 @@ export function playBeep() {
   const audio = new Audio(url)
   audio.play().catch(() => {})
 }
+
+export function unlockAudio() {
+  const url = getBeepUrl()
+  if (!url) return
+  const audio = new Audio(url)
+  audio.volume = 0
+  audio.play().catch(() => {})
+}

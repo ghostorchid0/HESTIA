@@ -100,6 +100,7 @@ router.patch(
     const io = req.app.get('io');
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
     io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
+    io.to('kitchen_all').emit('order_status_updated', order.toObject());
 
     notifyRoom(order.roomUuid, {
       title: 'Hestia',
@@ -137,6 +138,7 @@ router.patch(
     const io = req.app.get('io');
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
     io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
+    io.to('kitchen_all').emit('order_status_updated', order.toObject());
     res.json(order);
   }
 );

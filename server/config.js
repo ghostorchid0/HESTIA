@@ -54,6 +54,9 @@ function getConfig() {
 
   const subscriptionPrice = parseInt(process.env.SUBSCRIPTION_PRICE_XOF, 10) || 30000;
   const subscriptionCurrency = process.env.SUBSCRIPTION_CURRENCY || 'XOF';
+  const feePercent = parseFloat(process.env.SUBSCRIPTION_FEE_PERCENT) || 15;
+  const chariowPriceOverride = parseInt(process.env.CHARIOW_PRICE_XOF, 10) || 0;
+  const chariowCustomerPrice = chariowPriceOverride || Math.round(subscriptionPrice / (1 - feePercent / 100));
 
   return {
     port: parseInt(process.env.PORT, 10) || 5000,
@@ -68,15 +71,16 @@ function getConfig() {
     vapidPublicKey,
     vapidPrivateKey,
     vapidSubject,
-    qosic: {
-      baseUrl: process.env.QOSIC_BASE_URL || 'https://api.qosic.com',
-      username: process.env.QOSIC_USERNAME || '',
-      password: process.env.QOSIC_PASSWORD || '',
-      clientId: process.env.QOSIC_CLIENT_ID || '',
+    chariow: {
+      apiKey: process.env.CHARIOW_API_KEY || '',
+      webhookSecret: process.env.CHARIOW_WEBHOOK_SECRET || '',
+      baseUrl: 'https://api.chariow.com/v1',
     },
     billing: {
       price: subscriptionPrice,
+      customerPrice: chariowCustomerPrice,
       currency: subscriptionCurrency,
+      feePercent,
     },
     smtp: {
       host: process.env.SMTP_HOST || '',

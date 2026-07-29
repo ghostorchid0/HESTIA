@@ -5,11 +5,14 @@ const paymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true },
   currency: { type: String, default: 'XOF' },
   status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
-  operator: { type: String, enum: ['togocel', 'moov'], required: true },
-  msisdn: { type: String, required: true },
-  transref: { type: String, required: true, unique: true },
+  provider: { type: String, enum: ['chariow', 'qosic', 'manual'], default: 'chariow' },
+  operator: { type: String, enum: ['togocel', 'moov', ''], default: '' },
+  msisdn: { type: String, default: '' },
+  transref: { type: String, default: '' },
+  chariowLicenseKey: { type: String, default: '' },
+  chariowResponse: { type: Object, default: null },
   qosicResponse: { type: Object, default: null },
-  type: { type: String, enum: ['trial_to_active', 'renewal', 'manual'], default: 'renewal' },
+  type: { type: String, enum: ['trial_to_active', 'renewal', 'manual', 'chariow_license'], default: 'renewal' },
   paidAt: { type: Date, default: null },
 }, { timestamps: true });
 

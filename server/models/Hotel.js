@@ -13,6 +13,7 @@ const hotelSchema = new mongoose.Schema({
   billingPhone: { type: String, default: '' },
   billingEmail: { type: String, default: '' },
   billingOperator: { type: String, enum: ['togocel', 'moov', ''], default: '' },
+  chariowLicenseKey: { type: String, default: '' },
   lastPaymentAt: { type: Date, default: null },
   lastInvoiceAt: { type: Date, default: null },
 }, { timestamps: true });

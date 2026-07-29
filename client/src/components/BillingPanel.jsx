@@ -2,27 +2,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 
-const togocelPrefixes = ['70', '71', '72', '73', '90', '91', '92', '93']
-const moovPrefixes = ['78', '79', '96', '97', '98', '99']
-
-function normalizeMsisdn(phone) {
-  if (!phone) return ''
-  let msisdn = phone.replace(/\D/g, '')
-  if (msisdn.startsWith('00')) msisdn = msisdn.slice(2)
-  if (msisdn.startsWith('0')) msisdn = '228' + msisdn.slice(1)
-  if (!msisdn.startsWith('228')) msisdn = '228' + msisdn
-  return msisdn
-}
-
-function detectOperator(phone) {
-  const msisdn = normalizeMsisdn(phone)
-  if (msisdn.length < 5) return ''
-  const prefix = msisdn.slice(3, 5)
-  if (togocelPrefixes.includes(prefix)) return 'togocel'
-  if (moovPrefixes.includes(prefix)) return 'moov'
-  return ''
-}
-
 function daysLeft(date) {
   if (!date) return 0
   const diff = new Date(date) - new Date()
@@ -33,21 +12,17 @@ export default function BillingPanel() {
   const { t } = useTranslation()
   const [state, setState] = useState(null)
   const [payments, setPayments] = useState([])
-  const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
-  const [operator, setOperator] = useState('')
-  const [detected, setDetected] = useState('')
+  const [licenseKey, setLicenseKey] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  const [pendingRef, setPendingRef] = useState(null)
 
   const fetchState = async () => {
     const res = await api.get('/billing/state')
     setState(res.data)
-    setPhone(res.data.billingPhone || '')
     setEmail(res.data.billingEmail || '')
-    setOperator(res.data.billingOperator || '')
+    setLicenseKey(res.data.chariowLicenseKey || '')
   }
 
   const fetchPayments = async () => {
@@ -60,48 +35,27 @@ export default function BillingPanel() {
     fetchPayments()
   }, [])
 
-  useEffect(() => {
-    setDetected(detectOperator(phone))
-  }, [phone])
-
-  useEffect(() => {
-    if (!pendingRef) return
-    const interval = setInterval(() => {
-      api.post('/billing/refresh', { transref: pendingRef }).then(res => {
-        if (res.data.status === 'success') {
-          setMessage(t('billing.paymentSuccess'))
-          setPendingRef(null)
-          fetchState()
-          fetchPayments()
-        } else if (res.data.status === 'failed') {
-          setError(t('billing.paymentFailed'))
-          setPendingRef(null)
-        }
-      }).catch(() => {})
-    }, 10000)
-    return () => clearInterval(interval)
-  }, [pendingRef, t])
-
   const saveBillingInfo = async (e) => {
     e.preventDefault()
     setMessage('')
     setError('')
     try {
-      await api.put('/billing/info', { billingPhone: phone, billingEmail: email, billingOperator: operator || detected })
+      await api.put('/billing/info', { billingEmail: email, chariowLicenseKey: licenseKey })
       setMessage(t('billing.infoSaved'))
     } catch (err) {
       setError(err.response?.data?.message || t('billing.error'))
     }
   }
 
-  const initiate = async () => {
+  const activate = async () => {
     setLoading(true)
     setMessage('')
     setError('')
     try {
-      const res = await api.post('/billing/initiate', { phone, operator: operator || detected, type: state.status === 'trial' ? 'trial_to_active' : 'renewal' })
-      setPendingRef(res.data.transref)
-      setMessage(t('billing.paymentInitiated'))
+      await api.post('/billing/activate', { licenseKey })
+      setMessage(t('billing.paymentSuccess'))
+      fetchState()
+      fetchPayments()
     } catch (err) {
       setError(err.response?.data?.message || t('billing.error'))
     } finally {
@@ -140,7 +94,10 @@ export default function BillingPanel() {
 
         <div className="mt-8 border-t border-hestia-linen pt-8">
           <p className="text-sm uppercase tracking-wider text-gray-500">{t('billing.price')}</p>
-          <p className="text-3xl font-serif text-hestia-gold">{state.price.toLocaleString()} <span className="text-base text-gray-500">{state.currency} / {t('billing.month')}</span></p>
+          <p className="text-3xl font-serif text-hestia-gold">{state.customerPrice.toLocaleString()} <span className="text-base text-gray-500">{state.currency} / {t('billing.month')}</span></p>
+          {state.feePercent > 0 && (
+            <p className="mt-1 text-xs text-gray-500">{t('billing.feeNote', { fee: state.feePercent, net: state.price.toLocaleString(), currency: state.currency })}</p>
+          )}
         </div>
       </div>
 
@@ -148,29 +105,20 @@ export default function BillingPanel() {
         <h2 className="mb-6 text-xl text-hestia-navy">{t('billing.paymentInfo')}</h2>
         <div className="grid gap-5 md:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.phone')}</label>
-            <input value={phone} onChange={e => setPhone(e.target.value)} className="input-luxe w-full" placeholder="22890XXXXXX" />
-            {detected && <p className="mt-1 text-xs text-hestia-gold">{t(`billing.${detected}`)}</p>}
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.email') || 'Email'}</label>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.email')}</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="input-luxe w-full" placeholder="facturation@hotel.tg" />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.operator')}</label>
-            <select value={operator || detected} onChange={e => setOperator(e.target.value)} className="input-luxe w-full">
-              <option value="">{t('billing.selectOperator')}</option>
-              <option value="togocel">{t('billing.togocel')}</option>
-              <option value="moov">{t('billing.moov')}</option>
-            </select>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('billing.licenseKey')}</label>
+            <input value={licenseKey} onChange={e => setLicenseKey(e.target.value)} className="input-luxe w-full" placeholder="ABC-123-XYZ-789" />
           </div>
         </div>
         {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
         {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
-        <div className="mt-6 flex gap-4">
+        <div className="mt-6 flex flex-wrap gap-4">
           <button type="submit" className="btn-primary">{t('billing.saveInfo')}</button>
-          <button type="button" onClick={initiate} disabled={loading || (!operator && !detected)} className="btn-primary bg-hestia-gold disabled:opacity-50">
-            {loading ? t('billing.processing') : t('billing.payNow')}
+          <button type="button" onClick={activate} disabled={loading || !licenseKey} className="btn-primary bg-hestia-gold disabled:opacity-50">
+            {loading ? t('billing.processing') : t('billing.activateLicense')}
           </button>
         </div>
       </form>
@@ -185,7 +133,7 @@ export default function BillingPanel() {
               <tr className="border-b border-hestia-linen text-left text-xs uppercase tracking-wider text-gray-400">
                 <th className="pb-3">{t('billing.date')}</th>
                 <th className="pb-3">{t('billing.amount')}</th>
-                <th className="pb-3">{t('billing.operator')}</th>
+                <th className="pb-3">{t('billing.licenseKey')}</th>
                 <th className="pb-3">{t('billing.status')}</th>
               </tr>
             </thead>
@@ -194,7 +142,7 @@ export default function BillingPanel() {
                 <tr key={p._id} className="border-b border-hestia-linen last:border-0">
                   <td className="py-3">{new Date(p.createdAt).toLocaleString()}</td>
                   <td className="py-3">{p.amount.toLocaleString()} {p.currency}</td>
-                  <td className="py-3 uppercase">{p.operator}</td>
+                  <td className="py-3 font-mono text-xs">{p.chariowLicenseKey || '-'}</td>
                   <td className="py-3">
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${p.status === 'success' ? 'bg-green-100 text-green-700' : p.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
                       {t(`billing.${p.status}`)}

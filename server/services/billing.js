@@ -1,6 +1,6 @@
 const Hotel = require('../models/Hotel');
 const Payment = require('../models/Payment');
-const { requestPayment, getTransactionStatus, normalizeMsisdn, detectOperator } = require('./qosic');
+const chariow = require('./chariow');
 const { notifySubscriptionEvent } = require('./notify');
 const config = require('../config');
 
@@ -20,79 +20,83 @@ async function getHotelSubscription(hotelId) {
     billingPhone: hotel.billingPhone,
     billingEmail: hotel.billingEmail,
     billingOperator: hotel.billingOperator,
+    chariowLicenseKey: hotel.chariowLicenseKey,
     price: config.billing.price,
+    customerPrice: config.billing.customerPrice,
+    feePercent: config.billing.feePercent,
     currency: config.billing.currency,
   };
 }
 
-async function initiatePayment(hotelId, phone, type = 'renewal', providedOperator = '') {
+async function activateWithLicense(hotelId, licenseKey) {
   const hotel = await Hotel.findById(hotelId);
   if (!hotel) throw new Error('Hotel not found');
+  if (!licenseKey) throw new Error('License key required');
 
-  const msisdn = normalizeMsisdn(phone || hotel.billingPhone);
-  if (!msisdn) throw new Error('Phone number required');
+  const validation = await chariow.validateLicense(licenseKey);
+  if (!validation.valid) {
+    throw new Error(validation.isExpired ? 'License expired' : 'License is not active');
+  }
 
-  const operator = providedOperator || detectOperator(msisdn) || hotel.billingOperator;
-  if (!operator) throw new Error('Operator could not be detected. Please select Togocel or Moov.');
+  const expiry = validation.expiresAt ? new Date(validation.expiresAt) : new Date(Date.now() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000);
 
-  const transref = generateTransref(hotel._id);
-  const payment = await Payment.create({
+  hotel.subscriptionStatus = 'active';
+  hotel.subscriptionExpiresAt = expiry;
+  hotel.lastPaymentAt = new Date();
+  hotel.chariowLicenseKey = validation.key;
+  await hotel.save();
+
+  await Payment.create({
     hotelId,
     amount: config.billing.price,
     currency: config.billing.currency,
-    status: 'pending',
-    operator,
-    msisdn,
-    transref,
-    type,
+    status: 'success',
+    provider: 'chariow',
+    chariowLicenseKey: validation.key,
+    chariowResponse: validation.raw,
+    type: 'chariow_license',
+    paidAt: new Date(),
   });
-
-  const qosicRes = await requestPayment(msisdn, config.billing.price, transref, operator);
-  payment.qosicResponse = qosicRes;
-  await payment.save();
-
-  return payment;
-}
-
-async function syncPaymentStatus(transref) {
-  const payment = await Payment.findOne({ transref });
-  if (!payment) throw new Error('Payment not found');
-  if (payment.status === 'success') return payment;
-
-  const qosicRes = await getTransactionStatus(transref);
-  payment.qosicResponse = qosicRes;
-
-  if (qosicRes.responsecode === '00') {
-    payment.status = 'success';
-    payment.paidAt = new Date();
-    await payment.save();
-    await activateSubscription(payment.hotelId, payment);
-  } else if (qosicRes.responsecode && qosicRes.responsecode !== '01') {
-    payment.status = 'failed';
-    await payment.save();
-  }
-
-  return payment;
-}
-
-async function activateSubscription(hotelId, payment) {
-  const hotel = await Hotel.findById(hotelId);
-  if (!hotel) return;
-
-  const now = new Date();
-  const expiry = new Date(now.getTime() + SUBSCRIPTION_DAYS * 24 * 60 * 60 * 1000);
-  hotel.subscriptionStatus = 'active';
-  hotel.subscriptionExpiresAt = expiry;
-  hotel.lastPaymentAt = now;
-  if (payment && payment.msisdn) hotel.billingPhone = payment.msisdn;
-  if (payment && payment.operator) hotel.billingOperator = payment.operator;
-  await hotel.save();
 
   await notifySubscriptionEvent(
     hotel,
     'Votre abonnement Hestia est actif',
-    `Bonjour ${hotel.name}, votre paiement de ${payment ? payment.amount : config.billing.price} ${config.billing.currency} a été reçu. Votre abonnement est actif jusqu'au ${expiry.toLocaleDateString('fr-FR')}.`
+    `Bonjour ${hotel.name}, votre licence Chariow est activée. Votre abonnement est valable jusqu'au ${expiry.toLocaleDateString('fr-FR')}.`
   );
+
+  return { hotel, validation };
+}
+
+async function applyLicenseFromWebhook(licenseKey, chariowPayload) {
+  const hotel = await Hotel.findOne({ chariowLicenseKey: licenseKey });
+  if (!hotel) throw new Error('Hotel not found for this license key');
+
+  const status = chariowPayload?.license?.status || chariowPayload?.status;
+  const expiresAt = chariowPayload?.license?.expires_at || chariowPayload?.expires_at;
+  const isActive = status === 'active';
+  const isExpired = status === 'expired';
+
+  if (isActive && expiresAt) {
+    hotel.subscriptionStatus = 'active';
+    hotel.subscriptionExpiresAt = new Date(expiresAt);
+    hotel.lastPaymentAt = new Date();
+    await hotel.save();
+    await Payment.create({
+      hotelId: hotel._id,
+      amount: config.billing.price,
+      currency: config.billing.currency,
+      status: 'success',
+      provider: 'chariow',
+      chariowLicenseKey: licenseKey,
+      chariowResponse: chariowPayload,
+      type: 'chariow_license',
+      paidAt: new Date(),
+    });
+  } else if (isExpired) {
+    await setPastDue(hotel._id);
+  }
+
+  return hotel;
 }
 
 async function manualActivation(hotelId, days = SUBSCRIPTION_DAYS) {
@@ -111,8 +115,7 @@ async function manualActivation(hotelId, days = SUBSCRIPTION_DAYS) {
     amount: 0,
     currency: config.billing.currency,
     status: 'success',
-    operator: hotel.billingOperator || 'togocel',
-    msisdn: hotel.billingPhone || '',
+    provider: 'manual',
     transref: `manual-${Date.now()}`,
     type: 'manual',
     paidAt: now,
@@ -140,8 +143,8 @@ async function setPastDue(hotelId) {
 
   await notifySubscriptionEvent(
     hotel,
-    'Votre abonnement Hestia est en attente de paiement',
-    `Bonjour ${hotel.name}, votre abonnement est en attente de paiement. Veuillez régler ${config.billing.price} ${config.billing.currency} pour continuer à utiliser Hestia.`
+    'Votre abonnement Hestia est en attente de renouvellement',
+    `Bonjour ${hotel.name}, votre abonnement est en attente. Achetez une nouvelle licence sur Chariow pour continuer à utiliser Hestia.`
   );
   return hotel;
 }
@@ -156,7 +159,7 @@ async function cancelSubscription(hotelId) {
   await notifySubscriptionEvent(
     hotel,
     'Votre abonnement Hestia a été suspendu',
-    `Bonjour ${hotel.name}, votre accès Hestia est désormais en lecture seule suite à l'absence de paiement. Contactez le support pour réactiver.`
+    `Bonjour ${hotel.name}, votre accès Hestia est désormais en lecture seule. Achetez une nouvelle licence pour réactiver.`
   );
   return hotel;
 }
@@ -167,14 +170,11 @@ async function getPayments(hotelId) {
 
 module.exports = {
   getHotelSubscription,
-  initiatePayment,
-  syncPaymentStatus,
-  activateSubscription,
+  activateWithLicense,
+  applyLicenseFromWebhook,
   manualActivation,
   extendTrial,
   setPastDue,
   cancelSubscription,
   getPayments,
-  normalizeMsisdn,
-  detectOperator,
 };

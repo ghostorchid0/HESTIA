@@ -263,7 +263,7 @@
     "paymentInitiated": "Payment initiated. Please confirm on your phone.",
     "paymentSuccess": "License activated",
     "paymentFailed": "Invalid license",
-    "feeNote": "Customer price (excl. {{fee}}% Chariow fee): you receive approx. {{net}} {{currency}}",
+    "buyOnChariow": "Buy on Chariow",
     "error": "An error occurred",
     "history": "Payment history",
     "noPayments": "No payments",

@@ -25,6 +25,7 @@ async function getHotelSubscription(hotelId) {
     customerPrice: config.billing.customerPrice,
     feePercent: config.billing.feePercent,
     currency: config.billing.currency,
+    storeUrl: config.billing.storeUrl,
   };
 }
 

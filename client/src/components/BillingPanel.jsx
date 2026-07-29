@@ -95,8 +95,10 @@ export default function BillingPanel() {
         <div className="mt-8 border-t border-hestia-linen pt-8">
           <p className="text-sm uppercase tracking-wider text-gray-500">{t('billing.price')}</p>
           <p className="text-3xl font-serif text-hestia-gold">{state.customerPrice.toLocaleString()} <span className="text-base text-gray-500">{state.currency} / {t('billing.month')}</span></p>
-          {state.feePercent > 0 && (
-            <p className="mt-1 text-xs text-gray-500">{t('billing.feeNote', { fee: state.feePercent, net: state.price.toLocaleString(), currency: state.currency })}</p>
+          {state.storeUrl && (
+            <a href={state.storeUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block rounded-full bg-hestia-gold px-6 py-2 text-sm font-semibold text-hestia-navy hover:bg-hestia-gold/90">
+              {t('billing.buyOnChariow')}
+            </a>
           )}
         </div>
       </div>

@@ -24,6 +24,7 @@ const billingRoutes = require('./routes/billing');
 const seedData = require('./seed');
 
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: config.clientUrl } });
 
@@ -139,6 +140,13 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
+  const role = socket.user?.role || 'guest';
+  const hotelId = socket.user?.hotelId || 'none';
+  console.log(`[socket] connected ${socket.id} role=${role} hotel=${hotelId}`);
+
+  socket.on('error', (err) => console.error('[socket] error', socket.id, err.message));
+  socket.on('disconnect', (reason) => console.log(`[socket] disconnect ${socket.id} ${reason}`));
+
   socket.on('join_room_channel', async (roomUuid) => {
     if (!roomUuid || typeof roomUuid !== 'string') return;
     const room = await Room.findOne({ uuid: roomUuid, active: true }).lean();
@@ -159,10 +167,13 @@ io.on('connection', (socket) => {
       !socket.authenticated ||
       !['admin', 'kitchen', 'superadmin'].includes(socket.user.role)
     ) {
+      console.log('[socket] join_kitchen rejected', socket.id, 'auth=', socket.authenticated, 'role=', socket.user?.role);
       return;
     }
     const hotelId = socket.user.hotelId ? socket.user.hotelId.toString() : 'all';
     socket.join(`kitchen_${hotelId}`);
+    socket.join('kitchen_all');
+    console.log(`[socket] join_kitchen ${socket.id} hotel=${hotelId}`);
   });
 
   socket.on('leave_room_channel', (roomUuid) => {

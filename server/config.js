@@ -36,9 +36,11 @@ function getConfig() {
       console.log('VAPID_PUBLIC_KEY=', vapidPublicKey);
     }
   }
-  const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@hestia.local';
+  const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:neotrixafric@gmail.com';
 
-  const renderExternalUrl = process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '';
+  const renderHostname = process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '';
+  const renderUrl = process.env.RENDER_EXTERNAL_URL || '';
+  const renderExternalUrl = renderUrl || renderHostname;
   const clientUrl = process.env.CLIENT_URL || renderExternalUrl || (isProd ? null : '*');
   if (isProd && !clientUrl) {
     throw new Error('CLIENT_URL must be set in production');

@@ -13,6 +13,7 @@ export default function MenuPage() {
   const [items, setItems] = useState([])
   const [categories, setCategories] = useState([])
   const [cart, setCart] = useState([])
+  const [cartOpen, setCartOpen] = useState(false)
   const [notes, setNotes] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('Cash on delivery')
   const [loading, setLoading] = useState(true)
@@ -72,8 +73,83 @@ export default function MenuPage() {
     )
   }
 
+  const cartCount = cart.reduce((sum, i) => sum + i.quantity, 0)
+
+  const renderCartContent = (showClose) => (
+    <div className="mx-auto max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-light text-hestia-navy sm:text-xl">{t('menuPage.yourOrder')}</h3>
+        {showClose && (
+          <button
+            onClick={() => setCartOpen(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-3xl text-gray-500 transition hover:bg-hestia-cream hover:text-hestia-navy"
+            aria-label={t('close')}
+          >
+            ×
+          </button>
+        )}
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {cart.map(item => (
+          <div key={item.menuItemId} className="flex flex-col gap-2 rounded-2xl bg-hestia-cream p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+              <span className="font-medium text-hestia-navy">{item.name}</span>
+              <input
+                value={item.notes}
+                onChange={(e) => updateNotes(item.menuItemId, e.target.value)}
+                placeholder={t('menuPage.notesPlaceholder')}
+                className="input-luxe mt-1 w-full"
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 sm:ml-4 sm:justify-start">
+              <div className="flex items-center gap-2">
+                <button onClick={() => updateQuantity(item.menuItemId, -1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-hestia-navy transition hover:bg-hestia-linen">−</button>
+                <span className="w-4 text-center">{item.quantity}</span>
+                <button onClick={() => updateQuantity(item.menuItemId, 1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-hestia-navy transition hover:bg-hestia-linen">+</button>
+              </div>
+              <button onClick={() => removeFromCart(item.menuItemId)} className="text-red-500">×</button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <textarea
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        placeholder={t('menuPage.additionalRequest')}
+        className="input-luxe mt-4 w-full"
+        rows="2"
+      />
+
+      <div className="mt-4">
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPage.paymentMethod')}</label>
+        <select
+          value={paymentMethod}
+          onChange={(e) => setPaymentMethod(e.target.value)}
+          className="input-luxe w-full"
+        >
+          <option value="Cash on delivery">{t('paymentMethods.cashOnDelivery')}</option>
+          <option value="Mobile Money">{t('paymentMethods.mobileMoney')}</option>
+          <option value="Room charge">{t('paymentMethods.roomCharge')}</option>
+        </select>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{t('total')} <span className="text-hestia-gold">{formatCurrency(total, settings?.currency)}</span></span>
+        <button
+          onClick={placeOrder}
+          disabled={placing}
+          className="btn-primary w-full sm:w-auto disabled:opacity-50"
+        >
+          {placing ? t('menuPage.placing') : t('menuPage.placeOrder')}
+        </button>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-hestia-cream pb-72 sm:pb-80">
+    <div className="min-h-screen bg-hestia-cream pb-24 sm:pb-80">
       <header className="sticky top-0 z-20 border-b border-hestia-linen bg-white/80 px-4 py-4 backdrop-blur-md sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
@@ -116,63 +192,37 @@ export default function MenuPage() {
       </main>
 
       {cart.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 max-h-[70vh] overflow-y-auto rounded-t-4xl bg-white p-4 shadow-luxe sm:p-6">
-          <div className="mx-auto max-w-2xl">
-            <h3 className="text-lg font-light text-hestia-navy sm:text-xl">{t('menuPage.yourOrder')}</h3>
-            <div className="mt-4 space-y-3">
-              {cart.map(item => (
-                <div key={item.menuItemId} className="flex flex-col gap-2 rounded-2xl bg-hestia-cream p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1">
-                    <span className="font-medium text-hestia-navy">{item.name}</span>
-                    <input
-                      value={item.notes}
-                      onChange={(e) => updateNotes(item.menuItemId, e.target.value)}
-                      placeholder={t('menuPage.notesPlaceholder')}
-                      className="input-luxe mt-1 w-full"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-3 sm:ml-4 sm:justify-start">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => updateQuantity(item.menuItemId, -1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-hestia-navy transition hover:bg-hestia-linen">−</button>
-                      <span className="w-4 text-center">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.menuItemId, 1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-hestia-navy transition hover:bg-hestia-linen">+</button>
-                    </div>
-                    <button onClick={() => removeFromCart(item.menuItemId)} className="text-red-500">×</button>
-                  </div>
-                </div>
-              ))}
+        <>
+          {/* Mobile floating cart button */}
+          {!cartOpen && (
+            <button
+              onClick={() => setCartOpen(true)}
+              className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-hestia-navy text-white shadow-luxe transition hover:bg-hestia-navy-light sm:hidden"
+              aria-label={t('menuPage.yourOrder')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5V6a3.375 3.375 0 0 1 6.75 0v4.5" />
+              </svg>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-hestia-gold text-xs font-bold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Mobile full-screen cart drawer */}
+          {cartOpen && (
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-white p-4 sm:hidden">
+              {renderCartContent(true)}
             </div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('menuPage.additionalRequest')}
-              className="input-luxe mt-4 w-full"
-              rows="2"
-            />
-            <div className="mt-4">
-              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPage.paymentMethod')}</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="input-luxe w-full"
-              >
-                <option value="Cash on delivery">{t('paymentMethods.cashOnDelivery')}</option>
-                <option value="Mobile Money">{t('paymentMethods.mobileMoney')}</option>
-                <option value="Room charge">{t('paymentMethods.roomCharge')}</option>
-              </select>
-            </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{t('total')} <span className="text-hestia-gold">{formatCurrency(total, settings?.currency)}</span></span>
-              <button
-                onClick={placeOrder}
-                disabled={placing}
-                className="btn-primary w-full sm:w-auto disabled:opacity-50"
-              >
-                {placing ? t('menuPage.placing') : t('menuPage.placeOrder')}
-              </button>
-            </div>
+          )}
+
+          {/* Desktop bottom cart sheet */}
+          <div className="fixed inset-x-0 bottom-0 z-30 hidden max-h-[70vh] overflow-y-auto rounded-t-4xl bg-white p-6 shadow-luxe sm:block">
+            {renderCartContent(false)}
           </div>
-        </div>
+        </>
       )}
     </div>
   )

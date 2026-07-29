@@ -3,6 +3,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { socket } from '../socket'
 import api from '../api'
+import { unlockAudio } from '../utils/beep'
 import useSettings from '../hooks/useSettings'
 import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
@@ -131,6 +132,18 @@ export default function AdminDashboard() {
       socket.emit('leave_kitchen')
     }
   }, [token])
+
+  useEffect(() => {
+    const unlock = () => unlockAudio()
+    document.addEventListener('click', unlock, { once: true })
+    document.addEventListener('touchstart', unlock, { once: true })
+    document.addEventListener('keydown', unlock, { once: true })
+    return () => {
+      document.removeEventListener('click', unlock)
+      document.removeEventListener('touchstart', unlock)
+      document.removeEventListener('keydown', unlock)
+    }
+  }, [])
 
   return (
     <Layout>

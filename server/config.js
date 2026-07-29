@@ -57,7 +57,7 @@ function getConfig() {
   const feePercent = parseFloat(process.env.SUBSCRIPTION_FEE_PERCENT) || 15;
   const chariowPriceOverride = parseInt(process.env.CHARIOW_PRICE_XOF, 10) || 35500;
   const chariowCustomerPrice = chariowPriceOverride;
-  const chariowStoreUrl = process.env.CHARIOW_STORE_URL || '';
+  const chariowStoreUrl = process.env.CHARIOW_STORE_URL || 'https://dkqhkbvr.mychariow.online';
 
   return {
     port: parseInt(process.env.PORT, 10) || 5000,

@@ -1,62 +1,68 @@
-function writeString(view, offset, string) {
-  for (let i = 0; i < string.length; i++) {
-    view.setUint8(offset + i, string.charCodeAt(i))
+let audioCtx = null
+
+function getAudioContext() {
+  if (!audioCtx && typeof window !== 'undefined') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)()
   }
-}
-
-function createBeepUrl() {
-  const sampleRate = 44100
-  const duration = 0.15
-  const numSamples = Math.floor(sampleRate * duration)
-  const buffer = new ArrayBuffer(44 + numSamples * 2)
-  const view = new DataView(buffer)
-
-  writeString(view, 0, 'RIFF')
-  view.setUint32(4, 36 + numSamples * 2, true)
-  writeString(view, 8, 'WAVE')
-  writeString(view, 12, 'fmt ')
-  view.setUint32(16, 16, true)
-  view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * 2, true)
-  view.setUint16(32, 2, true)
-  view.setUint16(34, 16, true)
-  writeString(view, 36, 'data')
-  view.setUint32(40, numSamples * 2, true)
-
-  const frequency = 880
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate
-    const sample = Math.sin(2 * Math.PI * frequency * t) * 0.5
-    const pcm = Math.max(-1, Math.min(1, sample)) * 0x7fff
-    view.setInt16(44 + i * 2, pcm, true)
-  }
-
-  const blob = new Blob([buffer], { type: 'audio/wav' })
-  return URL.createObjectURL(blob)
-}
-
-let beepUrl = null
-
-export function getBeepUrl() {
-  if (!beepUrl && typeof window !== 'undefined') {
-    beepUrl = createBeepUrl()
-  }
-  return beepUrl
-}
-
-export function playBeep() {
-  const url = getBeepUrl()
-  if (!url) return
-  const audio = new Audio(url)
-  audio.play().catch(() => {})
+  return audioCtx
 }
 
 export function unlockAudio() {
-  const url = getBeepUrl()
-  if (!url) return
-  const audio = new Audio(url)
-  audio.volume = 0
-  audio.play().catch(() => {})
+  const ctx = getAudioContext()
+  if (ctx && ctx.state === 'suspended') {
+    ctx.resume().catch(() => {})
+  }
+}
+
+export function playBeep() {
+  const ctx = getAudioContext()
+  if (!ctx) return
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {})
+  }
+
+  const now = ctx.currentTime
+  const duration = 1.6
+
+  // Luxury bell chord: A5, E6, A6 with soft harmonics
+  const frequencies = [880, 1320, 1760]
+  const gains = [0.25, 0.12, 0.08]
+
+  const master = ctx.createGain()
+  master.connect(ctx.destination)
+  master.gain.setValueAtTime(0, now)
+  master.gain.linearRampToValueAtTime(0.4, now + 0.01)
+  master.gain.exponentialRampToValueAtTime(0.001, now + duration)
+
+  frequencies.forEach((freq, i) => {
+    const osc = ctx.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(freq, now)
+
+    const partial = ctx.createGain()
+    partial.gain.setValueAtTime(0, now)
+    partial.gain.linearRampToValueAtTime(gains[i], now + 0.02)
+    partial.gain.exponentialRampToValueAtTime(0.001, now + duration * (0.7 + i * 0.1))
+
+    osc.connect(partial)
+    partial.connect(master)
+
+    osc.start(now)
+    osc.stop(now + duration + 0.1)
+  })
+
+  // A little high shimmer for the "ting"
+  const shimmer = ctx.createOscillator()
+  shimmer.type = 'sine'
+  shimmer.frequency.setValueAtTime(3520, now)
+
+  const shimmerGain = ctx.createGain()
+  shimmerGain.gain.setValueAtTime(0, now)
+  shimmerGain.gain.linearRampToValueAtTime(0.05, now + 0.005)
+  shimmerGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6)
+
+  shimmer.connect(shimmerGain)
+  shimmerGain.connect(master)
+  shimmer.start(now)
+  shimmer.stop(now + 0.7)
 }

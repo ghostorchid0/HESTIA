@@ -8,6 +8,7 @@ RUN npm run build
 
 # Production server image
 FROM node:20-slim
+ENV NODE_ENV=production
 WORKDIR /app
 COPY server/package*.json ./
 RUN npm ci

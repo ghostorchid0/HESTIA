@@ -38,7 +38,8 @@ function getConfig() {
   }
   const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:admin@hestia.local';
 
-  const clientUrl = process.env.CLIENT_URL || (isProd ? null : '*');
+  const renderExternalUrl = process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME}` : '';
+  const clientUrl = process.env.CLIENT_URL || renderExternalUrl || (isProd ? null : '*');
   if (isProd && !clientUrl) {
     throw new Error('CLIENT_URL must be set in production');
   }

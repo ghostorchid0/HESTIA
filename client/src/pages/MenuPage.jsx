@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 export default function MenuPage() {
   const { t } = useTranslation()
@@ -164,11 +165,11 @@ export default function MenuPage() {
             <div className="space-y-4">
               {items.filter(i => i.category === cat).map(item => (
                 <div key={item._id} className="card-luxe flex flex-col gap-4 p-4 transition hover:shadow-luxe sm:flex-row sm:items-center sm:gap-5 sm:p-5">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} className="mx-auto h-20 w-20 rounded-2xl object-cover shadow-sm sm:mx-0" />
-                  ) : (
-                    <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-hestia-linen text-2xl text-hestia-gold sm:mx-0">✦</div>
-                  )}
+                  <ImageWithFallback
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="mx-auto h-20 w-20 rounded-2xl object-cover shadow-sm sm:mx-0"
+                  />
                   <div className="flex-1 text-center sm:text-left">
                     <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                       <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>

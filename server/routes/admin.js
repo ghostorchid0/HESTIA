@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
+const fsp = require('fs/promises');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
@@ -25,6 +26,16 @@ function pickMenuFields(source) {
     if (source[key] !== undefined) picked[key] = source[key];
   }
   return picked;
+}
+
+async function fileToDataUrl(file) {
+  const buffer = await fsp.readFile(file.path);
+  try {
+    await fsp.unlink(file.path);
+  } catch (err) {
+    console.error('Failed to delete uploaded file:', err.message);
+  }
+  return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
 }
 
 function handleValidation(req, res) {
@@ -218,12 +229,17 @@ const menuValidation = [
   body('price').isFloat({ min: 0 }).toFloat(),
   body('category').trim().notEmpty().escape(),
   body('available').optional().isBoolean().toBoolean(),
-  body('imageUrl').optional().trim().isURL({ protocols: ['http','https'], require_protocol: true }),
+  body('imageUrl').optional().trim().custom((value) => {
+    if (!value) return true;
+    if (value.startsWith('data:image/')) return true;
+    if (value.startsWith('https://')) return true;
+    throw new Error('imageUrl must be an HTTPS or data URL');
+  }),
 ];
 
 router.post('/menu', requireRole('admin'), upload.single('image'), menuValidation, async (req, res) => {
   if (!handleValidation(req, res)) return;
-  if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
+  if (req.file) req.body.imageUrl = await fileToDataUrl(req.file);
   const item = await MenuItem.create({ ...pickMenuFields(req.body), hotelId: req.hotelId });
   res.status(201).json(item);
 });
@@ -235,7 +251,7 @@ router.put('/menu/:id',
   menuValidation,
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    if (req.file) req.body.imageUrl = `/uploads/${req.file.filename}`;
+    if (req.file) req.body.imageUrl = await fileToDataUrl(req.file);
     const item = await MenuItem.findOneAndUpdate({ _id: req.params.id, ...hotelFilter(req) }, pickMenuFields(req.body), { new: true });
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);

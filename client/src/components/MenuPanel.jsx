@@ -4,6 +4,7 @@ import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
 import CategorySelect from './CategorySelect'
+import ImageWithFallback from './ImageWithFallback'
 
 const emptyItem = { name: '', description: '', price: '', category: '', available: true, imageUrl: '' }
 
@@ -31,7 +32,7 @@ export default function MenuPanel() {
     data.append('price', form.price)
     data.append('category', form.category)
     data.append('available', form.available ? 'true' : 'false')
-    if (form.imageUrl && !file) data.append('imageUrl', form.imageUrl)
+    if (form.imageUrl && !file && !form.imageUrl.startsWith('data:image/')) data.append('imageUrl', form.imageUrl)
     if (file) data.append('image', file)
     return data
   }
@@ -100,7 +101,7 @@ export default function MenuPanel() {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Image file</label>
             <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} className="w-full text-sm" />
           </div>
-          {imagePreview && <img src={imagePreview} alt="preview" className="h-20 w-20 rounded-2xl object-cover shadow-sm" />}
+          {imagePreview && <ImageWithFallback src={imagePreview} alt="preview" className="h-20 w-20 rounded-2xl object-cover shadow-sm" />}
         </div>
         <div className="mt-5 flex items-center gap-2">
           <input id="available" type="checkbox" checked={form.available} onChange={e => setForm({ ...form, available: e.target.checked })} />
@@ -113,11 +114,7 @@ export default function MenuPanel() {
         {items.map(item => (
           <div key={item._id} className="card-luxe flex flex-col p-6 transition hover:shadow-luxe">
             <div className="flex items-start gap-4">
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
-              ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-hestia-linen text-2xl text-hestia-gold">✦</div>
-              )}
+              <ImageWithFallback src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
                 <p className="text-xs uppercase tracking-wider text-gray-400">{item.category}</p>

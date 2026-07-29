@@ -44,24 +44,33 @@ async function seedData() {
       console.log('Seeded menu items');
     }
 
-    if ((await User.countDocuments()) === 0) {
-      await User.create({
+    let admin = await User.findOne({ username: config.adminUsername });
+    if (!admin) {
+      admin = await User.create({
         hotelId: defaultHotel._id,
         username: config.adminUsername,
         password: config.adminPassword,
         role: 'admin',
       });
       console.log('Seeded admin user');
+    } else if (config.adminPassword !== 'admin123') {
+      admin.password = config.adminPassword;
+      await admin.save();
+      console.log('Updated admin password');
     }
 
     let superadmin = await User.findOne({ username: config.superadminUsername });
     if (!superadmin) {
-      await User.create({
+      superadmin = await User.create({
         username: config.superadminUsername,
         password: config.superadminPassword,
         role: 'superadmin',
       });
       console.log('Seeded superadmin user');
+    } else if (config.superadminPassword !== 'superadmin123') {
+      superadmin.password = config.superadminPassword;
+      await superadmin.save();
+      console.log('Updated superadmin password');
     }
 
     if ((await Settings.countDocuments()) === 0) {

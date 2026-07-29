@@ -35,24 +35,24 @@ export default function DemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-hestia-cream p-6 pt-12">
+    <div className="min-h-screen bg-hestia-cream p-4 pt-10 sm:p-6 sm:pt-12">
       <div className="mx-auto max-w-3xl text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{t('demoPage.tagline')}</p>
-        <h1 className="mt-4 text-4xl font-light text-hestia-navy">{demo.hotel.name}</h1>
-        <p className="mx-auto mt-4 max-w-xl text-gray-600">{t('demoPage.instructions')}</p>
+        <h1 className="mt-4 text-3xl font-light text-hestia-navy sm:text-4xl">{demo.hotel.name}</h1>
+        <p className="mx-auto mt-4 max-w-xl text-sm text-gray-600 sm:text-base">{t('demoPage.instructions')}</p>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-4xl gap-6 md:grid-cols-2">
+      <div className="mx-auto mt-10 grid max-w-4xl gap-4 sm:mt-12 sm:gap-6 md:grid-cols-2">
         {demo.rooms.map(room => (
-          <div key={room.uuid} className="card-luxe p-8 text-center">
-            <p className="font-serif text-3xl text-hestia-navy">{t('room')} {room.number}</p>
+          <div key={room.uuid} className="card-luxe p-6 text-center sm:p-8">
+            <p className="font-serif text-2xl text-hestia-navy sm:text-3xl">{t('room')} {room.number}</p>
             <p className="mt-2 text-sm text-gray-400">{t('demoPage.scanOrClick')}</p>
-            <Link to={`/room/${room.uuid}`} className="btn-primary mt-6 inline-block">{t('demoPage.openRoom')}</Link>
+            <Link to={`/room/${room.uuid}`} className="btn-primary mt-4 inline-block sm:mt-6">{t('demoPage.openRoom')}</Link>
           </div>
         ))}
       </div>
 
-      <div className="mt-16 text-center">
+      <div className="mt-12 text-center sm:mt-16">
         <Link to="/admin/login" className="btn-outline">{t('demoPage.tryStaff')}</Link>
       </div>
     </div>

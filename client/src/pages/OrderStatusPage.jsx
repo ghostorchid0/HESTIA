@@ -100,21 +100,21 @@ export default function OrderStatusPage() {
   const currentStep = statusSteps.indexOf(order.status)
 
   return (
-    <div className="min-h-screen bg-hestia-cream p-6 pt-12">
+    <div className="min-h-screen bg-hestia-cream p-4 pt-10 sm:p-6 sm:pt-12">
       <div className="mx-auto max-w-xl">
         <div className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
           <p className="mt-1 text-sm text-gray-500">{t('room')} {order.roomNumber}</p>
-          <h1 className="mt-2 text-4xl font-light text-hestia-navy">{t('orderStatus.title')}</h1>
+          <h1 className="mt-2 text-3xl font-light text-hestia-navy sm:text-4xl">{t('orderStatus.title')}</h1>
         </div>
 
-        <div className="card-luxe mt-10 p-8">
+        <div className="card-luxe mt-8 p-6 sm:mt-10 sm:p-8">
           <div className="relative mt-4">
-            <div className="absolute left-6 top-4 bottom-4 w-px bg-hestia-linen" />
+            <div className="absolute left-5 top-3 bottom-3 w-px bg-hestia-linen sm:left-6 sm:top-4 sm:bottom-4" />
             {statusSteps.map((step, idx) => (
-              <div key={step} className="relative mb-8 flex items-center">
+              <div key={step} className="relative mb-6 flex items-center sm:mb-8">
                 <div
-                  className={`z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 text-sm font-serif font-medium transition ${
+                  className={`z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-serif font-medium transition sm:h-12 sm:w-12 sm:text-sm ${
                     idx <= currentStep
                       ? 'border-hestia-gold bg-hestia-gold text-white'
                       : 'border-hestia-linen bg-white text-gray-400'
@@ -122,8 +122,8 @@ export default function OrderStatusPage() {
                 >
                   {idx + 1}
                 </div>
-                <div className="ml-5">
-                  <p className={`font-serif text-lg ${idx <= currentStep ? 'text-hestia-navy' : 'text-gray-400'}`}>
+                <div className="ml-4 sm:ml-5">
+                  <p className={`font-serif text-base sm:text-lg ${idx <= currentStep ? 'text-hestia-navy' : 'text-gray-400'}`}>
                     {t(`status.${step}`)}
                   </p>
                 </div>
@@ -132,8 +132,8 @@ export default function OrderStatusPage() {
           </div>
         </div>
 
-        <div className="card-luxe mt-6 p-8">
-          <h2 className="text-xl font-light text-hestia-navy">{t('orderStatus.items')}</h2>
+        <div className="card-luxe mt-6 p-6 sm:p-8">
+          <h2 className="text-lg font-light text-hestia-navy sm:text-xl">{t('orderStatus.items')}</h2>
           <ul className="mt-4 space-y-3">
             {order.items.map((item, idx) => (
               <li key={idx} className="flex justify-between border-b border-hestia-linen pb-2 text-sm">
@@ -142,7 +142,7 @@ export default function OrderStatusPage() {
               </li>
             ))}
           </ul>
-          <p className="mt-6 text-right font-serif text-2xl text-hestia-navy">
+          <p className="mt-6 text-right font-serif text-xl text-hestia-navy sm:text-2xl">
             {t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span>
           </p>
         </div>
@@ -152,13 +152,13 @@ export default function OrderStatusPage() {
             onClick={subscribePush}
             className="btn-outline mt-6 w-full"
           >
-            Notify me of updates
+            {t('orderStatus.notifyMe')}
           </button>
         )}
 
         {order.status === 'Delivered' && !reviewSent && (
-          <form onSubmit={submitReview} className="card-luxe mt-6 p-8">
-            <h2 className="text-xl font-light text-hestia-navy">{t('orderStatus.rateOrder')}</h2>
+          <form onSubmit={submitReview} className="card-luxe mt-6 p-6 sm:p-8">
+            <h2 className="text-lg font-light text-hestia-navy sm:text-xl">{t('orderStatus.rateOrder')}</h2>
             <div className="mt-4 flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map(star => (
                 <button key={star} type="button" onClick={() => setReview({ ...review, rating: star })} className={`text-2xl ${star <= review.rating ? 'text-hestia-gold' : 'text-gray-300'}`}>

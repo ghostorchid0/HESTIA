@@ -2,14 +2,14 @@ services:
   - type: web
     name: hestia
     runtime: docker
-    plan: starter
+    plan: free
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 5000
       - key: CLIENT_URL
-        value: https://your-service.onrender.com
+        sync: false
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
@@ -36,3 +36,33 @@ services:
         sync: false
       - key: SMS_SENDER
         value: Hestia
+      - key: TWILIO_SID
+        sync: false
+      - key: TWILIO_TOKEN
+        sync: false
+      - key: TWILIO_FROM
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        value: noreply@hestia.local
+      - key: CHARIOW_API_KEY
+        sync: false
+      - key: CHARIOW_WEBHOOK_SECRET
+        sync: false
+      - key: CHARIOW_STORE_URL
+        value: https://dkqhkbvr.mychariow.online
+      - key: SUBSCRIPTION_PRICE_XOF
+        value: 30000
+      - key: SUBSCRIPTION_CURRENCY
+        value: XOF
+      - key: SUBSCRIPTION_FEE_PERCENT
+        value: 15
+      - key: CHARIOW_PRICE_XOF
+        value: 35500

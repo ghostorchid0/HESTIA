@@ -95,6 +95,13 @@ function getConfig() {
       pass: process.env.SMTP_PASS || '',
       from: process.env.SMTP_FROM || 'noreply@hestia.local',
     },
+    smtpFallback: {
+      host: process.env.SMTP_FALLBACK_HOST || '',
+      port: parseInt(process.env.SMTP_FALLBACK_PORT, 10) || 587,
+      user: process.env.SMTP_FALLBACK_USER || '',
+      pass: process.env.SMTP_FALLBACK_PASS || '',
+      from: process.env.SMTP_FALLBACK_FROM || process.env.SMTP_FROM || 'noreply@hestia.local',
+    },
   };
 }
 

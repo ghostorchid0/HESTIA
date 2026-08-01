@@ -207,7 +207,10 @@
     "introText": "This report summarizes all paid orders for the selected period.",
     "topItemsNote": "Top selling items by revenue.",
     "categoryNote": "Revenue breakdown by category.",
-    "ordersNote": "Most recent paid orders."
+    "ordersNote": "Most recent paid orders.",
+    "email": "Email",
+    "emailSent": "Report sent by email",
+    "emailFailed": "Failed to send report"
   },
   "reportsPanel": {
     "title": "Rush Reports",

@@ -207,7 +207,10 @@
     "introText": "Ce rapport synthétise toutes les commandes payées sur la période sélectionnée.",
     "topItemsNote": "Articles les plus vendus par revenu.",
     "categoryNote": "Répartition du chiffre d'affaires par catégorie.",
-    "ordersNote": "Commandes payées les plus récentes."
+    "ordersNote": "Commandes payées les plus récentes.",
+    "email": "Email",
+    "emailSent": "Rapport envoyé par email",
+    "emailFailed": "Échec de l'envoi du rapport"
   },
   "reportsPanel": {
     "title": "Rapports d'affluence",

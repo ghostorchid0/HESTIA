@@ -14,6 +14,9 @@ const { hasFeature, featureTiers } = require('../middleware/hasFeature');
 const upload = require('../middleware/upload');
 const { notifyRoom } = require('../services/push');
 const { sendSms } = require('../services/sms');
+const { sendEmail } = require('../services/email');
+const { getSalesReport } = require('../services/salesReport');
+const { buildSalesReportPdf } = require('../services/salesReportPdf');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
@@ -494,6 +497,45 @@ router.get('/analytics/sales',
       orders,
     });
   });
+
+router.post('/reports/email',
+  requireRole('admin'),
+  body('date').isISO8601().toDate(),
+  body('period').isIn(['day', 'week', 'month', 'year']),
+  body('to').optional().trim().isEmail(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+
+    const { date, period, to } = req.body;
+    const hotel = await Hotel.findById(req.hotelId);
+    if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
+
+    const recipient = to || hotel.billingEmail;
+    if (!recipient) {
+      return res.status(400).json({ message: 'No recipient email configured. Set billingEmail on the hotel or pass to in the body.' });
+    }
+
+    const report = await getSalesReport(req.hotelId, date, period);
+    if (!report) return res.status(400).json({ message: 'Invalid date or period' });
+
+    report.currency = hotel.currency;
+    const pdfBuffer = await buildSalesReportPdf(report, hotel.name);
+
+    const dateStr = new Date(date).toISOString().split('T')[0];
+    const start = new Date(report.start).toLocaleDateString();
+    const end = new Date(report.end).toLocaleDateString();
+    const periodLabel = start === end ? start : `${start} - ${end}`;
+
+    await sendEmail(
+      recipient,
+      `Hestia - Sales Report ${periodLabel}`,
+      `Please find attached the sales report for ${periodLabel}. Generated on ${new Date().toLocaleString()}.`,
+      [{ filename: `hestia-sales-report-${dateStr}-${period}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
+    );
+
+    res.json({ sent: true, to: recipient });
+  }
+);
 
 router.get('/users', requireRole('admin'), async (req, res) => {
   const filter = req.user.role === 'superadmin' ? {} : hotelFilter(req);

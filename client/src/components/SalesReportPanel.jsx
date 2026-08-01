@@ -20,6 +20,8 @@ export default function SalesReportPanel() {
   const [date, setDate] = useState(today())
   const [period, setPeriod] = useState('day')
   const [report, setReport] = useState(null)
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailStatus, setEmailStatus] = useState(null)
 
   const fetchReport = useCallback(() => {
     api.get(`/admin/analytics/sales?date=${date}&period=${period}`).then(res => setReport(res.data))
@@ -256,6 +258,20 @@ export default function SalesReportPanel() {
     doc.save(`hestia-sales-report-${date}-${period}.pdf`)
   }
 
+  const emailReport = async () => {
+    if (!report) return
+    setEmailLoading(true)
+    setEmailStatus(null)
+    try {
+      await api.post('/admin/reports/email', { date, period })
+      setEmailStatus({ type: 'success', message: t('salesReportPanel.emailSent') })
+    } catch (err) {
+      setEmailStatus({ type: 'error', message: err.response?.data?.message || t('salesReportPanel.emailFailed') })
+    } finally {
+      setEmailLoading(false)
+    }
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -292,8 +308,16 @@ export default function SalesReportPanel() {
           <button onClick={downloadPDF} className="btn-outline">
             PDF
           </button>
+          <button onClick={emailReport} disabled={emailLoading} className="btn-outline">
+            {emailLoading ? '...' : t('salesReportPanel.email')}
+          </button>
         </div>
       </div>
+      {emailStatus && (
+        <div className={`mb-4 rounded-xl p-3 text-sm ${emailStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {emailStatus.message}
+        </div>
+      )}
 
       {report.totalOrders === 0 ? (
         <div className="card-luxe p-10 text-center">

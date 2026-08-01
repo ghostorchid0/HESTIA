@@ -76,7 +76,7 @@ function Layout({ children }) {
 
   return (
     <div className="min-h-screen bg-hestia-cream">
-      <header className="sticky top-0 z-30 border-b border-hestia-linen bg-hestia-navy px-6 py-4 shadow-soft">
+      <header className="print:hidden sticky top-0 z-30 border-b border-hestia-linen bg-hestia-navy px-6 py-4 shadow-soft">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="font-serif text-2xl text-white">{settings?.hotelName || 'Hestia'}</span>
@@ -102,7 +102,7 @@ function Layout({ children }) {
         </div>
       </header>
       <div className="mx-auto max-w-6xl p-6 md:flex md:gap-8">
-        <nav className="mb-6 flex flex-wrap gap-2 md:w-56 md:flex-col">
+        <nav className="print:hidden mb-6 flex flex-wrap gap-2 md:w-56 md:flex-col">
           {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} />}
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}

@@ -56,6 +56,9 @@ describe('Orders', () => {
       .expect(201);
     expect(res.body.status).toBe('Received');
     expect(res.body.total).toBeGreaterThan(0);
+    expect(res.body.items.length).toBe(1);
+    expect(res.body.items[0].quantity).toBe(2);
+    expect(res.body.items[0].name).toBeDefined();
     expect(res.body.history.length).toBe(1);
     orderId = res.body._id;
   });

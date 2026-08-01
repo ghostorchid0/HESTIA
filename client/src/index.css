@@ -29,3 +29,23 @@
     @apply rounded-xl border-hestia-linen bg-white px-4 py-3 text-sm outline-none transition focus:border-hestia-gold focus:ring-1 focus:ring-hestia-gold;
   }
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .card-luxe {
+    break-inside: avoid;
+    box-shadow: none !important;
+    background: white !important;
+    border-color: #e5e5e5 !important;
+  }
+  .recharts-wrapper,
+  .recharts-wrapper svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}

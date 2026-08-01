@@ -101,7 +101,7 @@ function Layout({ children }) {
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-6xl p-6 md:flex md:gap-8">
+      <div className="mx-auto max-w-6xl p-6 print:max-w-none print:p-0 md:flex md:gap-8">
         <nav className="print:hidden mb-6 flex flex-wrap gap-2 md:w-56 md:flex-col">
           {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} />}
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}

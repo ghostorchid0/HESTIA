@@ -193,7 +193,7 @@ export default function SalesReportPanel() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card-luxe p-6 transition hover:shadow-luxe">
               <h2 className="mb-4 text-xl font-light text-hestia-navy">{t('salesReportPanel.topItems')}</h2>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full print:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={report.topItems.slice(0, 8)} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#EAE6DD" />
@@ -228,7 +228,7 @@ export default function SalesReportPanel() {
 
             <div className="card-luxe p-6 transition hover:shadow-luxe">
               <h2 className="mb-4 text-xl font-light text-hestia-navy">{t('salesReportPanel.salesByCategory')}</h2>
-              <div className="h-64 w-full">
+              <div className="h-64 w-full print:h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import PlanOverview from './PlanOverview'
+import BrandingPanel from './BrandingPanel'
 
 export default function SettingsPanel() {
   const { t } = useTranslation()
@@ -34,6 +35,8 @@ export default function SettingsPanel() {
       <h1 className="text-3xl font-light text-hestia-navy">{t('settingsPanel.title')}</h1>
 
       <PlanOverview />
+
+      <BrandingPanel />
 
       <form onSubmit={save} className="card-luxe p-8">
         <div className="grid gap-5 md:grid-cols-2">

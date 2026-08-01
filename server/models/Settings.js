@@ -6,6 +6,9 @@ const settingsSchema = new mongoose.Schema({
   currency: { type: String, default: '$' },
   contactPhone: { type: String, default: '' },
   address: { type: String, default: '' },
+  logoUrl: { type: String, default: '' },
+  accentColor: { type: String, default: '#C9A227' },
+  welcomeMessage: { type: String, default: '' },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Settings', settingsSchema);

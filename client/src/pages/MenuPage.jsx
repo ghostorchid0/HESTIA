@@ -153,7 +153,10 @@ export default function MenuPage() {
     <div className="min-h-screen bg-hestia-cream pb-24 sm:pb-80">
       <header className="sticky top-0 z-20 border-b border-hestia-linen bg-white/80 px-4 py-4 backdrop-blur-md sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
+          {settings?.logoUrl && (
+            <ImageWithFallback src={settings.logoUrl} alt={settings.hotelName} className="mx-auto mb-2 h-16 w-16 rounded-2xl bg-hestia-cream object-contain p-2" />
+          )}
+          <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: settings?.accentColor || '#C9A227' }}>{settings?.hotelName || t('appName')}</p>
           <h1 className="mt-1 text-2xl font-light text-hestia-navy sm:text-3xl">{t('menuPage.title')}</h1>
         </div>
       </header>

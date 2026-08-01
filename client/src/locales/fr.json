@@ -161,6 +161,15 @@
     "alreadyOnPlan": "Déjà sur cette formule",
     "upgrading": "Mise à jour..."
   },
+  "branding": {
+    "title": "Personnalisation marque blanche",
+    "logo": "Logo de l'hôtel",
+    "accentColor": "Couleur d'accent",
+    "welcomeMessage": "Message de bienvenue",
+    "saved": "Personnalisation enregistrée",
+    "error": "Échec de l'enregistrement",
+    "locked": "Personnalisation disponible en Pro ou Enterprise."
+  },
   "analyticsPanel": {
     "title": "Analyses",
     "totalOrders": "Total commandes",

@@ -161,6 +161,15 @@
     "alreadyOnPlan": "Already on this plan",
     "upgrading": "Upgrading..."
   },
+  "branding": {
+    "title": "White-label Branding",
+    "logo": "Hotel logo",
+    "accentColor": "Accent color",
+    "welcomeMessage": "Welcome message",
+    "saved": "Branding saved",
+    "error": "Failed to save branding",
+    "locked": "Branding is available on Pro or Enterprise."
+  },
   "analyticsPanel": {
     "title": "Analytics",
     "totalOrders": "Total Orders",

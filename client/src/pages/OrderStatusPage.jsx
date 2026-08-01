@@ -5,6 +5,7 @@ import api from '../api'
 import { socket } from '../socket'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
+import ImageWithFallback from '../components/ImageWithFallback'
 
 export default function OrderStatusPage() {
   const { t } = useTranslation()
@@ -103,7 +104,10 @@ export default function OrderStatusPage() {
     <div className="min-h-screen bg-hestia-cream p-4 pt-10 sm:p-6 sm:pt-12">
       <div className="mx-auto max-w-xl">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-hestia-gold">{settings?.hotelName || t('appName')}</p>
+          {settings?.logoUrl && (
+            <ImageWithFallback src={settings.logoUrl} alt={settings.hotelName} className="mx-auto mb-2 h-16 w-16 rounded-2xl bg-hestia-cream object-contain p-2" />
+          )}
+          <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: settings?.accentColor || '#C9A227' }}>{settings?.hotelName || t('appName')}</p>
           <p className="mt-1 text-sm text-gray-500">{t('room')} {order.roomNumber}</p>
           <h1 className="mt-2 text-3xl font-light text-hestia-navy sm:text-4xl">{t('orderStatus.title')}</h1>
         </div>

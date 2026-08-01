@@ -281,7 +281,11 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
     Order.countDocuments(baseFilter),
     Order.countDocuments({ ...baseFilter, status: 'Delivered' }),
     Order.countDocuments(paidFilter),
-    Order.aggregate([{ $match: paidFilter }, { $group: { _id: null, total: { $sum: '$total' } } }]),
+    Order.aggregate([
+      { $match: paidFilter },
+      { $unwind: '$items' },
+      { $group: { _id: null, total: { $sum: { $multiply: ['$items.price', '$items.quantity'] } } } },
+    ]),
     Order.find(baseFilter).sort({ createdAt: -1 }).limit(10),
     Order.aggregate([
       { $match: paidFilter },
@@ -312,11 +316,18 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
     ]),
     Order.aggregate([
       { $match: { ...paidFilter, createdAt: { $gte: sevenDaysAgo } } },
+      { $unwind: '$items' },
       {
         $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          date: { $first: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } },
-          revenue: { $sum: '$total' },
+          _id: { orderId: '$_id', date: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } },
+          orderRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      {
+        $group: {
+          _id: '$_id.date',
+          date: { $first: '$_id.date' },
+          revenue: { $sum: '$orderRevenue' },
           orders: { $sum: 1 },
         },
       },
@@ -421,11 +432,18 @@ router.get('/analytics/sales',
       Order.find(matchStage).sort({ createdAt: -1 }),
       Order.aggregate([
         { $match: matchStage },
+        { $unwind: '$items' },
+        {
+          $group: {
+            _id: '$_id',
+            orderRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          },
+        },
         {
           $group: {
             _id: null,
             totalOrders: { $sum: 1 },
-            totalRevenue: { $sum: '$total' },
+            totalRevenue: { $sum: '$orderRevenue' },
           },
         },
       ]),

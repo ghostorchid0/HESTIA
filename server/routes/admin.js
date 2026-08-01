@@ -564,13 +564,16 @@ router.post('/reports/email',
     const end = new Date(report.end).toLocaleDateString();
     const periodLabel = start === end ? start : `${start} - ${end}`;
 
-    await sendEmail(
+    const sent = await sendEmail(
       recipient,
       `Hestia - Sales Report ${periodLabel}`,
       `Please find attached the sales report for ${periodLabel}. Generated on ${new Date().toLocaleString()}.`,
       [{ filename: `hestia-sales-report-${dateStr}-${period}.csv`, content: Buffer.from(csv, 'utf-8'), contentType: 'text/csv' }]
     );
 
+    if (!sent) {
+      return res.status(502).json({ message: 'Failed to send email. Check SMTP configuration.' });
+    }
     res.json({ sent: true, to: recipient });
   }
 );

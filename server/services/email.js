@@ -5,7 +5,7 @@ function createTransporter(smtp) {
   if (!smtp.host || !smtp.user) {
     return null;
   }
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     host: smtp.host,
     port: smtp.port,
     secure: smtp.port === 465,

@@ -1,57 +1,61 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import api from '../api'
 import { socket } from '../socket'
 import { SettingsContext } from './settingsContext'
 
-function getSettingsParams(pathname) {
+function getSettingsParams() {
   const params = {}
-  const match = pathname.match(/^\/room\/([^/]+)/)
+  const match = window.location.pathname.match(/^\/room\/([^/]+)/)
   if (match) {
     params.roomUuid = match[1]
-  } else {
-    const hotelId = localStorage.getItem('hestia_hotel')
-    if (hotelId) params.hotelId = hotelId
   }
-  return params
+  const hotelId = localStorage.getItem('hestia_hotel')
+  if (hotelId) params.hotelId = hotelId
+  return { params, hotelId }
 }
 
 export default function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(null)
   const location = useLocation()
-  const params = useMemo(() => getSettingsParams(location.pathname), [location.pathname])
   const joinedHotel = useRef(null)
 
   const refresh = useCallback(async (extraParams = {}) => {
+    const { params } = getSettingsParams()
     const allParams = { ...params, ...extraParams }
+    // When explicit hotelId passed, prefer it (admin header selection)
+    if (extraParams.hotelId) allParams.hotelId = extraParams.hotelId
     try {
       const res = await api.get('/settings', { params: allParams })
       setSettings(res.data)
+      if (res.data?.hotelId) {
+        const id = res.data.hotelId.toString ? res.data.hotelId.toString() : res.data.hotelId
+        if (joinedHotel.current !== id) {
+          socket.emit('join_hotel_channel', id)
+          joinedHotel.current = id
+        }
+      }
       return res.data
     } catch (err) {
       console.error('Failed to load settings', err)
       return null
     }
-  }, [params])
+  }, [])
 
   useEffect(() => {
     refresh()
+  }, [refresh, location.pathname])
+
+  useEffect(() => {
+    const onUpdate = () => refresh()
+    socket.on('settings_updated', onUpdate)
+    return () => socket.off('settings_updated', onUpdate)
   }, [refresh])
 
+  // Fallback polling every 3s for environments where socket is unstable
   useEffect(() => {
-    if (!settings?.hotelId) return
-    const id = settings.hotelId.toString ? settings.hotelId.toString() : settings.hotelId
-    if (joinedHotel.current === id) return
-    socket.emit('join_hotel_channel', id)
-    joinedHotel.current = id
-  }, [settings])
-
-  useEffect(() => {
-    const handler = () => {
-      refresh()
-    }
-    socket.on('settings_updated', handler)
-    return () => socket.off('settings_updated', handler)
+    const interval = setInterval(refresh, 3000)
+    return () => clearInterval(interval)
   }, [refresh])
 
   const updateSettings = useCallback((data) => {

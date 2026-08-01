@@ -176,6 +176,7 @@
     "title": "Analyses",
     "totalOrders": "Total commandes",
     "delivered": "Livrées",
+    "paidOrders": "Payées",
     "revenue": "Revenus",
     "recentOrders": "Commandes récentes",
     "revenue7Days": "Revenus (7 derniers jours)",

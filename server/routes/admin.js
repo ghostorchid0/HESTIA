@@ -277,9 +277,10 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
 
   const paidFilter = { ...baseFilter, paymentStatus: 'Paid' };
 
-  const [totalOrders, deliveredOrders, revenueAgg, recentOrders, topItems, categorySales, revenueByDay] = await Promise.all([
+  const [totalOrders, deliveredOrders, paidOrders, revenueAgg, recentOrders, topItems, categorySales, revenueByDay] = await Promise.all([
     Order.countDocuments(baseFilter),
     Order.countDocuments({ ...baseFilter, status: 'Delivered' }),
+    Order.countDocuments(paidFilter),
     Order.aggregate([{ $match: paidFilter }, { $group: { _id: null, total: { $sum: '$total' } } }]),
     Order.find(baseFilter).sort({ createdAt: -1 }).limit(10),
     Order.aggregate([
@@ -336,6 +337,7 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
   res.json({
     totalOrders,
     deliveredOrders,
+    paidOrders,
     revenue,
     recentOrders,
     topItems,

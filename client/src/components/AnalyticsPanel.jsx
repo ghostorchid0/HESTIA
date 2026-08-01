@@ -38,7 +38,7 @@ export default function AnalyticsPanel() {
     <FeatureGate feature="REVENUE_DASHBOARD" fallback={<div className="p-8 text-center text-gray-500">🔒 Analytics dashboard requires PRO or Enterprise.</div>}>
     <div>
       <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('analyticsPanel.title')}</h1>
-      <div className="mb-8 grid gap-6 sm:grid-cols-3">
+      <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.totalOrders')}</p>
           <p className="mt-2 font-serif text-4xl text-hestia-navy">{data.totalOrders}</p>
@@ -46,6 +46,10 @@ export default function AnalyticsPanel() {
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.delivered')}</p>
           <p className="mt-2 font-serif text-4xl text-green-700">{data.deliveredOrders}</p>
+        </div>
+        <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.paidOrders')}</p>
+          <p className="mt-2 font-serif text-4xl text-hestia-gold">{data.paidOrders}</p>
         </div>
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.revenue')}</p>

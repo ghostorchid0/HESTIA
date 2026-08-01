@@ -105,6 +105,8 @@ router.patch(
     if (order.status === req.body.status) return res.json(order);
 
     order.status = req.body.status;
+    if (req.body.status === 'Delivered') order.paymentStatus = 'Paid';
+    if (req.body.status === 'Cancelled') order.paymentStatus = 'Pending';
     order.history.push({ status: req.body.status, changedBy: req.user.username || 'staff' });
     await order.save();
 

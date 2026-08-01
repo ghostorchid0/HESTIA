@@ -273,13 +273,15 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
   const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+  const paidFilter = { ...baseFilter, paymentStatus: 'Paid' };
+
   const [totalOrders, deliveredOrders, revenueAgg, recentOrders, topItems, categorySales, revenueByDay] = await Promise.all([
     Order.countDocuments(baseFilter),
     Order.countDocuments({ ...baseFilter, status: 'Delivered' }),
-    Order.aggregate([{ $match: { ...baseFilter, status: 'Delivered' } }, { $group: { _id: null, total: { $sum: '$total' } } }]),
+    Order.aggregate([{ $match: paidFilter }, { $group: { _id: null, total: { $sum: '$total' } } }]),
     Order.find(baseFilter).sort({ createdAt: -1 }).limit(10),
     Order.aggregate([
-      { $match: { ...baseFilter, status: { $ne: 'Cancelled' } } },
+      { $match: paidFilter },
       { $unwind: '$items' },
       {
         $group: {
@@ -293,7 +295,7 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
       { $limit: 5 },
     ]),
     Order.aggregate([
-      { $match: { ...baseFilter, status: { $ne: 'Cancelled' } } },
+      { $match: paidFilter },
       { $unwind: '$items' },
       {
         $group: {
@@ -306,7 +308,7 @@ router.get('/analytics', requireRole('admin'), async (req, res) => {
       { $sort: { revenue: -1 } },
     ]),
     Order.aggregate([
-      { $match: { ...baseFilter, status: { $ne: 'Cancelled' }, createdAt: { $gte: sevenDaysAgo } } },
+      { $match: { ...paidFilter, createdAt: { $gte: sevenDaysAgo } } },
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
@@ -408,7 +410,7 @@ router.get('/analytics/sales',
     const matchStage = {
       ...hotelFilter(req),
       createdAt: { $gte: bounds.start, $lte: bounds.end },
-      status: { $ne: 'Cancelled' },
+      paymentStatus: 'Paid',
     };
 
     const [orders, totals, topItems, categorySales] = await Promise.all([

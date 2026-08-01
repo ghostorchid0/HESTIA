@@ -160,7 +160,11 @@ export default function AdminDashboard() {
         <Route path="dashboard" element={<OrdersPanel />} />
         <Route path="menu" element={<MenuPanel />} />
         <Route path="rooms" element={<RoomsPanel />} />
-        <Route path="analytics" element={<AnalyticsPanel />} />
+        <Route path="analytics" element={
+          <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
+            <AnalyticsPanel />
+          </Suspense>
+        } />
         <Route path="reports" element={
           <Suspense fallback={<div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>}>
             <ReportsPanel />

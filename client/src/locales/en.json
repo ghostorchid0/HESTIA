@@ -203,7 +203,11 @@
     "quantity": "Qty",
     "revenue": "Revenue",
     "noData": "No sales for this period",
-    "download": "Download report .txt"
+    "download": "Download report .txt",
+    "introText": "This report summarizes all paid orders for the selected period.",
+    "topItemsNote": "Top selling items by revenue.",
+    "categoryNote": "Revenue breakdown by category.",
+    "ordersNote": "Most recent paid orders."
   },
   "reportsPanel": {
     "title": "Rush Reports",

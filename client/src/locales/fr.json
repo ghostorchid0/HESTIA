@@ -203,7 +203,11 @@
     "quantity": "Qté",
     "revenue": "Revenu",
     "noData": "Aucune vente sur cette période",
-    "download": "Télécharger le rapport .txt"
+    "download": "Télécharger le rapport .txt",
+    "introText": "Ce rapport synthétise toutes les commandes payées sur la période sélectionnée.",
+    "topItemsNote": "Articles les plus vendus par revenu.",
+    "categoryNote": "Répartition du chiffre d'affaires par catégorie.",
+    "ordersNote": "Commandes payées les plus récentes."
   },
   "reportsPanel": {
     "title": "Rapports d'affluence",

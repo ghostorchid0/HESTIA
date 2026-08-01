@@ -173,7 +173,11 @@ export default function SalesReportPanel() {
     doc.setTextColor(...navy)
     doc.setFontSize(16)
     doc.text(periodLabel, pageWidth / 2, y, { align: 'center' })
-    y += 30
+    y += 25
+
+    doc.setFontSize(10).setTextColor(100)
+    doc.text(t('salesReportPanel.introText'), margin, y)
+    y += 25
 
     doc.setFillColor(250, 249, 246)
     doc.rect(margin, y, pageWidth - margin * 2, 70, 'F')
@@ -195,6 +199,10 @@ export default function SalesReportPanel() {
       didDrawPage: (data) => footer(data.pageNumber),
     }
 
+    doc.setFontSize(10).setTextColor(100)
+    doc.text(t('salesReportPanel.topItemsNote'), margin, y)
+    y += 20
+
     autoTable(doc, {
       ...tableBase,
       startY: y,
@@ -209,6 +217,10 @@ export default function SalesReportPanel() {
       y = 40
     }
 
+    doc.setFontSize(10).setTextColor(100)
+    doc.text(t('salesReportPanel.categoryNote'), margin, y)
+    y += 20
+
     autoTable(doc, {
       ...tableBase,
       startY: y,
@@ -222,6 +234,10 @@ export default function SalesReportPanel() {
       doc.addPage()
       y = 40
     }
+
+    doc.setFontSize(10).setTextColor(100)
+    doc.text(t('salesReportPanel.ordersNote'), margin, y)
+    y += 20
 
     autoTable(doc, {
       ...tableBase,

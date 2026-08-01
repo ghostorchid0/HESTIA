@@ -177,7 +177,10 @@
     "totalOrders": "Total Orders",
     "delivered": "Delivered",
     "revenue": "Revenue",
-    "recentOrders": "Recent Orders"
+    "recentOrders": "Recent Orders",
+    "revenue7Days": "Revenue (last 7 days)",
+    "topItems": "Top selling items",
+    "salesByDepartment": "Sales by department"
   },
   "salesReportPanel": {
     "title": "Sales Report",

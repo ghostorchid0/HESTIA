@@ -177,7 +177,10 @@
     "totalOrders": "Total commandes",
     "delivered": "Livrées",
     "revenue": "Revenus",
-    "recentOrders": "Commandes récentes"
+    "recentOrders": "Commandes récentes",
+    "revenue7Days": "Revenus (7 derniers jours)",
+    "topItems": "Meilleures ventes",
+    "salesByDepartment": "Ventes par département"
   },
   "salesReportPanel": {
     "title": "Rapport des ventes",

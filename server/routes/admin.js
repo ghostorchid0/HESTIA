@@ -270,15 +270,73 @@ router.delete('/menu/:id',
 
 router.get('/analytics', requireRole('admin'), async (req, res) => {
   const baseFilter = hotelFilter(req);
-  const totalOrders = await Order.countDocuments(baseFilter);
-  const deliveredOrders = await Order.countDocuments({ ...baseFilter, status: 'Delivered' });
-  const revenue = await Order.aggregate([{ $match: { ...baseFilter, status: 'Delivered' } }, { $group: { _id: null, total: { $sum: '$total' } } }]);
-  const recentOrders = await Order.find(baseFilter).sort({ createdAt: -1 }).limit(10);
+  const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const [totalOrders, deliveredOrders, revenueAgg, recentOrders, topItems, categorySales, revenueByDay] = await Promise.all([
+    Order.countDocuments(baseFilter),
+    Order.countDocuments({ ...baseFilter, status: 'Delivered' }),
+    Order.aggregate([{ $match: { ...baseFilter, status: 'Delivered' } }, { $group: { _id: null, total: { $sum: '$total' } } }]),
+    Order.find(baseFilter).sort({ createdAt: -1 }).limit(10),
+    Order.aggregate([
+      { $match: { ...baseFilter, status: { $ne: 'Cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.menuItemId',
+          name: { $first: '$items.name' },
+          quantity: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      { $sort: { revenue: -1 } },
+      { $limit: 5 },
+    ]),
+    Order.aggregate([
+      { $match: { ...baseFilter, status: { $ne: 'Cancelled' } } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.department',
+          category: { $first: '$items.department' },
+          quantity: { $sum: '$items.quantity' },
+          revenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+        },
+      },
+      { $sort: { revenue: -1 } },
+    ]),
+    Order.aggregate([
+      { $match: { ...baseFilter, status: { $ne: 'Cancelled' }, createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          date: { $first: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } },
+          revenue: { $sum: '$total' },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ]);
+
+  const revenue = revenueAgg.length ? revenueAgg[0].total : 0;
+
+  // Fill missing days with 0 for the last 7 days
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+    return d.toISOString().split('T')[0];
+  }).reverse();
+  const revenueByDayMap = Object.fromEntries(revenueByDay.map(d => [d.date, { date: d.date, revenue: d.revenue, orders: d.orders }]));
+  const filledRevenueByDay = days.map(d => revenueByDayMap[d] || { date: d, revenue: 0, orders: 0 });
+
   res.json({
     totalOrders,
     deliveredOrders,
-    revenue: revenue.length ? revenue[0].total : 0,
+    revenue,
     recentOrders,
+    topItems,
+    categorySales,
+    revenueByDay: filledRevenueByDay,
   });
 });
 

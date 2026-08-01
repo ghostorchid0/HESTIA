@@ -9,8 +9,8 @@ import useSubscription from '../hooks/useSubscription'
 import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
-import AnalyticsPanel from '../components/AnalyticsPanel'
 
+const AnalyticsPanel = lazy(() => import('../components/AnalyticsPanel'))
 const ReportsPanel = lazy(() => import('../components/ReportsPanel'))
 const SalesReportPanel = lazy(() => import('../components/SalesReportPanel'))
 const StaffPanel = lazy(() => import('../components/StaffPanel'))

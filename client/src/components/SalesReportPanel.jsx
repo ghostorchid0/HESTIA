@@ -58,6 +58,55 @@ export default function SalesReportPanel() {
     window.URL.revokeObjectURL(url)
   }
 
+  const escapeCsv = (v) => {
+    const s = String(v ?? '')
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`
+    return s
+  }
+
+  const downloadCSV = () => {
+    if (!report) return
+    const header = ['Item', 'Category', 'Quantity', 'Revenue'].map(escapeCsv).join(',')
+    const topRows = report.topItems.map(it => [it.name, it.category || '-', it.quantity, it.revenue].map(escapeCsv).join(','))
+    const categoryHeader = ['Category', 'Quantity', 'Revenue'].map(escapeCsv).join(',')
+    const categoryRows = report.categorySales.map(c => [c.category, c.quantity, c.revenue].map(escapeCsv).join(','))
+    const orderHeader = ['Room', 'Items', 'Total', 'Date'].map(escapeCsv).join(',')
+    const orderRows = report.orders.map(o => [
+      o.roomNumber,
+      o.items.map(i => `${i.quantity}x ${i.name}`).join(' | '),
+      o.total,
+      new Date(o.createdAt).toISOString(),
+    ].map(escapeCsv).join(','))
+    const summary = [
+      ['Total orders', report.totalOrders].map(escapeCsv).join(','),
+      ['Total revenue', report.totalRevenue].map(escapeCsv).join(','),
+      ['Average order', report.averageOrderValue].map(escapeCsv).join(','),
+    ]
+    const csv = [
+      'Summary',
+      ...summary,
+      '',
+      'Top items',
+      header,
+      ...topRows,
+      '',
+      'Sales by category',
+      categoryHeader,
+      ...categoryRows,
+      '',
+      'Orders',
+      orderHeader,
+      ...orderRows,
+    ].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `hestia-sales-report-${date}-${period}.csv`
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
   if (!report) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -111,6 +160,9 @@ export default function SalesReportPanel() {
           </div>
           <button onClick={downloadReport} className="btn-outline">
             {t('salesReportPanel.download')}
+          </button>
+          <button onClick={downloadCSV} className="btn-outline">
+            CSV
           </button>
         </div>
       </div>

@@ -73,7 +73,10 @@ router.use(async (req, res, next) => {
 });
 
 function hotelFilter(req) {
-  return req.hotelId ? { hotelId: req.hotelId } : {};
+  if (!req.hotelId) return {};
+  return mongoose.isValidObjectId(req.hotelId)
+    ? { hotelId: new mongoose.Types.ObjectId(req.hotelId) }
+    : {};
 }
 
 router.get('/orders',

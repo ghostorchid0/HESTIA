@@ -64,8 +64,14 @@ if (process.env.NODE_ENV === 'production') {
   const isServerDir = path.basename(__dirname) === 'server';
   const projectRoot = isServerDir ? path.join(__dirname, '..') : __dirname;
   const staticDir = path.join(projectRoot, 'client/dist');
-  app.use(express.static(staticDir));
+  app.use(express.static(staticDir, { maxAge: '1y', immutable: true }));
   app.get('*', (req, res) => {
+    if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|eot)$/)) {
+      return res.status(404).send('Not found');
+    }
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
     res.sendFile(path.join(staticDir, 'index.html'));
   });
 }

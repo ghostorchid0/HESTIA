@@ -169,7 +169,8 @@ export default function SalesReportPanel() {
     let y = 110
     doc.setTextColor(...navy)
     doc.setFontSize(16)
-    doc.text(periodLabel, pageWidth / 2, y, { align: 'center' })
+    const printablePeriod = periodLabel.replace(/→/g, '->')
+    doc.text(printablePeriod, pageWidth / 2, y, { align: 'center' })
     y += 30
 
     doc.setFillColor(250, 249, 246)
@@ -182,39 +183,7 @@ export default function SalesReportPanel() {
     doc.text(`${t('salesReportPanel.totalOrders')}: ${report.totalOrders}`, margin + 10, y + 25)
     doc.text(`${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue, currency)}`, margin + 10, y + 45)
     doc.text(`${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue, currency)}`, margin + 10, y + 65)
-    y += 105
-
-    const drawBarChart = (title, data, startY) => {
-      if (startY > 600) {
-        doc.addPage()
-        startY = 40
-      }
-      doc.setFontSize(13).setTextColor(...navy)
-      doc.text(title, margin, startY)
-      const max = Math.max(...data.map(d => d.revenue), 1)
-      const barMax = pageWidth - margin * 2 - 180
-      const rowHeight = 24
-      let cy = startY + 20
-      data.slice(0, 8).forEach((d) => {
-        if (cy > pageHeight - 80) {
-          doc.addPage()
-          cy = 40
-        }
-        const label = ((d.name || d.category || '').length > 28 ? `${(d.name || d.category).slice(0, 28)}...` : (d.name || d.category || '-'))
-        const barWidth = (d.revenue / max) * barMax
-        doc.setFontSize(9).setTextColor(80)
-        doc.text(label, margin, cy + 10)
-        doc.setFillColor(...navy)
-        doc.rect(margin + 120, cy, barWidth, 14, 'F')
-        doc.setTextColor(...navy)
-        doc.text(formatCurrency(d.revenue, currency), margin + 120 + barWidth + 8, cy + 10)
-        cy += rowHeight
-      })
-      return cy + 20
-    }
-
-    y = drawBarChart(t('salesReportPanel.topItems'), report.topItems, y)
-    y = drawBarChart(t('salesReportPanel.salesByCategory'), report.categorySales, y)
+    y += 95
 
     const tableBase = {
       theme: 'grid',

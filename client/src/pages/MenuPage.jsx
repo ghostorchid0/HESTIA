@@ -5,6 +5,7 @@ import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
 import ImageWithFallback from '../components/ImageWithFallback'
+import BrandAccent from '../components/BrandAccent'
 
 export default function MenuPage() {
   const { t } = useTranslation()
@@ -68,9 +69,11 @@ export default function MenuPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-hestia-cream">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" />
-      </div>
+      <BrandAccent>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-[var(--brand)]" />
+        </div>
+      </BrandAccent>
     )
   }
 
@@ -137,7 +140,7 @@ export default function MenuPage() {
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{t('total')} <span className="text-hestia-gold">{formatCurrency(total, settings?.currency)}</span></span>
+        <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{t('total')} <span className="text-[var(--brand)]">{formatCurrency(total, settings?.currency)}</span></span>
         <button
           onClick={placeOrder}
           disabled={placing}
@@ -150,7 +153,8 @@ export default function MenuPage() {
   )
 
   return (
-    <div className="min-h-screen bg-hestia-cream pb-24 sm:pb-80">
+    <BrandAccent>
+    <div className="min-h-screen pb-24 sm:pb-80">
       <header className="sticky top-0 z-20 border-b border-hestia-linen bg-white/80 px-4 py-4 backdrop-blur-md sm:px-6 sm:py-5">
         <div className="mx-auto max-w-2xl text-center">
           {settings?.logoUrl && (
@@ -176,7 +180,7 @@ export default function MenuPage() {
                   <div className="flex-1 text-center sm:text-left">
                     <div className="flex flex-col items-center gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                       <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
-                      <span className="font-serif text-lg text-hestia-gold">
+                      <span className="font-serif text-lg text-[var(--brand)]">
                         {item.price === 0 ? t('menuPage.free') : formatCurrency(item.price, settings?.currency)}
                       </span>
                     </div>
@@ -184,7 +188,7 @@ export default function MenuPage() {
                   </div>
                   <button
                     onClick={() => addToCart(item)}
-                    className="btn-outline w-full sm:w-auto"
+                    className="w-full rounded-2xl border border-[var(--brand)] px-6 py-3 font-sans text-sm font-medium uppercase tracking-widest text-hestia-navy transition-all hover:bg-[var(--brand)] hover:text-white sm:w-auto"
                   >
                     {t('menuPage.add')}
                   </button>
@@ -208,7 +212,7 @@ export default function MenuPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5V6a3.375 3.375 0 0 1 6.75 0v4.5" />
               </svg>
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-hestia-gold text-xs font-bold text-white">
+                <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-white">
                   {cartCount}
                 </span>
               )}
@@ -229,5 +233,6 @@ export default function MenuPage() {
         </>
       )}
     </div>
+    </BrandAccent>
   )
 }

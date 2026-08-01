@@ -6,6 +6,7 @@ import { socket } from '../socket'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
 import ImageWithFallback from '../components/ImageWithFallback'
+import BrandAccent from '../components/BrandAccent'
 
 export default function OrderStatusPage() {
   const { t } = useTranslation()
@@ -101,13 +102,14 @@ export default function OrderStatusPage() {
   const currentStep = statusSteps.indexOf(order.status)
 
   return (
-    <div className="min-h-screen bg-hestia-cream p-4 pt-10 sm:p-6 sm:pt-12">
+    <BrandAccent>
+    <div className="min-h-screen p-4 pt-10 sm:p-6 sm:pt-12">
       <div className="mx-auto max-w-xl">
         <div className="text-center">
           {settings?.logoUrl && (
             <ImageWithFallback src={settings.logoUrl} alt={settings.hotelName} className="mx-auto mb-2 h-16 w-16 rounded-2xl bg-hestia-cream object-contain p-2" />
           )}
-          <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: settings?.accentColor || '#C9A227' }}>{settings?.hotelName || t('appName')}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--brand)]">{settings?.hotelName || t('appName')}</p>
           <p className="mt-1 text-sm text-gray-500">{t('room')} {order.roomNumber}</p>
           <h1 className="mt-2 text-3xl font-light text-hestia-navy sm:text-4xl">{t('orderStatus.title')}</h1>
         </div>
@@ -120,7 +122,7 @@ export default function OrderStatusPage() {
                 <div
                   className={`z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 text-xs font-serif font-medium transition sm:h-12 sm:w-12 sm:text-sm ${
                     idx <= currentStep
-                      ? 'border-hestia-gold bg-hestia-gold text-white'
+                      ? 'border-[var(--brand)] bg-[var(--brand)] text-white'
                       : 'border-hestia-linen bg-white text-gray-400'
                   }`}
                 >
@@ -147,14 +149,14 @@ export default function OrderStatusPage() {
             ))}
           </ul>
           <p className="mt-6 text-right font-serif text-xl text-hestia-navy sm:text-2xl">
-            {t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span>
+            {t('total')} <span className="text-[var(--brand)]">{formatCurrency(order.total, settings?.currency)}</span>
           </p>
         </div>
 
         {!pushEnabled && (
           <button
             onClick={subscribePush}
-            className="btn-outline mt-6 w-full"
+            className="mt-6 w-full rounded-2xl border border-[var(--brand)] px-6 py-3 font-sans text-sm font-medium uppercase tracking-widest text-hestia-navy transition-all hover:bg-[var(--brand)] hover:text-white"
           >
             {t('orderStatus.notifyMe')}
           </button>
@@ -165,7 +167,7 @@ export default function OrderStatusPage() {
             <h2 className="text-lg font-light text-hestia-navy sm:text-xl">{t('orderStatus.rateOrder')}</h2>
             <div className="mt-4 flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map(star => (
-                <button key={star} type="button" onClick={() => setReview({ ...review, rating: star })} className={`text-2xl ${star <= review.rating ? 'text-hestia-gold' : 'text-gray-300'}`}>
+                <button key={star} type="button" onClick={() => setReview({ ...review, rating: star })} className={`text-2xl ${star <= review.rating ? 'text-[var(--brand)]' : 'text-gray-300'}`}>
                   ★
                 </button>
               ))}
@@ -186,5 +188,6 @@ export default function OrderStatusPage() {
         </Link>
       </div>
     </div>
+    </BrandAccent>
   )
 }

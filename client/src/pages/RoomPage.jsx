@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import ImageWithFallback from '../components/ImageWithFallback'
+import BrandAccent from '../components/BrandAccent'
 
 export default function RoomPage() {
   const { t } = useTranslation()
@@ -51,29 +52,30 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-hestia-cream p-4 sm:p-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-hestia-linen/60 via-transparent to-transparent" />
-      <div className="card-luxe relative z-10 w-full max-w-lg p-8 text-center sm:p-12">
-        {settings?.logoUrl && (
-          <ImageWithFallback src={settings.logoUrl} alt={settings.hotelName} className="mx-auto mb-4 h-20 w-20 rounded-2xl bg-hestia-cream object-contain p-2" />
-        )}
-        <p className="text-xs font-semibold uppercase tracking-[0.3em]" style={{ color: settings?.accentColor || '#C9A227' }}>{t('tagline')}</p>
-        <h1 className="mt-4 text-4xl font-light text-hestia-navy sm:text-5xl">{settings?.hotelName || t('appName')}</h1>
-        {settings?.welcomeMessage && (
-          <p className="mt-3 text-sm italic text-gray-500">{settings.welcomeMessage}</p>
-        )}
-        <div className="mx-auto mt-6 h-px w-16" style={{ backgroundColor: settings?.accentColor || '#C9A227' }} />
-        <p className="mt-6 text-base text-gray-600 sm:text-lg">
-          {t('room')} <span className="font-serif text-2xl text-hestia-navy">{room.number}</span>
-        </p>
-        <button
-          onClick={() => navigate(`/room/${uuid}/menu`)}
-          className="mt-8 w-full rounded-2xl px-8 py-3.5 font-sans text-sm font-semibold uppercase tracking-widest text-white shadow-soft transition-all hover:shadow-luxe sm:mt-10"
-          style={{ backgroundColor: settings?.accentColor || '#C9A227' }}
-        >
-          {t('roomPage.openMenu')}
-        </button>
+    <BrandAccent>
+      <div className="relative flex min-h-screen items-center justify-center p-4 sm:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-hestia-linen/60 via-transparent to-transparent" />
+        <div className="card-luxe relative z-10 w-full max-w-lg p-8 text-center sm:p-12">
+          {settings?.logoUrl && (
+            <ImageWithFallback src={settings.logoUrl} alt={settings.hotelName} className="mx-auto mb-4 h-20 w-20 rounded-2xl bg-hestia-cream object-contain p-2" />
+          )}
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--brand)]">{t('tagline')}</p>
+          <h1 className="mt-4 text-4xl font-light text-hestia-navy sm:text-5xl">{settings?.hotelName || t('appName')}</h1>
+          {settings?.welcomeMessage && (
+            <p className="mt-3 text-sm italic text-gray-500">{settings.welcomeMessage}</p>
+          )}
+          <div className="mx-auto mt-6 h-px w-16 bg-[var(--brand)]" />
+          <p className="mt-6 text-base text-gray-600 sm:text-lg">
+            {t('room')} <span className="font-serif text-2xl text-hestia-navy">{room.number}</span>
+          </p>
+          <button
+            onClick={() => navigate(`/room/${uuid}/menu`)}
+            className="mt-8 w-full rounded-2xl bg-[var(--brand)] px-8 py-3.5 font-sans text-sm font-semibold uppercase tracking-widest text-white shadow-soft transition-all hover:shadow-luxe sm:mt-10"
+          >
+            {t('roomPage.openMenu')}
+          </button>
+        </div>
       </div>
-    </div>
+    </BrandAccent>
   )
 }

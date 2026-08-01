@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, AreaChart, Area,
@@ -13,9 +13,15 @@ export default function AnalyticsPanel() {
   const { settings } = useSettings()
   const [data, setData] = useState(null)
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     api.get('/admin/analytics').then(res => setData(res.data))
   }, [])
+
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 3000)
+    return () => clearInterval(interval)
+  }, [fetchData])
 
   if (!data) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import api from '../api'
@@ -19,9 +19,15 @@ export default function SalesReportPanel() {
   const [period, setPeriod] = useState('day')
   const [report, setReport] = useState(null)
 
-  useEffect(() => {
+  const fetchReport = useCallback(() => {
     api.get(`/admin/analytics/sales?date=${date}&period=${period}`).then(res => setReport(res.data))
   }, [date, period])
+
+  useEffect(() => {
+    fetchReport()
+    const interval = setInterval(fetchReport, 3000)
+    return () => clearInterval(interval)
+  }, [fetchReport])
 
   const periodLabel = useMemo(() => {
     if (!report) return ''

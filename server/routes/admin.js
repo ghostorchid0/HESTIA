@@ -16,7 +16,6 @@ const { notifyRoom } = require('../services/push');
 const { sendSms } = require('../services/sms');
 const { sendEmail } = require('../services/email');
 const { getSalesReport } = require('../services/salesReport');
-const { buildSalesReportPdf } = require('../services/salesReportPdf');
 const Order = require('../models/Order');
 const MenuItem = require('../models/MenuItem');
 const Room = require('../models/Room');
@@ -405,6 +404,47 @@ function getPeriodBounds(dateStr, period) {
   }
 }
 
+function buildSalesReportCsv(report, hotel) {
+  const escape = (v) => {
+    const s = String(v ?? '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+  const line = (cells) => cells.map(escape).join(',');
+  const start = new Date(report.start).toLocaleDateString();
+  const end = new Date(report.end).toLocaleDateString();
+  const period = start === end ? start : `${start} - ${end}`;
+  const rows = [
+    `Hotel, ${hotel.name}`,
+    `Period, ${period}`,
+    '',
+    'Summary',
+    `Total orders, ${report.totalOrders}`,
+    `Total revenue, ${report.totalRevenue}`,
+    `Average order, ${report.averageOrderValue}`,
+    '',
+    'Top items',
+    line(['Item', 'Category', 'Quantity', 'Revenue']),
+    ...report.topItems.slice(0, 8).map((it) => line([it.name, it.category || '-', it.quantity, it.revenue])),
+    '',
+    'Sales by category',
+    line(['Category', 'Quantity', 'Revenue']),
+    ...report.categorySales.map((c) => line([c.category, c.quantity, c.revenue])),
+    '',
+    'Recent orders',
+    line(['Room', 'Items', 'Total', 'Date']),
+    ...report.orders.slice(0, 30).map((o) => line([
+      o.roomNumber,
+      (o.items || []).map((i) => `${i.quantity}x ${i.name}`).join(' | '),
+      o.total,
+      new Date(o.createdAt).toISOString(),
+    ])),
+  ];
+  return rows.join('\n');
+}
+
 router.get('/analytics/sales',
   requireRole('admin'),
   query('date').isISO8601().toDate(),
@@ -518,9 +558,7 @@ router.post('/reports/email',
     const report = await getSalesReport(req.hotelId, date, period);
     if (!report) return res.status(400).json({ message: 'Invalid date or period' });
 
-    report.currency = hotel.currency;
-    const pdfBuffer = await buildSalesReportPdf(report, hotel.name);
-
+    const csv = buildSalesReportCsv(report, hotel);
     const dateStr = new Date(date).toISOString().split('T')[0];
     const start = new Date(report.start).toLocaleDateString();
     const end = new Date(report.end).toLocaleDateString();
@@ -530,7 +568,7 @@ router.post('/reports/email',
       recipient,
       `Hestia - Sales Report ${periodLabel}`,
       `Please find attached the sales report for ${periodLabel}. Generated on ${new Date().toLocaleString()}.`,
-      [{ filename: `hestia-sales-report-${dateStr}-${period}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }]
+      [{ filename: `hestia-sales-report-${dateStr}-${period}.csv`, content: Buffer.from(csv, 'utf-8'), contentType: 'text/csv' }]
     );
 
     res.json({ sent: true, to: recipient });

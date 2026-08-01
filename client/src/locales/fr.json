@@ -17,6 +17,8 @@
   "deactivate": "Désactiver",
   "room": "Chambre",
   "total": "Total",
+  "date": "Date",
+  "page": "Page",
   "note": "Note",
   "status": {
     "Received": "Reçue",

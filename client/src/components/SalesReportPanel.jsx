@@ -144,65 +144,84 @@ export default function SalesReportPanel() {
     const currency = settings?.currency || ''
     const doc = new jsPDF('p', 'pt', 'a4')
     const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 40
-    let y = 40
+    const accent = [201, 162, 39]
+    const navy = [11, 26, 42]
+    const linen = [247, 245, 240]
 
-    doc.setFontSize(10).setTextColor(150)
-    doc.text(settings?.hotelName || 'Hestia', margin, y)
-    y += 15
-    doc.text(new Date().toLocaleString(), margin, y)
-    y += 30
+    const footer = (pageNumber) => {
+      doc.setFontSize(8).setTextColor(150)
+      doc.text(`Hestia - ${t('salesReportPanel.title')} - ${t('page')} ${pageNumber}`, margin, pageHeight - 20)
+    }
 
-    doc.setFontSize(20).setTextColor(11, 26, 42)
-    doc.text(t('salesReportPanel.title'), margin, y)
-    y += 22
-    doc.setFontSize(11).setTextColor(120)
+    doc.setFillColor(...navy)
+    doc.rect(0, 0, pageWidth, 80, 'F')
+    doc.setTextColor(...linen)
+    doc.setFontSize(22)
+    doc.text(settings?.hotelName || 'Hestia', margin, 45)
+    doc.setTextColor(...accent)
+    doc.setFontSize(10)
+    doc.text(t('salesReportPanel.title').toUpperCase(), margin, 65)
+    doc.setTextColor(150)
+    doc.text(new Date().toLocaleString(), pageWidth - margin, 65, { align: 'right' })
+
+    let y = 110
+    doc.setTextColor(...navy)
+    doc.setFontSize(16)
     doc.text(periodLabel, margin, y)
-    y += 35
+    y += 25
 
-    doc.setFontSize(12).setTextColor(11, 26, 42)
-    doc.text(`${t('salesReportPanel.totalOrders')}: ${report.totalOrders}`, margin, y)
-    y += 18
-    doc.text(`${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue, currency)}`, margin, y)
-    y += 18
-    doc.text(`${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue, currency)}`, margin, y)
-    y += 30
+    doc.setFillColor(250, 249, 246)
+    doc.rect(margin, y, pageWidth - margin * 2, 70, 'F')
+    doc.setDrawColor(...accent)
+    doc.setLineWidth(2)
+    doc.line(margin, y, pageWidth - margin, y)
+    doc.setTextColor(...navy)
+    doc.setFontSize(11)
+    doc.text(`${t('salesReportPanel.totalOrders')}: ${report.totalOrders}`, margin + 10, y + 25)
+    doc.text(`${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue, currency)}`, margin + 10, y + 45)
+    doc.text(`${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue, currency)}`, margin + 10, y + 65)
+    y += 95
+
+    const tableBase = {
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 4, overflow: 'linebreak' },
+      margin: { left: margin, right: margin },
+      tableWidth: pageWidth - margin * 2,
+      didDrawPage: (data) => footer(data.pageNumber),
+    }
 
     autoTable(doc, {
+      ...tableBase,
       startY: y,
       head: [[t('salesReportPanel.item'), t('salesReportPanel.category'), t('salesReportPanel.quantity'), t('salesReportPanel.revenue')]],
       body: report.topItems.slice(0, 8).map(it => [it.name, it.category || '-', String(it.quantity), formatCurrency(it.revenue, currency)]),
-      theme: 'grid',
-      headStyles: { fillColor: [11, 26, 42], textColor: [247, 245, 240] },
-      styles: { fontSize: 9, cellPadding: 4 },
-      margin: { left: margin, right: margin },
-      tableWidth: pageWidth - margin * 2,
+      headStyles: { fillColor: navy, textColor: linen },
     })
 
     y = doc.lastAutoTable.finalY + 25
-    if (y > 650) {
+    if (y > 600) {
       doc.addPage()
       y = 40
     }
 
     autoTable(doc, {
+      ...tableBase,
       startY: y,
       head: [[t('salesReportPanel.category'), t('salesReportPanel.quantity'), t('salesReportPanel.revenue')]],
       body: report.categorySales.map(c => [c.category, String(c.quantity), formatCurrency(c.revenue, currency)]),
-      theme: 'grid',
-      headStyles: { fillColor: [201, 162, 39], textColor: [11, 26, 42] },
-      styles: { fontSize: 9, cellPadding: 4 },
-      margin: { left: margin, right: margin },
-      tableWidth: pageWidth - margin * 2,
+      headStyles: { fillColor: accent, textColor: navy },
     })
 
     y = doc.lastAutoTable.finalY + 25
-    if (y > 520) {
+    if (y > 500) {
       doc.addPage()
       y = 40
     }
 
     autoTable(doc, {
+      ...tableBase,
       startY: y,
       head: [[t('room'), t('salesReportPanel.item'), t('total'), t('date')]],
       body: report.orders.slice(0, 30).map(o => [
@@ -211,11 +230,8 @@ export default function SalesReportPanel() {
         formatCurrency(o.total, currency),
         new Date(o.createdAt).toLocaleString(),
       ]),
-      theme: 'grid',
-      headStyles: { fillColor: [11, 26, 42], textColor: [247, 245, 240] },
+      headStyles: { fillColor: navy, textColor: linen },
       styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-      margin: { left: margin, right: margin },
-      tableWidth: pageWidth - margin * 2,
     })
 
     doc.save(`hestia-sales-report-${date}-${period}.pdf`)

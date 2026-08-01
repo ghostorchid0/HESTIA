@@ -164,6 +164,7 @@
   "branding": {
     "title": "Personnalisation marque blanche",
     "logo": "Logo de l'hôtel",
+    "removeLogo": "Supprimer",
     "accentColor": "Couleur d'accent",
     "welcomeMessage": "Message de bienvenue",
     "saved": "Personnalisation enregistrée",

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
@@ -15,13 +15,30 @@ export default function BrandingPanel() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    if (settings) {
+      setLogoUrl(settings.logoUrl || '')
+      setAccentColor(settings.accentColor || '#C9A227')
+      setWelcomeMessage(settings.welcomeMessage || '')
+    }
+  }, [settings])
+
   const handleFile = (e) => {
     const f = e.target.files[0]
     if (!f) return
+    if (f.size > 8 * 1024 * 1024) {
+      setError('Image too large. Max 8MB.')
+      return
+    }
     const reader = new FileReader()
-    reader.onload = (ev) => setLogoUrl(ev.target.result)
+    reader.onload = (ev) => {
+      setError('')
+      setLogoUrl(ev.target.result)
+    }
     reader.readAsDataURL(f)
   }
+
+  const removeLogo = () => setLogoUrl('')
 
   const save = async (e) => {
     e.preventDefault()
@@ -50,8 +67,13 @@ export default function BrandingPanel() {
       <div className="grid gap-5 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('branding.logo')}</label>
-          <input type="file" accept="image/*" onChange={handleFile} className="w-full text-sm" />
-          {logoUrl && <ImageWithFallback src={logoUrl} alt="logo" className="mt-3 h-20 w-20 rounded-2xl bg-hestia-cream object-contain p-2" />}
+          <input type="file" accept="image/png, image/jpeg, image/jpg, image/svg+xml, image/webp" onChange={handleFile} className="w-full text-sm" />
+          {logoUrl && (
+            <div className="mt-3 flex items-center gap-3">
+              <ImageWithFallback src={logoUrl} alt="logo" className="h-20 w-20 rounded-2xl bg-hestia-cream object-contain p-2" />
+              <button type="button" onClick={removeLogo} className="text-sm text-red-500 hover:underline">{t('branding.removeLogo')}</button>
+            </div>
+          )}
         </div>
         <div>
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('branding.accentColor')}</label>

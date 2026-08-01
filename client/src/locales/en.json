@@ -164,6 +164,7 @@
   "branding": {
     "title": "White-label Branding",
     "logo": "Hotel logo",
+    "removeLogo": "Remove",
     "accentColor": "Accent color",
     "welcomeMessage": "Welcome message",
     "saved": "Branding saved",

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Hotel = require('../models/Hotel');
 
 const featureTiers = {
@@ -12,10 +13,18 @@ const featureTiers = {
   CUSTOM_DOMAIN: ['ENTERPRISE'],
 };
 
+function resolveHotelId(req) {
+  const isSuperadmin = req.user?.role === 'superadmin';
+  const headerHotel = req.headers?.['x-hotel-id'] || req.query?.hotelId;
+  if (headerHotel && !mongoose.isValidObjectId(headerHotel)) return null;
+  return (isSuperadmin && headerHotel) || req.hotelId || req.user?.hotelId;
+}
+
 function hasFeature(feature) {
   return async (req, res, next) => {
-    if (!req.hotelId) return next();
-    const hotel = await Hotel.findById(req.hotelId).lean();
+    const hotelId = resolveHotelId(req);
+    if (!hotelId) return next();
+    const hotel = await Hotel.findById(hotelId).lean();
     if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
     const plan = hotel.subscription?.plan || 'STARTER';
     const allowed = featureTiers[feature] || [];

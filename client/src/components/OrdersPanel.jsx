@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
@@ -23,10 +23,14 @@ export default function OrdersPanel() {
     return stored === null ? true : stored === 'true'
   })
 
-  const fetchOrders = async () => {
-    const res = await api.get('/admin/orders?limit=200')
-    setOrders(res.data)
-  }
+  const fetchOrders = useCallback(async () => {
+    try {
+      const res = await api.get('/admin/orders?limit=200')
+      setOrders(res.data)
+    } catch (err) {
+      console.error('Failed to fetch orders', err)
+    }
+  }, [])
 
   const toggleSound = () => {
     const next = !soundEnabled
@@ -57,16 +61,23 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     fetchOrders()
-    socket.on('new_order', (order) => {
+    const interval = setInterval(fetchOrders, 3000)
+    return () => clearInterval(interval)
+  }, [fetchOrders])
+
+  useEffect(() => {
+    const onNew = (order) => {
       setOrders((prev) => [order, ...prev])
       if (soundEnabled) playBeep()
-    })
-    socket.on('order_status_updated', (order) => {
+    }
+    const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
-    })
+    }
+    socket.on('new_order', onNew)
+    socket.on('order_status_updated', onUpdate)
     return () => {
-      socket.off('new_order')
-      socket.off('order_status_updated')
+      socket.off('new_order', onNew)
+      socket.off('order_status_updated', onUpdate)
     }
   }, [soundEnabled])
 

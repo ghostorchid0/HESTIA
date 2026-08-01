@@ -134,7 +134,8 @@ export default function AdminDashboard() {
     if (!token) return
     const joinStaff = () => socket.emit('join_staff')
     socket.on('connect', joinStaff)
-    socket.disconnect().connect()
+    if (socket.connected) joinStaff()
+    else socket.connect()
     return () => {
       socket.off('connect', joinStaff)
       socket.emit('leave_staff')

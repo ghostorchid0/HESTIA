@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/format'
 import CategorySelect from './CategorySelect'
 import ImageWithFallback from './ImageWithFallback'
 
-const emptyItem = { name: '', description: '', price: '', category: '', available: true, imageUrl: '' }
+const emptyItem = { name: '', description: '', price: '', category: '', department: 'kitchen', available: true, imageUrl: '' }
 
 export default function MenuPanel() {
   const { t } = useTranslation()
@@ -31,6 +31,7 @@ export default function MenuPanel() {
     data.append('description', form.description || '')
     data.append('price', form.price)
     data.append('category', form.category)
+    data.append('department', form.department || 'kitchen')
     data.append('available', form.available ? 'true' : 'false')
     if (form.imageUrl && !file && !form.imageUrl.startsWith('data:image/')) data.append('imageUrl', form.imageUrl)
     if (file) data.append('image', file)
@@ -88,6 +89,13 @@ export default function MenuPanel() {
             <input type="number" step="0.01" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="input-luxe w-full" required />
           </div>
           <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.department')}</label>
+            <select value={form.department || 'kitchen'} onChange={e => setForm({ ...form, department: e.target.value })} className="input-luxe w-full">
+              <option value="kitchen">{t('staffPanel.kitchen')}</option>
+              <option value="reception">{t('staffPanel.reception')}</option>
+            </select>
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('menuPanel.imageUrl')}</label>
             <input value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} className="input-luxe w-full" />
           </div>
@@ -117,7 +125,7 @@ export default function MenuPanel() {
               <ImageWithFallback src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
-                <p className="text-xs uppercase tracking-wider text-gray-400">{item.category}</p>
+                <p className="text-xs uppercase tracking-wider text-gray-400">{item.category} · {t(`staffPanel.${item.department || 'kitchen'}`)}</p>
                 <p className="mt-1 text-sm text-gray-600">{item.description}</p>
                 <p className="mt-2 font-serif text-lg text-hestia-gold">{formatCurrency(item.price, settings?.currency)} <span className="text-sm text-gray-400">&middot; {item.available ? t('active') : t('inactive')}</span></p>
               </div>

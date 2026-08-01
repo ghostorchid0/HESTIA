@@ -56,6 +56,7 @@ router.post(
         price: menu.price,
         quantity,
         notes: item.notes || '',
+        department: menu.department || 'kitchen',
       });
     }
 
@@ -73,8 +74,8 @@ router.post(
     });
 
     const io = req.app.get('io');
-    io.to(`kitchen_${order.hotelId}`).emit('new_order', order.toObject());
-    io.to('kitchen_all').emit('new_order', order.toObject());
+    const departments = [...new Set(order.items.map(i => i.department))];
+    departments.forEach((dept) => io.to(`${dept}_${order.hotelId}`).emit('new_order', order.toObject()));
 
     try {
       const hotel = await Hotel.findById(room.hotelId);

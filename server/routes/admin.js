@@ -21,7 +21,7 @@ const User = require('../models/User');
 const Hotel = require('../models/Hotel');
 const Settings = require('../models/Settings');
 
-const allowedMenuFields = ['name', 'description', 'price', 'category', 'available', 'imageUrl'];
+const allowedMenuFields = ['name', 'description', 'price', 'category', 'department', 'available', 'imageUrl'];
 
 function pickMenuFields(source) {
   const picked = {};
@@ -84,13 +84,17 @@ router.get('/orders',
     const { status, limit = 100 } = req.query;
     const filter = { ...hotelFilter(req) };
     if (status) filter.status = status;
+    const role = req.user.role;
+    if (['kitchen', 'reception'].includes(role)) {
+      filter['items.department'] = role;
+    }
     const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(parseInt(limit));
     res.json(orders);
   });
 
 router.patch(
   '/orders/:id/status',
-  requireRole('admin', 'kitchen'),
+  requireRole('admin', 'kitchen', 'reception'),
   param('id').isMongoId(),
   body('status').isIn(['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']),
   async (req, res) => {
@@ -105,9 +109,9 @@ router.patch(
     await order.save();
 
     const io = req.app.get('io');
+    const orderDepts = [...new Set(order.items.map(i => i.department))];
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
-    io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
-    io.to('kitchen_all').emit('order_status_updated', order.toObject());
+    orderDepts.forEach((dept) => io.to(`${dept}_${order.hotelId}`).emit('order_status_updated', order.toObject()));
 
     notifyRoom(order.roomUuid, {
       title: 'Hestia',
@@ -130,7 +134,7 @@ router.patch(
 
 router.patch(
   '/orders/:id/payment',
-  requireRole('admin', 'kitchen'),
+  requireRole('admin', 'kitchen', 'reception'),
   param('id').isMongoId(),
   body('paymentStatus').isIn(['Pending', 'Paid']),
   async (req, res) => {
@@ -143,9 +147,9 @@ router.patch(
     await order.save();
 
     const io = req.app.get('io');
+    const orderDepts = [...new Set(order.items.map(i => i.department))];
     io.to(`room_${order.roomUuid}`).emit('order_status_updated', order.toObject());
-    io.to(`kitchen_${order.hotelId}`).emit('order_status_updated', order.toObject());
-    io.to('kitchen_all').emit('order_status_updated', order.toObject());
+    orderDepts.forEach((dept) => io.to(`${dept}_${order.hotelId}`).emit('order_status_updated', order.toObject()));
     res.json(order);
   }
 );
@@ -225,6 +229,7 @@ const menuValidation = [
   body('description').optional().trim().escape(),
   body('price').isFloat({ min: 0 }).toFloat(),
   body('category').trim().notEmpty().escape(),
+  body('department').optional().isIn(['kitchen', 'reception']),
   body('available').optional().isBoolean().toBoolean(),
   body('imageUrl').optional().trim().custom((value) => {
     if (!value) return true;
@@ -433,7 +438,7 @@ router.post('/users',
   requireRole('admin'),
   body('username').trim().notEmpty().escape().isLength({ min: 3 }),
   body('password').isLength({ min: 6 }),
-  body('role').isIn(['admin', 'kitchen']),
+  body('role').isIn(['admin', 'kitchen', 'reception']),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
     const { username, password, role } = req.body;

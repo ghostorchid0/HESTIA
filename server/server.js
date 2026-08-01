@@ -163,18 +163,19 @@ io.on('connection', (socket) => {
     socket.join(`room_${roomUuid}`);
   });
 
-  socket.on('join_kitchen', () => {
+  socket.on('join_staff', () => {
     if (
       !socket.authenticated ||
-      !['admin', 'kitchen', 'superadmin'].includes(socket.user.role)
+      !['admin', 'kitchen', 'reception', 'superadmin'].includes(socket.user.role)
     ) {
-      console.log('[socket] join_kitchen rejected', socket.id, 'auth=', socket.authenticated, 'role=', socket.user?.role);
+      console.log('[socket] join_staff rejected', socket.id, 'auth=', socket.authenticated, 'role=', socket.user?.role);
       return;
     }
     const hotelId = socket.user.hotelId ? socket.user.hotelId.toString() : 'all';
-    socket.join(`kitchen_${hotelId}`);
-    socket.join('kitchen_all');
-    console.log(`[socket] join_kitchen ${socket.id} hotel=${hotelId}`);
+    const role = socket.user.role;
+    if (['admin', 'superadmin', 'kitchen'].includes(role)) socket.join(`kitchen_${hotelId}`);
+    if (['admin', 'superadmin', 'reception'].includes(role)) socket.join(`reception_${hotelId}`);
+    console.log(`[socket] join_staff ${socket.id} role=${role} hotel=${hotelId}`);
   });
 
   socket.on('leave_room_channel', (roomUuid) => {
@@ -189,9 +190,10 @@ io.on('connection', (socket) => {
     if (hotelId && typeof hotelId === 'string') socket.leave(`hotel_${hotelId}`);
   });
 
-  socket.on('leave_kitchen', () => {
+  socket.on('leave_staff', () => {
     const hotelId = socket.user?.hotelId ? socket.user.hotelId.toString() : 'all';
     socket.leave(`kitchen_${hotelId}`);
+    socket.leave(`reception_${hotelId}`);
   });
 });
 

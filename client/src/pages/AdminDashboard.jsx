@@ -27,6 +27,7 @@ function Layout({ children }) {
   const role = localStorage.getItem('hestia_role')
   const isAdmin = role === 'admin' || role === 'superadmin'
   const isSuperadmin = role === 'superadmin'
+  const isStaff = isAdmin || role === 'kitchen' || role === 'reception'
   const location = useLocation()
   const path = location.pathname
   const [hotels, setHotels] = useState([])
@@ -102,7 +103,7 @@ function Layout({ children }) {
       </header>
       <div className="mx-auto max-w-6xl p-6 md:flex md:gap-8">
         <nav className="mb-6 flex flex-wrap gap-2 md:w-56 md:flex-col">
-          <NavItem to="/admin/dashboard" label={t('admin.orders')} />
+          {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} />}
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}
           {isAdmin && <NavItem to="/admin/analytics" label={t('admin.analytics')} />}
@@ -131,12 +132,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!token) return
-    const joinKitchen = () => socket.emit('join_kitchen')
-    socket.on('connect', joinKitchen)
+    const joinStaff = () => socket.emit('join_staff')
+    socket.on('connect', joinStaff)
     socket.disconnect().connect()
     return () => {
-      socket.off('connect', joinKitchen)
-      socket.emit('leave_kitchen')
+      socket.off('connect', joinStaff)
+      socket.emit('leave_staff')
     }
   }, [token])
 

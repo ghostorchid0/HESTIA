@@ -6,6 +6,7 @@ const orderItemSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
   notes: { type: String, maxlength: 500 },
+  department: { type: String, enum: ['kitchen', 'reception'], default: 'kitchen' },
 }, { _id: false });
 
 const statusHistorySchema = new mongoose.Schema({

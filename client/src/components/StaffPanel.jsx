@@ -54,6 +54,7 @@ export default function StaffPanel() {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('staffPanel.role')}</label>
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} className="input-luxe w-full">
               <option value="kitchen">{t('staffPanel.kitchen')}</option>
+              <option value="reception">{t('staffPanel.reception')}</option>
               <option value="admin">{t('staffPanel.admin')}</option>
             </select>
           </div>
@@ -81,7 +82,11 @@ export default function StaffPanel() {
                 <tr key={u._id} className="border-b border-hestia-linen last:border-0">
                   <td className="py-3 font-medium text-hestia-navy">{u.username}</td>
                   <td className="py-3">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${u.role === 'admin' ? 'bg-hestia-gold/10 text-hestia-gold' : 'bg-hestia-navy/10 text-hestia-navy'}`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
+                      u.role === 'admin' ? 'bg-hestia-gold/10 text-hestia-gold' :
+                      u.role === 'reception' ? 'bg-blue-100 text-blue-700' :
+                      'bg-hestia-navy/10 text-hestia-navy'
+                    }`}>
                       {t(`staffPanel.${u.role}`)}
                     </span>
                   </td>

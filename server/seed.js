@@ -41,7 +41,11 @@ async function seedData() {
         { name: 'Dental Kit', description: 'Toothbrush and toothpaste', price: 4, category: 'Amenities', available: true, imageUrl: '' },
         { name: 'Extra Towels', description: 'Set of 2 bath towels', price: 0, category: 'Amenities', available: true, imageUrl: '' },
       ];
-      await MenuItem.insertMany(menuItems.map(i => ({ ...i, hotelId: defaultHotel._id })));
+      await MenuItem.insertMany(menuItems.map(i => ({
+        ...i,
+        hotelId: defaultHotel._id,
+        department: i.category === 'Amenities' ? 'reception' : 'kitchen',
+      })));
       console.log('Seeded menu items');
     }
 
@@ -112,7 +116,11 @@ async function seedData() {
         { name: 'Jus de bissap', description: '50 cl', price: 1200, category: 'Boissons', available: true, imageUrl: '' },
         { name: 'Eau minérale', description: '50 cl', price: 800, category: 'Boissons', available: true, imageUrl: '' },
       ];
-      await MenuItem.insertMany(demoMenu.map(i => ({ ...i, hotelId: demoHotel._id })));
+      await MenuItem.insertMany(demoMenu.map(i => ({
+        ...i,
+        hotelId: demoHotel._id,
+        department: i.category === 'Amenities' ? 'reception' : 'kitchen',
+      })));
       console.log('Seeded demo menu');
     }
 

@@ -181,6 +181,14 @@ io.on('connection', (socket) => {
     if (roomUuid && typeof roomUuid === 'string') socket.leave(`room_${roomUuid}`);
   });
 
+  socket.on('join_hotel_channel', (hotelId) => {
+    if (hotelId && typeof hotelId === 'string') socket.join(`hotel_${hotelId}`);
+  });
+
+  socket.on('leave_hotel_channel', (hotelId) => {
+    if (hotelId && typeof hotelId === 'string') socket.leave(`hotel_${hotelId}`);
+  });
+
   socket.on('leave_kitchen', () => {
     const hotelId = socket.user?.hotelId ? socket.user.hotelId.toString() : 'all';
     socket.leave(`kitchen_${hotelId}`);

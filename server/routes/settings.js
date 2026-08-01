@@ -73,6 +73,8 @@ router.put('/',
       updates,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+    const io = req.app.get('io');
+    if (io) io.to(`hotel_${hotelId.toString()}`).emit('settings_updated');
     res.json(settings);
   });
 
@@ -105,6 +107,8 @@ router.put('/branding',
       updates,
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+    const io = req.app.get('io');
+    if (io) io.to(`hotel_${hotelId.toString()}`).emit('settings_updated');
     res.json(settings);
   });
 

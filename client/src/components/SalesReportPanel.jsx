@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
@@ -137,7 +139,87 @@ export default function SalesReportPanel() {
     fontSize: '0.75rem',
   }
 
-  const printReport = () => window.print()
+  const downloadPDF = () => {
+    if (!report) return
+    const currency = settings?.currency || ''
+    const doc = new jsPDF('p', 'pt', 'a4')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const margin = 40
+    let y = 40
+
+    doc.setFontSize(10).setTextColor(150)
+    doc.text(settings?.hotelName || 'Hestia', margin, y)
+    y += 15
+    doc.text(new Date().toLocaleString(), margin, y)
+    y += 30
+
+    doc.setFontSize(20).setTextColor(11, 26, 42)
+    doc.text(t('salesReportPanel.title'), margin, y)
+    y += 22
+    doc.setFontSize(11).setTextColor(120)
+    doc.text(periodLabel, margin, y)
+    y += 35
+
+    doc.setFontSize(12).setTextColor(11, 26, 42)
+    doc.text(`${t('salesReportPanel.totalOrders')}: ${report.totalOrders}`, margin, y)
+    y += 18
+    doc.text(`${t('salesReportPanel.totalRevenue')}: ${formatCurrency(report.totalRevenue, currency)}`, margin, y)
+    y += 18
+    doc.text(`${t('salesReportPanel.averageOrder')}: ${formatCurrency(report.averageOrderValue, currency)}`, margin, y)
+    y += 30
+
+    autoTable(doc, {
+      startY: y,
+      head: [[t('salesReportPanel.item'), t('salesReportPanel.category'), t('salesReportPanel.quantity'), t('salesReportPanel.revenue')]],
+      body: report.topItems.slice(0, 8).map(it => [it.name, it.category || '-', String(it.quantity), formatCurrency(it.revenue, currency)]),
+      theme: 'grid',
+      headStyles: { fillColor: [11, 26, 42], textColor: [247, 245, 240] },
+      styles: { fontSize: 9, cellPadding: 4 },
+      margin: { left: margin, right: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+
+    y = doc.lastAutoTable.finalY + 25
+    if (y > 650) {
+      doc.addPage()
+      y = 40
+    }
+
+    autoTable(doc, {
+      startY: y,
+      head: [[t('salesReportPanel.category'), t('salesReportPanel.quantity'), t('salesReportPanel.revenue')]],
+      body: report.categorySales.map(c => [c.category, String(c.quantity), formatCurrency(c.revenue, currency)]),
+      theme: 'grid',
+      headStyles: { fillColor: [201, 162, 39], textColor: [11, 26, 42] },
+      styles: { fontSize: 9, cellPadding: 4 },
+      margin: { left: margin, right: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+
+    y = doc.lastAutoTable.finalY + 25
+    if (y > 520) {
+      doc.addPage()
+      y = 40
+    }
+
+    autoTable(doc, {
+      startY: y,
+      head: [[t('room'), t('salesReportPanel.item'), t('total'), t('date')]],
+      body: report.orders.slice(0, 30).map(o => [
+        String(o.roomNumber),
+        o.items.map(i => `${i.quantity}x ${i.name}`).join(' | '),
+        formatCurrency(o.total, currency),
+        new Date(o.createdAt).toLocaleString(),
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [11, 26, 42], textColor: [247, 245, 240] },
+      styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+      margin: { left: margin, right: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+
+    doc.save(`hestia-sales-report-${date}-${period}.pdf`)
+  }
 
   return (
     <div>
@@ -172,7 +254,7 @@ export default function SalesReportPanel() {
           <button onClick={downloadCSV} className="btn-outline">
             CSV
           </button>
-          <button onClick={printReport} className="btn-outline">
+          <button onClick={downloadPDF} className="btn-outline">
             PDF
           </button>
         </div>

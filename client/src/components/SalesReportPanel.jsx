@@ -35,7 +35,7 @@ export default function SalesReportPanel() {
     if (!report) return ''
     const start = new Date(report.start).toLocaleDateString()
     const end = new Date(report.end).toLocaleDateString()
-    return start === end ? start : `${start} → ${end}`
+    return start === end ? start : `${start} - ${end}`
   }, [report])
 
   const downloadReport = () => {
@@ -164,13 +164,15 @@ export default function SalesReportPanel() {
     doc.setFontSize(10)
     doc.text(t('salesReportPanel.title').toUpperCase(), margin, 65)
     doc.setTextColor(150)
-    doc.text(new Date().toLocaleString(), pageWidth - margin, 65, { align: 'right' })
+    doc.text(`${t('generated') || 'Generated'} ${new Date().toLocaleString()}`, pageWidth - margin, 65, { align: 'right' })
+    doc.setDrawColor(...accent)
+    doc.setLineWidth(1)
+    doc.line(margin, 75, pageWidth - margin, 75)
 
-    let y = 110
+    let y = 115
     doc.setTextColor(...navy)
     doc.setFontSize(16)
-    const printablePeriod = periodLabel.replace(/→/g, '->')
-    doc.text(printablePeriod, pageWidth / 2, y, { align: 'center' })
+    doc.text(periodLabel, pageWidth / 2, y, { align: 'center' })
     y += 30
 
     doc.setFillColor(250, 249, 246)

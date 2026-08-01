@@ -5,6 +5,7 @@ import { socket } from '../socket'
 import api from '../api'
 import { unlockAudio } from '../utils/beep'
 import useSettings from '../hooks/useSettings'
+import useSubscription from '../hooks/useSubscription'
 import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
@@ -22,6 +23,7 @@ const SubscriptionsPanel = lazy(() => import('../components/SubscriptionsPanel')
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
   const { settings, refresh } = useSettings()
+  const { plan, status, trialDaysLeft } = useSubscription()
   const role = localStorage.getItem('hestia_role')
   const isAdmin = role === 'admin' || role === 'superadmin'
   const isSuperadmin = role === 'superadmin'
@@ -78,6 +80,11 @@ function Layout({ children }) {
           <div className="flex items-center gap-3">
             <span className="font-serif text-2xl text-white">{settings?.hotelName || 'Hestia'}</span>
             <span className="rounded border border-hestia-gold/30 px-2 py-0.5 text-xs uppercase tracking-wider text-hestia-gold">{role}</span>
+            {plan && (
+              <span className={`rounded border px-2 py-0.5 text-xs uppercase tracking-wider ${status === 'TRIAL' ? 'border-hestia-gold/30 text-hestia-gold' : 'border-green-500/30 text-green-400'}`}>
+                {plan} {status === 'TRIAL' && ` - ${trialDaysLeft}d`}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {isSuperadmin && hotels.length > 0 && (

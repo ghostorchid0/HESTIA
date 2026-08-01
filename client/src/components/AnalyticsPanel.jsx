@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
+import FeatureGate from './FeatureGate'
 
 export default function AnalyticsPanel() {
   const { t } = useTranslation()
@@ -16,6 +17,7 @@ export default function AnalyticsPanel() {
   if (!data) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" /></div>
 
   return (
+    <FeatureGate feature="REVENUE_DASHBOARD" fallback={<div className="p-8 text-center text-gray-500">🔒 Analytics dashboard requires PRO or Enterprise.</div>}>
     <div>
       <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('analyticsPanel.title')}</h1>
       <div className="mb-8 grid gap-6 sm:grid-cols-3">
@@ -44,5 +46,6 @@ export default function AnalyticsPanel() {
         ))}
       </div>
     </div>
+    </FeatureGate>
   )
 }

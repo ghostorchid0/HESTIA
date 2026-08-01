@@ -15,6 +15,7 @@ async function seedData() {
         slug: 'default',
         currency: '$',
         active: true,
+        subscription: { plan: 'ENTERPRISE', status: 'TRIAL' },
       });
       console.log('Seeded default hotel');
     }
@@ -87,6 +88,7 @@ async function seedData() {
         currency: 'XOF',
         contactPhone: '+228 90 00 00 00',
         active: true,
+        subscription: { plan: 'PRO', status: 'TRIAL' },
       });
       console.log('Seeded demo hotel');
     }

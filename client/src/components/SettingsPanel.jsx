@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
+import PlanOverview from './PlanOverview'
 
 export default function SettingsPanel() {
   const { t } = useTranslation()
@@ -29,8 +30,10 @@ export default function SettingsPanel() {
   }
 
   return (
-    <div>
-      <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('settingsPanel.title')}</h1>
+    <div className="space-y-8">
+      <h1 className="text-3xl font-light text-hestia-navy">{t('settingsPanel.title')}</h1>
+
+      <PlanOverview />
 
       <form onSubmit={save} className="card-luxe p-8">
         <div className="grid gap-5 md:grid-cols-2">

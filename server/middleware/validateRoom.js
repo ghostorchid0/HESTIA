@@ -12,13 +12,20 @@ async function validateRoom(req, res, next) {
 
   const hotel = room.hotelId;
   const now = new Date();
-  const isActive = hotel && (hotel.subscriptionStatus === 'active' ||
-    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now));
+  const status = hotel?.subscription?.status || 'TRIAL';
+  const trialEndsAt = hotel?.subscription?.trialEndsAt;
+  const subscriptionExpiresAt = hotel?.subscription?.subscriptionExpiresAt;
+
+  const isActive = status === 'ACTIVE' ||
+    (status === 'TRIAL' && trialEndsAt && new Date(trialEndsAt) > now) ||
+    (status === 'PAST_DUE' && false);
+
   if (!isActive) {
     return res.status(403).json({ message: 'This hotel service is temporarily unavailable.' });
   }
 
   req.room = room;
+  req.hotelId = room.hotelId._id;
   next();
 }
 

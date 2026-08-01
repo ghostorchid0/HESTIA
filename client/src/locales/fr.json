@@ -146,7 +146,20 @@
     "roomNumber": "Numéro de chambre",
     "addRoom": "Ajouter une chambre",
     "qrBaseUrl": "URL de base du QR",
-    "loadingQr": "Chargement du QR..."
+    "loadingQr": "Chargement du QR...",
+    "usage": "Utilisation des chambres",
+    "rooms": "chambres",
+    "limitReached": "Limite de chambres atteinte pour"
+  },
+  "planOverview": {
+    "title": "Formule & facturation",
+    "currentPlan": "Formule actuelle",
+    "trialDays": "jours restants",
+    "rooms": "Chambres",
+    "current": "Actuel",
+    "upgradeTo": "Passer à {{plan}}",
+    "alreadyOnPlan": "Déjà sur cette formule",
+    "upgrading": "Mise à jour..."
   },
   "analyticsPanel": {
     "title": "Analyses",

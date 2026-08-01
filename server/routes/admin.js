@@ -8,6 +8,9 @@ const fsp = require('fs/promises');
 const router = express.Router();
 const config = require('../config');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const checkRoomLimit = require('../middleware/checkRoomLimit');
+const checkSubscriptionStatus = require('../middleware/checkSubscriptionStatus');
+const { hasFeature, featureTiers } = require('../middleware/hasFeature');
 const upload = require('../middleware/upload');
 const { notifyRoom } = require('../services/push');
 const { sendSms } = require('../services/sms');
@@ -66,14 +69,7 @@ router.use((req, res, next) => {
 router.use(async (req, res, next) => {
   if (req.user.role === 'superadmin') return next();
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  if (!req.hotelId) return next();
-  const hotel = await Hotel.findById(req.hotelId);
-  if (!hotel) return next();
-  const now = new Date();
-  const isActive = hotel.subscriptionStatus === 'active' ||
-    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now);
-  if (isActive) return next();
-  return res.status(403).json({ message: 'Subscription expired or cancelled. Please renew your plan.' });
+  return checkSubscriptionStatus(req, res, next);
 });
 
 function hotelFilter(req) {
@@ -162,6 +158,7 @@ router.get('/rooms', requireRole('admin'), async (req, res) => {
 router.post('/rooms',
   requireRole('admin'),
   body('number').trim().notEmpty().escape(),
+  checkRoomLimit,
   async (req, res) => {
     if (!handleValidation(req, res)) return;
     const room = await Room.create({ hotelId: req.hotelId, uuid: uuidv4(), number: req.body.number, active: true });
@@ -574,5 +571,46 @@ router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) =
   await workbook.xlsx.write(res);
   res.end();
 });
+
+function getFeatureFlags(plan) {
+  const flags = {};
+  for (const [feature, plans] of Object.entries(featureTiers)) {
+    flags[feature] = plans.includes(plan);
+  }
+  return flags;
+}
+
+router.get('/subscription', requireRole('admin'), async (req, res) => {
+  const hotel = await Hotel.findById(req.hotelId).lean();
+  if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
+  const used = await Room.countDocuments({ hotelId: req.hotelId, active: true });
+  const now = new Date();
+  const trialEndsAt = hotel.subscription?.trialEndsAt;
+  const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt) - now) / (1000 * 60 * 60 * 24))) : 0;
+  res.json({
+    subscription: hotel.subscription,
+    rooms: { used, max: hotel.subscription?.maxRoomsAllowed || 12 },
+    trialDaysLeft,
+    features: getFeatureFlags(hotel.subscription?.plan),
+  });
+});
+
+router.patch('/subscription/upgrade',
+  requireRole('admin'),
+  body('plan').isIn(['STARTER', 'PRO', 'ENTERPRISE']),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const hotel = await Hotel.findById(req.hotelId);
+    if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
+    hotel.subscription.plan = req.body.plan;
+    if (hotel.subscription.status === 'TRIAL' || hotel.subscription.status === 'PAST_DUE') {
+      hotel.subscription.status = 'ACTIVE';
+    }
+    await hotel.save();
+    res.json({
+      subscription: hotel.subscription,
+      features: getFeatureFlags(hotel.subscription.plan),
+    });
+  });
 
 module.exports = router;

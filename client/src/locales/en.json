@@ -146,7 +146,20 @@
     "roomNumber": "Room number",
     "addRoom": "Add Room",
     "qrBaseUrl": "QR base URL",
-    "loadingQr": "Loading QR..."
+    "loadingQr": "Loading QR...",
+    "usage": "Room usage",
+    "rooms": "rooms",
+    "limitReached": "Room limit reached for"
+  },
+  "planOverview": {
+    "title": "Plan & Billing",
+    "currentPlan": "Current plan",
+    "trialDays": "days left",
+    "rooms": "Rooms",
+    "current": "Current",
+    "upgradeTo": "Upgrade to {{plan}}",
+    "alreadyOnPlan": "Already on this plan",
+    "upgrading": "Upgrading..."
   },
   "analyticsPanel": {
     "title": "Analytics",

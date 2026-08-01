@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import useSubscription from '../hooks/useSubscription'
 
 export default function RoomsPanel() {
   const { t } = useTranslation()
+  const { rooms: usage, isRoomLimitReached, plan } = useSubscription()
   const [rooms, setRooms] = useState([])
   const [number, setNumber] = useState('')
   const [host, setHost] = useState(window.location.origin)
@@ -32,9 +34,14 @@ export default function RoomsPanel() {
 
   const addRoom = async (e) => {
     e.preventDefault()
-    await api.post('/admin/rooms', { number })
-    setNumber('')
-    fetchRooms()
+    if (isRoomLimitReached) return
+    try {
+      await api.post('/admin/rooms', { number })
+      setNumber('')
+      fetchRooms()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to add room')
+    }
   }
 
   const toggle = async (id) => {
@@ -72,6 +79,22 @@ export default function RoomsPanel() {
     <div>
       <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('roomsPanel.title')}</h1>
 
+      <div className="card-luxe mb-6 p-6">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.usage')}</p>
+          <p className="text-sm font-medium text-hestia-navy">{usage.used} / {usage.max} {t('roomsPanel.rooms')}</p>
+        </div>
+        <div className="h-3 w-full overflow-hidden rounded-full bg-hestia-linen">
+          <div
+            className={`h-full rounded-full transition-all ${isRoomLimitReached ? 'bg-red-500' : 'bg-hestia-gold'}`}
+            style={{ width: `${Math.min(100, (usage.max ? usage.used / usage.max : 0) * 100)}%` }}
+          />
+        </div>
+        {isRoomLimitReached && (
+          <p className="mt-2 text-sm text-red-500">{t('roomsPanel.limitReached')} <span className="font-medium uppercase">{plan}</span></p>
+        )}
+      </div>
+
       <form onSubmit={addRoom} className="card-luxe mb-6 flex gap-4 p-6">
         <div className="flex-1">
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.roomNumber')}</label>
@@ -80,9 +103,10 @@ export default function RoomsPanel() {
             onChange={e => setNumber(e.target.value)}
             className="input-luxe w-full"
             required
+            disabled={isRoomLimitReached}
           />
         </div>
-        <button className="btn-primary self-end">{t('roomsPanel.addRoom')}</button>
+        <button className="btn-primary self-end disabled:opacity-50" disabled={isRoomLimitReached}>{t('roomsPanel.addRoom')}</button>
       </form>
 
       <div className="card-luxe mb-6 p-6">

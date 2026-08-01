@@ -41,19 +41,19 @@ export default function AnalyticsPanel() {
       <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.totalOrders')}</p>
-          <p className="mt-2 font-serif text-4xl text-hestia-navy">{data.totalOrders}</p>
+          <p className="mt-2 break-words font-serif text-2xl text-hestia-navy sm:text-3xl lg:text-4xl">{data.totalOrders}</p>
         </div>
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.delivered')}</p>
-          <p className="mt-2 font-serif text-4xl text-green-700">{data.deliveredOrders}</p>
+          <p className="mt-2 break-words font-serif text-2xl text-green-700 sm:text-3xl lg:text-4xl">{data.deliveredOrders}</p>
         </div>
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.paidOrders')}</p>
-          <p className="mt-2 font-serif text-4xl text-hestia-gold">{data.paidOrders}</p>
+          <p className="mt-2 break-words font-serif text-2xl text-hestia-gold sm:text-3xl lg:text-4xl">{data.paidOrders}</p>
         </div>
         <div className="card-luxe p-6 text-center transition hover:shadow-luxe">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('analyticsPanel.revenue')}</p>
-          <p className="mt-2 font-serif text-4xl text-hestia-gold">{formatCurrency(data.revenue, settings?.currency)}</p>
+          <p className="mt-2 break-words font-serif text-2xl text-hestia-gold sm:text-3xl lg:text-4xl">{formatCurrency(data.revenue, settings?.currency)}</p>
         </div>
       </div>
 

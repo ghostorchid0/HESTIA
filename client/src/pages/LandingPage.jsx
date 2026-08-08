@@ -1,16 +1,14 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import useSettings from '../hooks/useSettings'
 
 export default function LandingPage() {
   const { t } = useTranslation()
-  const { settings } = useSettings()
 
   return (
     <div className="min-h-screen bg-hestia-cream">
       <header className="border-b border-hestia-linen bg-white/80 px-4 py-3 backdrop-blur-md sm:px-6 sm:py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{settings?.hotelName || t('appName')}</span>
+          <span className="font-serif text-xl text-hestia-navy sm:text-2xl">{t('appName')}</span>
           <div className="flex items-center gap-3">
             <Link to="/admin/login" className="text-sm font-medium text-hestia-navy hover:text-hestia-gold">{t('landing.staffLogin')}</Link>
           </div>

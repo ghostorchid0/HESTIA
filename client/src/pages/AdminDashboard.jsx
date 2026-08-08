@@ -8,12 +8,14 @@ import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
 import SettingsPanel from '../components/SettingsPanel'
+import HotelsPanel from '../components/HotelsPanel'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
   const { settings } = useSettings()
   const role = localStorage.getItem('hestia_role')
   const isAdmin = role === 'admin' || role === 'superadmin'
+  const isSuperadmin = role === 'superadmin'
   const isStaff = isAdmin || role === 'kitchen' || role === 'reception'
   const location = useLocation()
   const path = location.pathname
@@ -64,6 +66,7 @@ function Layout({ children }) {
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}
           {isAdmin && <NavItem to="/admin/settings" label={t('admin.settings')} />}
+          {isSuperadmin && <NavItem to="/admin/hotels" label={t('admin.hotels')} />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>
@@ -110,6 +113,7 @@ export default function AdminDashboard() {
         <Route path="menu" element={<MenuPanel />} />
         <Route path="rooms" element={<RoomsPanel />} />
         <Route path="settings" element={<SettingsPanel />} />
+        <Route path="hotels" element={<HotelsPanel />} />
         <Route path="*" element={<OrdersPanel />} />
       </Routes>
     </Layout>

@@ -39,35 +39,35 @@
   },
   "landing": {
     "staffLogin": "Staff login",
-    "headline": "Digital room service for modern hotels",
-    "subheadline": "Let your guests order room service from their phone with a simple QR code scan. Faster service, happier guests, more revenue.",
-    "demo": "Request a demo",
-    "admin": "Admin dashboard",
-    "featuresTitle": "Why hotels love Hestia",
+    "headline": "Less chaos at reception, more revenue for your hotel",
+    "subheadline": "Hestia centralizes orders, service requests and payments. No more lost messages, calls or forgotten tasks.",
+    "demo": "See the demo",
+    "admin": "Dashboard",
+    "featuresTitle": "Why Hestia changes your hotel's daily life",
     "feature": {
-      "qrOrdering": { "title": "QR ordering", "desc": "Guests scan, browse the menu and order in seconds. No app download needed." },
-      "staffDashboard": { "title": "Staff dashboard", "desc": "Kitchen and reception track orders in real time, update status and manage payments." },
-      "payment": { "title": "Local payments", "desc": "Cash on delivery, Mobile Money or room charge — choose what works for your guests." }
+      "qrOrdering": { "title": "All orders in one place", "desc": "No more WhatsApp and paper. Kitchen and reception see everything in real time." },
+      "staffDashboard": { "title": "Guests install nothing", "desc": "A simple QR code in the room. They order, request service or pay from their phone." },
+      "payment": { "title": "Your team saves time", "desc": "Less calls, less back and forth. Your staff focuses on hospitality." }
     },
-    "pricingTitle": "Simple pricing",
-    "pricingDesc": "One flat monthly fee per hotel. No hidden commissions.",
-    "plan": "Per hotel",
-    "price": "$49",
-    "perMonth": "/ month",
+    "pricingTitle": "Try Hestia with no commitment",
+    "pricingDesc": "30-day free trial. No commission, no credit card.",
+    "plan": "Free trial",
+    "price": "Free",
+    "perMonth": "30 days, then a plan tailored to your hotel",
     "includes": {
-      "rooms": "Unlimited rooms & QR codes",
+      "rooms": "Unlimited QR codes per room",
       "orders": "Unlimited orders",
-      "support": "Email & WhatsApp support"
+      "support": "WhatsApp & call support"
     },
-    "start": "Start now",
-    "footer": "© 2025 Hestia. Built for hotels in Togo and beyond."
+    "start": "Request a trial",
+    "footer": "© 2025 Hestia. Built for African hotels."
   },
   "demoPage": {
-    "tagline": "Live demo",
-    "instructions": "Choose a demo room below to see exactly what your guests will experience when they scan their QR code.",
+    "tagline": "See what your guests will see",
+    "instructions": "You are a guest in a room. Open one to scan and order as they would in your hotel.",
     "scanOrClick": "Scan the QR code or click to open",
     "openRoom": "Open as guest",
-    "tryStaff": "Try the staff dashboard",
+    "tryStaff": "Try the reception dashboard",
     "notFound": "Demo not configured"
   },
   "roomPage": {

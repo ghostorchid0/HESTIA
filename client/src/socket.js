@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client'
+import { unlockAudio } from './utils/beep'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || ''
 
@@ -21,7 +22,6 @@ socket.on('connect', () => {
     socket.emit('join_staff')
   }
   // Try to unlock audio on socket connect (user is likely interacting)
-  const { unlockAudio } = require('./utils/beep')
   unlockAudio()
 })
 socket.on('disconnect', (reason) => console.log('[socket] disconnected', reason))

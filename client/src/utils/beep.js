@@ -8,9 +8,20 @@ function getAudioContext() {
 }
 
 export function unlockAudio() {
+  console.log('unlockAudio called')
   const ctx = getAudioContext()
+  console.log('AudioContext obtained:', ctx, 'state:', ctx?.state)
   if (ctx && ctx.state === 'suspended') {
-    ctx.resume().catch(() => {})
+    console.log('Resuming suspended AudioContext')
+    ctx.resume().then(() => {
+      console.log('AudioContext resumed successfully')
+    }).catch((err) => {
+      console.error('Failed to resume AudioContext:', err)
+    })
+  } else if (ctx) {
+    console.log('AudioContext state is not suspended:', ctx.state)
+  } else {
+    console.error('No AudioContext available to unlock')
   }
 }
 

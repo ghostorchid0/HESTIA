@@ -45,8 +45,10 @@ export default function OrdersPanel() {
   }
 
   const manualUnlockAudio = () => {
+    console.log('Manual unlock audio button clicked')
     unlockAudio()
     setAudioUnlocked(true)
+    console.log('Audio unlocked flag set to true')
   }
 
   const downloadExcel = async () => {

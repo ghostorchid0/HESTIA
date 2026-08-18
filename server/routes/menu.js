@@ -15,8 +15,13 @@ const publicLimiter = rateLimit({
 function isSubscriptionActive(hotel) {
   if (!hotel) return false;
   const now = new Date();
-  return hotel.subscriptionStatus === 'active' ||
-    (hotel.subscriptionStatus === 'trial' && hotel.trialEndsAt && hotel.trialEndsAt > now);
+  // Check both legacy and new subscription fields
+  const status = hotel.subscriptionStatus || hotel.subscription?.status;
+  const trialEndsAt = hotel.trialEndsAt || hotel.subscription?.trialEndsAt;
+  const activeStatuses = ['active', 'ACTIVE', 'trial', 'TRIAL'];
+  return activeStatuses.includes(status) ||
+    (status === 'trial' && trialEndsAt && trialEndsAt > now) ||
+    (status === 'TRIAL' && trialEndsAt && trialEndsAt > now);
 }
 
 async function resolveHotelId(req) {

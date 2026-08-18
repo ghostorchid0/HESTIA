@@ -26,7 +26,11 @@ const seedData = require('./seed');
 const app = express();
 app.set('trust proxy', 1);
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: config.clientUrl } });
+const io = new Server(server, {
+  cors: { origin: config.clientUrl },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
 
 app.set('io', io);
 app.use(helmet({

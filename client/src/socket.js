@@ -20,6 +20,9 @@ socket.on('connect', () => {
   if (token) {
     socket.emit('join_staff')
   }
+  // Try to unlock audio on socket connect (user is likely interacting)
+  const { unlockAudio } = require('./utils/beep')
+  unlockAudio()
 })
 socket.on('disconnect', (reason) => console.log('[socket] disconnected', reason))
 socket.on('connect_error', (err) => console.error('[socket] connect_error', err.message))

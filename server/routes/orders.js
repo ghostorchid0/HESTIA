@@ -73,10 +73,13 @@ router.post(
       history: [{ status: 'Received', changedBy: 'guest' }],
     });
 
+    // Emit socket event immediately after order creation
     const io = req.app.get('io');
     const departments = [...new Set(order.items.map(i => i.department))];
     departments.forEach((dept) => io.to(`${dept}_${order.hotelId}`).emit('new_order', order.toObject()));
+    console.log(`Socket emitted new_order for order ${order._id} to departments:`, departments);
 
+    // Send SMS after socket (non-critical, won't break order if it fails)
     try {
       const hotel = await Hotel.findById(room.hotelId);
       if (hotel?.contactPhone) {

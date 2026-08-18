@@ -116,12 +116,16 @@ async function seedData() {
         { name: 'Jus de bissap', description: '50 cl', price: 1200, category: 'Boissons', available: true, imageUrl: '' },
         { name: 'Eau minérale', description: '50 cl', price: 800, category: 'Boissons', available: true, imageUrl: '' },
       ];
-      await MenuItem.insertMany(demoMenu.map(i => ({
-        ...i,
-        hotelId: demoHotel._id,
-        department: i.category === 'Amenities' ? 'reception' : 'kitchen',
-      })));
-      console.log('Seeded demo menu');
+      try {
+        await MenuItem.insertMany(demoMenu.map(i => ({
+          ...i,
+          hotelId: demoHotel._id,
+          department: i.category === 'Amenities' ? 'reception' : 'kitchen',
+        })));
+        console.log('Seeded demo menu');
+      } catch (err) {
+        console.error('Failed to seed demo menu:', err);
+      }
     }
 
     const demoSettings = await Settings.findOne({ hotelId: demoHotel._id });

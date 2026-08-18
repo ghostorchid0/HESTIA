@@ -22,7 +22,6 @@ export default function OrdersPanel() {
     const stored = localStorage.getItem('hestia_sound')
     return stored === null ? true : stored === 'true'
   })
-  const [audioUnlocked, setAudioUnlocked] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -37,18 +36,6 @@ export default function OrdersPanel() {
     const next = !soundEnabled
     setSoundEnabled(next)
     localStorage.setItem('hestia_sound', next)
-    // Unlock audio when enabling sound
-    if (next) {
-      unlockAudio()
-      setAudioUnlocked(true)
-    }
-  }
-
-  const manualUnlockAudio = () => {
-    console.log('Manual unlock audio button clicked')
-    unlockAudio()
-    setAudioUnlocked(true)
-    console.log('Audio unlocked flag set to true')
   }
 
   const downloadExcel = async () => {
@@ -80,14 +67,8 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     const onNew = (order) => {
-      console.log('New order received via socket:', order)
       setOrders((prev) => [order, ...prev])
-      if (soundEnabled) {
-        console.log('Playing beep (sound enabled)')
-        playBeep()
-      } else {
-        console.log('Sound disabled, not playing beep')
-      }
+      if (soundEnabled) playBeep()
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
@@ -130,14 +111,6 @@ export default function OrdersPanel() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-light text-hestia-navy">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-3">
-          {!audioUnlocked && soundEnabled && (
-            <button
-              onClick={manualUnlockAudio}
-              className="rounded-lg border border-hestia-gold bg-hestia-gold/10 px-4 py-2 text-sm font-medium text-hestia-gold transition hover:bg-hestia-gold hover:text-white"
-            >
-              Activer le son
-            </button>
-          )}
           <button
             onClick={toggleSound}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold' : 'bg-gray-100 text-gray-600'}`}

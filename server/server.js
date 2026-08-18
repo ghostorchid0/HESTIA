@@ -179,8 +179,14 @@ io.on('connection', (socket) => {
     }
     const hotelId = socket.user.hotelId ? socket.user.hotelId.toString() : 'all';
     const role = socket.user.role;
-    if (['admin', 'superadmin', 'kitchen'].includes(role)) socket.join(`kitchen_${hotelId}`);
-    if (['admin', 'superadmin', 'reception'].includes(role)) socket.join(`reception_${hotelId}`);
+    if (['admin', 'superadmin', 'kitchen'].includes(role)) {
+      socket.join(`kitchen_${hotelId}`);
+      console.log(`[socket] ${socket.id} joined kitchen_${hotelId}`);
+    }
+    if (['admin', 'superadmin', 'reception'].includes(role)) {
+      socket.join(`reception_${hotelId}`);
+      console.log(`[socket] ${socket.id} joined reception_${hotelId}`);
+    }
     console.log(`[socket] join_staff ${socket.id} role=${role} hotel=${hotelId}`);
   });
 

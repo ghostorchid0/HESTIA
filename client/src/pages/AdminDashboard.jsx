@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { socket } from '../socket'
 import { unlockAudio } from '../utils/beep'
 import useSettings from '../hooks/useSettings'
+import api from '../api'
 import OrdersPanel from '../components/OrdersPanel'
 import MenuPanel from '../components/MenuPanel'
 import RoomsPanel from '../components/RoomsPanel'
@@ -12,13 +13,32 @@ import HotelsPanel from '../components/HotelsPanel'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
-  const { settings } = useSettings()
+  const { settings, refresh } = useSettings()
   const role = localStorage.getItem('hestia_role')
   const isAdmin = role === 'admin' || role === 'superadmin'
   const isSuperadmin = role === 'superadmin'
   const isStaff = isAdmin || role === 'kitchen' || role === 'reception'
   const location = useLocation()
   const path = location.pathname
+  const [hotels, setHotels] = useState([])
+  const [activeHotel, setActiveHotel] = useState(localStorage.getItem('hestia_hotel') || '')
+
+  useEffect(() => {
+    if (isSuperadmin) {
+      api.get('/admin/hotels').then(res => setHotels(res.data)).catch(() => {})
+    }
+  }, [isSuperadmin])
+
+  useEffect(() => {
+    if (!activeHotel) return
+    localStorage.setItem('hestia_hotel', activeHotel)
+    refresh({ hotelId: activeHotel })
+  }, [activeHotel, refresh])
+
+  const changeHotel = (id) => {
+    setActiveHotel(id)
+    window.location.reload()
+  }
 
   const logout = () => {
     localStorage.removeItem('hestia_token')
@@ -53,6 +73,12 @@ function Layout({ children }) {
             <span className="rounded border border-hestia-gold/30 px-2 py-0.5 text-xs uppercase tracking-wider text-hestia-gold">{role}</span>
           </div>
           <div className="flex items-center gap-3">
+            {isSuperadmin && hotels.length > 0 && (
+              <select value={activeHotel} onChange={e => changeHotel(e.target.value)} className="rounded-lg border border-white/10 bg-hestia-navy px-3 py-1.5 text-sm text-white">
+                <option value="">{t('admin.selectHotel')}</option>
+                {hotels.map(h => <option key={h._id} value={h._id}>{h.name}</option>)}
+              </select>
+            )}
             <button onClick={toggleLang} className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/80 hover:bg-white/10">
               {i18n.language === 'fr' ? 'EN' : 'FR'}
             </button>

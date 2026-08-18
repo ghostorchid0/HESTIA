@@ -67,8 +67,14 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     const onNew = (order) => {
+      console.log('New order received via socket:', order)
       setOrders((prev) => [order, ...prev])
-      if (soundEnabled) playBeep()
+      if (soundEnabled) {
+        console.log('Playing beep (sound enabled)')
+        playBeep()
+      } else {
+        console.log('Sound disabled, not playing beep')
+      }
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))

@@ -16,9 +16,14 @@ export function unlockAudio() {
 
 export function playBeep() {
   const ctx = getAudioContext()
-  if (!ctx) return
+  console.log('playBeep called, AudioContext:', ctx, 'state:', ctx?.state)
+  if (!ctx) {
+    console.error('No AudioContext available')
+    return
+  }
   if (ctx.state === 'suspended') {
-    ctx.resume().catch(() => {})
+    console.log('Resuming suspended AudioContext')
+    ctx.resume().catch((err) => console.error('Failed to resume AudioContext:', err))
   }
 
   const now = ctx.currentTime
@@ -65,4 +70,6 @@ export function playBeep() {
   shimmerGain.connect(master)
   shimmer.start(now)
   shimmer.stop(now + 0.7)
+
+  console.log('Beep sound scheduled')
 }

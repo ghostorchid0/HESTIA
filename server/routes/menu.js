@@ -27,15 +27,21 @@ function isSubscriptionActive(hotel) {
 async function resolveHotelId(req) {
   if (req.query.roomUuid) {
     const room = await Room.findOne({ uuid: req.query.roomUuid, active: true }).populate('hotelId');
+    // Bypass subscription check for demo hotel
+    if (room?.hotelId?.slug === 'demo') return room?.hotelId?._id;
     return isSubscriptionActive(room?.hotelId) ? room?.hotelId?._id : null;
   }
   if (req.query.hotelSlug) {
     const hotel = await Hotel.findOne({ slug: req.query.hotelSlug, active: true });
+    // Bypass subscription check for demo hotel
+    if (hotel?.slug === 'demo') return hotel?._id;
     return isSubscriptionActive(hotel) ? hotel?._id : null;
   }
   if (req.query.hotelId) {
     if (!mongoose.isValidObjectId(req.query.hotelId)) return null;
     const hotel = await Hotel.findOne({ _id: req.query.hotelId, active: true });
+    // Bypass subscription check for demo hotel
+    if (hotel?.slug === 'demo') return hotel?._id;
     return isSubscriptionActive(hotel) ? hotel?._id : null;
   }
   return null;
@@ -51,6 +57,7 @@ router.get('/', publicLimiter, async (req, res) => {
       .sort({ category: 1, name: 1 });
     res.json(items);
   } catch (err) {
+    console.error('Menu error:', err);
     res.status(500).json({ message: err.message });
   }
 });

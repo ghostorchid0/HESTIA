@@ -22,6 +22,7 @@ export default function OrdersPanel() {
     const stored = localStorage.getItem('hestia_sound')
     return stored === null ? true : stored === 'true'
   })
+  const [audioUnlocked, setAudioUnlocked] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -36,6 +37,16 @@ export default function OrdersPanel() {
     const next = !soundEnabled
     setSoundEnabled(next)
     localStorage.setItem('hestia_sound', next)
+    // Unlock audio when enabling sound
+    if (next) {
+      unlockAudio()
+      setAudioUnlocked(true)
+    }
+  }
+
+  const manualUnlockAudio = () => {
+    unlockAudio()
+    setAudioUnlocked(true)
   }
 
   const downloadExcel = async () => {
@@ -117,6 +128,14 @@ export default function OrdersPanel() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-light text-hestia-navy">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-3">
+          {!audioUnlocked && soundEnabled && (
+            <button
+              onClick={manualUnlockAudio}
+              className="rounded-lg border border-hestia-gold bg-hestia-gold/10 px-4 py-2 text-sm font-medium text-hestia-gold transition hover:bg-hestia-gold hover:text-white"
+            >
+              Activer le son
+            </button>
+          )}
           <button
             onClick={toggleSound}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold' : 'bg-gray-100 text-gray-600'}`}

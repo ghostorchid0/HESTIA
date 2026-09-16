@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import { socket } from '../socket'
-import { playBeep, unlockAudio } from '../utils/beep'
+import { playBeep } from '../utils/beep'
 import { formatCurrency } from '../utils/format'
 import useSettings from '../hooks/useSettings'
 

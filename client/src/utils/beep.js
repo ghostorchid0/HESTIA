@@ -1,36 +1,16 @@
-let audioCtx = null
-
-function getAudioContext() {
-  if (!audioCtx && typeof window !== 'undefined') {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-  }
-  return audioCtx
-}
+let audioElement = null
 
 export function unlockAudio() {
-  const ctx = getAudioContext()
-  if (ctx && ctx.state === 'suspended') {
-    ctx.resume().catch(() => {})
-  }
+  // No-op for HTML5 audio - it doesn't need unlocking
 }
 
 export function playBeep() {
-  const ctx = getAudioContext()
-  if (!ctx) return
-
-  // Simple beep: single sine wave at 880Hz (A5)
-  const oscillator = ctx.createOscillator()
-  const gainNode = ctx.createGain()
-
-  oscillator.connect(gainNode)
-  gainNode.connect(ctx.destination)
-
-  oscillator.frequency.value = 880
-  oscillator.type = 'sine'
-
-  gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
-  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
-
-  oscillator.start(ctx.currentTime)
-  oscillator.stop(ctx.currentTime + 0.3)
+  if (!audioElement) {
+    audioElement = new Audio('/sounds/ding.mp3')
+    audioElement.volume = 0.5
+  }
+  audioElement.currentTime = 0
+  audioElement.play().catch((err) => {
+    console.error('Failed to play ding sound:', err)
+  })
 }

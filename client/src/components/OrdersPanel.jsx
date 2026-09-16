@@ -22,15 +22,25 @@ export default function OrdersPanel() {
     const stored = localStorage.getItem('hestia_sound')
     return stored === null ? true : stored === 'true'
   })
+  const [knownOrderIds, setKnownOrderIds] = useState(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
       const res = await api.get('/admin/orders?limit=200')
-      setOrders(res.data)
+      const newOrders = res.data
+      // Detect new orders by comparing IDs
+      const hasNewOrder = newOrders.some(o => !knownOrderIds.has(o._id))
+      if (hasNewOrder && soundEnabled && knownOrderIds.size > 0) {
+        console.log('New order detected via polling, playing sound')
+        playBeep()
+      }
+      // Update known order IDs
+      setKnownOrderIds(new Set(newOrders.map(o => o._id)))
+      setOrders(newOrders)
     } catch (err) {
       console.error('Failed to fetch orders', err)
     }
-  }, [])
+  }, [soundEnabled, knownOrderIds])
 
   const toggleSound = () => {
     const next = !soundEnabled
@@ -59,14 +69,17 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     fetchOrders()
-    const interval = setInterval(fetchOrders, 3000)
+    const interval = setInterval(fetchOrders, 5000) // Poll every 5s as backup to socket
     return () => clearInterval(interval)
   }, [fetchOrders])
 
   useEffect(() => {
     const onNew = (order) => {
-      console.log('New order received:', order)
-      setOrders((prev) => [order, ...prev])
+      console.log('New order received via socket:', order)
+      setOrders((prev) => {
+        setKnownOrderIds(new Set([...prev.map(o => o._id), order._id]))
+        return [order, ...prev]
+      })
       if (soundEnabled) {
         console.log('Sound enabled, calling playBeep')
         playBeep()
@@ -83,7 +96,7 @@ export default function OrdersPanel() {
       socket.off('new_order', onNew)
       socket.off('order_status_updated', onUpdate)
     }
-  }, [soundEnabled])
+  }, [])
 
   const updateStatus = async (id, status) => {
     await api.patch(`/admin/orders/${id}/status`, { status })

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { socket } from '../socket'
-import { unlockAudio } from '../utils/beep'
 import useSettings from '../hooks/useSettings'
 import api from '../api'
 import OrdersPanel from '../components/OrdersPanel'
@@ -123,15 +122,7 @@ export default function AdminDashboard() {
   }, [token])
 
   useEffect(() => {
-    const unlock = () => unlockAudio()
-    document.addEventListener('click', unlock, { once: true })
-    document.addEventListener('touchstart', unlock, { once: true })
-    document.addEventListener('keydown', unlock, { once: true })
-    return () => {
-      document.removeEventListener('click', unlock)
-      document.removeEventListener('touchstart', unlock)
-      document.removeEventListener('keydown', unlock)
-    }
+    // No-op for HTML5 audio - doesn't need unlocking
   }, [])
 
   return (

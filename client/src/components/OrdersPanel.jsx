@@ -54,9 +54,7 @@ export default function OrdersPanel() {
   }
 
   useEffect(() => {
-    const handleUnlock = () => unlockAudio()
-    document.addEventListener('click', handleUnlock, { once: true })
-    return () => document.removeEventListener('click', handleUnlock)
+    // No-op for HTML5 audio - doesn't need unlocking
   }, [])
 
   useEffect(() => {

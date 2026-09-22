@@ -21,6 +21,7 @@ const settingsRoutes = require('./routes/settings');
 const reviewsRoutes = require('./routes/reviews');
 const demoRoutes = require('./routes/demo');
 const billingRoutes = require('./routes/billing');
+const paymentRoutes = require('./routes/payments');
 const seedData = require('./seed');
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/reviews', reviewsRoutes);
 app.use('/api/demo', demoRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/payments', paymentRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   const isServerDir = path.basename(__dirname) === 'server';

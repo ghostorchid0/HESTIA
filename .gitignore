@@ -6,6 +6,5 @@ dist/
 .DS_Store
 *.pid
 .devin/config.local.json
-uploads/
 coverage/
 !client/public/sounds/*.mp3

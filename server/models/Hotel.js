@@ -12,6 +12,7 @@ const hotelSchema = new mongoose.Schema({
   currency: { type: String, default: 'XOF' },
   contactPhone: { type: String, default: '' },
   address: { type: String, default: '' },
+  logo: { type: String, default: '' }, // Cloudinary URL for hotel logo
   active: { type: Boolean, default: true },
 
   subscription: {

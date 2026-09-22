@@ -33,14 +33,10 @@ function pickMenuFields(source) {
   return picked;
 }
 
-async function fileToDataUrl(file) {
-  const buffer = await fsp.readFile(file.path);
-  try {
-    await fsp.unlink(file.path);
-  } catch (err) {
-    console.error('Failed to delete uploaded file:', err.message);
-  }
-  return `data:${file.mimetype};base64,${buffer.toString('base64')}`;
+async function fileToCloudinaryUrl(file) {
+  // With Cloudinary storage, file is already uploaded
+  // The Cloudinary URL is available in req.file.path
+  return file.path;
 }
 
 function handleValidation(req, res) {
@@ -248,7 +244,7 @@ const menuValidation = [
 
 router.post('/menu', requireRole('admin'), upload.single('image'), menuValidation, async (req, res) => {
   if (!handleValidation(req, res)) return;
-  if (req.file) req.body.imageUrl = await fileToDataUrl(req.file);
+  if (req.file) req.body.imageUrl = await fileToCloudinaryUrl(req.file);
   const item = await MenuItem.create({ ...pickMenuFields(req.body), hotelId: req.hotelId });
   res.status(201).json(item);
 });
@@ -260,7 +256,7 @@ router.put('/menu/:id',
   menuValidation,
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    if (req.file) req.body.imageUrl = await fileToDataUrl(req.file);
+    if (req.file) req.body.imageUrl = await fileToCloudinaryUrl(req.file);
     const item = await MenuItem.findOneAndUpdate({ _id: req.params.id, ...hotelFilter(req) }, pickMenuFields(req.body), { new: true });
     if (!item) return res.status(404).json({ message: 'Item not found' });
     res.json(item);
@@ -618,6 +614,7 @@ router.get('/hotels', requireRole('superadmin'), async (req, res) => {
 
 router.post('/hotels',
   requireRole('superadmin'),
+  upload.single('logo'),
   body('name').trim().notEmpty().escape(),
   body('slug').trim().notEmpty().escape().matches(/^[a-z0-9-]+$/),
   body('currency').optional().trim().escape(),
@@ -631,7 +628,8 @@ router.post('/hotels',
     const existing = await Hotel.findOne({ slug: slug.toLowerCase() });
     if (existing) return res.status(409).json({ message: 'Slug already exists' });
 
-    const hotel = await Hotel.create({ name, slug: slug.toLowerCase(), currency, contactPhone, address });
+    const logoUrl = req.file ? await fileToCloudinaryUrl(req.file) : '';
+    const hotel = await Hotel.create({ name, slug: slug.toLowerCase(), currency, contactPhone, address, logo: logoUrl });
     await Settings.create({ hotelId: hotel._id, hotelName: name, currency: currency || 'XOF' });
 
     let admin = null;
@@ -647,6 +645,38 @@ router.post('/hotels',
 
     res.status(201).json({ hotel, admin: admin ? { username: admin.username, role: admin.role, hotelId: admin.hotelId } : null });
   });
+
+router.put('/hotels/:id',
+  requireRole('superadmin'),
+  upload.single('logo'),
+  param('id').isMongoId(),
+  body('name').optional().trim().notEmpty().escape(),
+  body('currency').optional().trim().escape(),
+  body('contactPhone').optional().trim().escape(),
+  body('address').optional().trim().escape(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const hotel = await Hotel.findById(req.params.id);
+    if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
+
+    const updateData = {};
+    if (req.body.name) updateData.name = req.body.name;
+    if (req.body.currency) updateData.currency = req.body.currency;
+    if (req.body.contactPhone !== undefined) updateData.contactPhone = req.body.contactPhone;
+    if (req.body.address !== undefined) updateData.address = req.body.address;
+    if (req.file) updateData.logo = await fileToCloudinaryUrl(req.file);
+
+    const updatedHotel = await Hotel.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    res.json(updatedHotel);
+  });
+
+router.delete('/hotels/:id', requireRole('superadmin'), param('id').isMongoId(), async (req, res) => {
+  if (!handleValidation(req, res)) return;
+  await Hotel.findByIdAndDelete(req.params.id);
+  await Settings.findOneAndDelete({ hotelId: req.params.id });
+  await User.deleteMany({ hotelId: req.params.id });
+  res.json({ message: 'Hotel deleted' });
+});
 
 router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) => {
   const orders = await Order.find(hotelFilter(req)).sort({ createdAt: -1 });

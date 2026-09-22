@@ -31,7 +31,6 @@ export default function OrdersPanel() {
       // Detect new orders by comparing IDs
       const hasNewOrder = newOrders.some(o => !knownOrderIds.has(o._id))
       if (hasNewOrder && soundEnabled && knownOrderIds.size > 0) {
-        console.log('New order detected via polling, playing sound')
         playBeep()
       }
       // Update known order IDs
@@ -75,17 +74,11 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     const onNew = (order) => {
-      console.log('New order received via socket:', order)
       setOrders((prev) => {
         setKnownOrderIds(new Set([...prev.map(o => o._id), order._id]))
         return [order, ...prev]
       })
-      if (soundEnabled) {
-        console.log('Sound enabled, calling playBeep')
-        playBeep()
-      } else {
-        console.log('Sound disabled, not playing')
-      }
+      if (soundEnabled) playBeep()
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))

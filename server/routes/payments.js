@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const sasPay = require('../services/sasapay');
-const Subscription = require('../models/Subscription');
+const Payment = require('../models/Payment');
 const Hotel = require('../models/Hotel');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
@@ -64,15 +64,18 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
       return res.status(500).json({ message: 'Failed to initiate payment', error: result.error });
     }
 
-    // Create pending subscription record
-    const subscription = await Subscription.create({
-      hotel: hotelId,
-      status: 'pending',
+    // Create pending payment record
+    const payment = await Payment.create({
+      hotelId,
       amount,
-      paymentId: result.data.id,
-      paymentMethod: 'sasapay',
-      paymentData: result.data,
-      idempotencyKey: result.idempotencyKey
+      currency: 'XOF',
+      status: 'pending',
+      provider: 'sasapay',
+      operator: network,
+      msisdn: phone,
+      transref: result.data.id,
+      sasapayResponse: result.data,
+      type: 'renewal'
     });
 
     res.json({
@@ -81,7 +84,7 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
       status: result.data.status,
       checkoutUrl: result.data.checkout_url,
       message: result.data.message || 'Payment initiated successfully',
-      subscriptionId: subscription._id
+      paymentId: payment._id
     });
 
   } catch (error) {
@@ -104,22 +107,21 @@ router.get('/verify/:paymentId', authenticateToken, requireRole('admin', 'supera
       return res.status(500).json({ message: 'Failed to verify payment', error: result.error });
     }
 
-    // Update subscription if payment is successful
+    // Update payment if successful
     if (result.data.status === 'SUCCESS') {
-      const subscription = await Subscription.findOne({ paymentId });
-      if (subscription && subscription.status !== 'active') {
-        subscription.status = 'active';
-        subscription.paidAt = new Date();
+      const payment = await Payment.findOne({ transref: paymentId });
+      if (payment && payment.status !== 'success') {
+        payment.status = 'success';
+        payment.paidAt = new Date();
         
         // Calculate subscription expiry (30 days from now)
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);
-        subscription.expiresAt = expiryDate;
 
-        await subscription.save();
+        await payment.save();
 
         // Update hotel subscription status
-        await Hotel.findByIdAndUpdate(subscription.hotel, {
+        await Hotel.findByIdAndUpdate(payment.hotelId, {
           subscriptionStatus: 'active',
           subscriptionExpiresAt: expiryDate
         });
@@ -164,15 +166,15 @@ router.get('/subscriptions', authenticateToken, requireRole('admin', 'superadmin
   try {
     const hotelId = req.user.hotelId;
 
-    const subscriptions = await Subscription.find({ hotel: hotelId })
+    const payments = await Payment.find({ hotelId })
       .sort({ createdAt: -1 })
       .limit(20);
 
-    res.json(subscriptions);
+    res.json(payments);
 
   } catch (error) {
-    console.error('Get subscriptions error:', error);
-    res.status(500).json({ message: 'Failed to get subscriptions' });
+    console.error('Get payments error:', error);
+    res.status(500).json({ message: 'Failed to get payments' });
   }
 });
 

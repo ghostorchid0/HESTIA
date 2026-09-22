@@ -14,6 +14,5 @@ COPY server/package*.json ./
 RUN npm ci
 COPY server/ ./
 COPY --from=client-builder /app/client/dist ./client/dist
-RUN mkdir -p uploads
 EXPOSE 5000
 CMD ["node", "server.js"]

@@ -17,13 +17,13 @@ export default function PaymentPanel() {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [subscriptions, setSubscriptions] = useState([])
+  const [payments, setPayments] = useState([])
   const [countries, setCountries] = useState([])
   const [selectedCountry, setSelectedCountry] = useState(null)
 
   useEffect(() => {
     fetchCountries()
-    fetchSubscriptions()
+    fetchPayments()
   }, [])
 
   const fetchCountries = async () => {
@@ -42,6 +42,15 @@ export default function PaymentPanel() {
       }
     } catch (error) {
       console.error('Failed to fetch countries:', error)
+    }
+  }
+
+  const fetchPayments = async () => {
+    try {
+      const response = await api.get('/payments/subscriptions')
+      setPayments(response.data)
+    } catch (error) {
+      console.error('Failed to fetch payments:', error)
     }
   }
 
@@ -66,8 +75,8 @@ export default function PaymentPanel() {
         window.location.href = response.data.checkoutUrl
       }
 
-      // Refresh subscriptions
-      fetchSubscriptions()
+      // Refresh payments
+      fetchPayments()
 
       // Reset form
       setFormData({
@@ -84,15 +93,6 @@ export default function PaymentPanel() {
       })
     } finally {
       setLoading(false)
-    }
-  }
-
-  const fetchSubscriptions = async () => {
-    try {
-      const response = await api.get('/payments/subscriptions')
-      setSubscriptions(response.data)
-    } catch (error) {
-      console.error('Failed to fetch subscriptions:', error)
     }
   }
 
@@ -272,40 +272,40 @@ export default function PaymentPanel() {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-hestia-dark">Historique des paiements</h2>
           <button
-            onClick={fetchSubscriptions}
+            onClick={fetchPayments}
             className="text-sm text-hestia-gold hover:underline"
           >
             Actualiser
           </button>
         </div>
 
-        {subscriptions.length === 0 ? (
+        {payments.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Aucun paiement trouvé</p>
         ) : (
           <div className="space-y-4">
-            {subscriptions.map((sub) => (
-              <div key={sub._id} className="border border-gray-200 rounded-lg p-4">
+            {payments.map((payment) => (
+              <div key={payment._id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <p className="font-semibold text-hestia-dark">
-                      {formatCurrency(sub.amount)}
+                      {formatCurrency(payment.amount)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Réf: {sub.paymentId || sub.transactionRef}
+                      Réf: {payment.transref}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    sub.status === 'active' ? 'bg-green-100 text-green-800' :
-                    sub.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    payment.status === 'success' ? 'bg-green-100 text-green-800' :
+                    payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-red-100 text-red-800'
                   }`}>
-                    {sub.status}
+                    {payment.status}
                   </span>
                 </div>
                 <div className="text-sm text-gray-500 space-y-1">
-                  <p>Créé le: {formatDate(sub.createdAt)}</p>
-                  {sub.paidAt && <p>Payé le: {formatDate(sub.paidAt)}</p>}
-                  {sub.expiresAt && <p>Expire le: {formatDate(sub.expiresAt)}</p>}
+                  <p>Créé le: {formatDate(payment.createdAt)}</p>
+                  {payment.paidAt && <p>Payé le: {formatDate(payment.paidAt)}</p>}
+                  <p>Provider: {payment.provider}</p>
                 </div>
               </div>
             ))}

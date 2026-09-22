@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 
@@ -7,12 +7,43 @@ export default function PaymentPanel() {
   const [formData, setFormData] = useState({
     hotelId: '',
     amount: 30000,
-    customerMobile: '',
+    phone: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    country: 'BJ',
+    network: 'mtn_bj',
     description: ''
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [subscriptions, setSubscriptions] = useState([])
+  const [countries, setCountries] = useState([])
+  const [selectedCountry, setSelectedCountry] = useState(null)
+
+  useEffect(() => {
+    fetchCountries()
+    fetchSubscriptions()
+  }, [])
+
+  const fetchCountries = async () => {
+    try {
+      const response = await api.get('/payments/countries')
+      setCountries(response.data)
+      // Set default country to first available
+      if (response.data.length > 0) {
+        const firstCountry = response.data[0]
+        setSelectedCountry(firstCountry)
+        setFormData(prev => ({
+          ...prev,
+          country: firstCountry.code,
+          network: firstCountry.networks?.[0]?.code || ''
+        }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch countries:', error)
+    }
+  }
 
   const handleInitiatePayment = async (e) => {
     e.preventDefault()
@@ -30,13 +61,21 @@ export default function PaymentPanel() {
         text: response.data.message || 'Payment initiated successfully'
       })
 
+      // If checkout URL is provided, redirect to it
+      if (response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl
+      }
+
       // Refresh subscriptions
       fetchSubscriptions()
 
       // Reset form
       setFormData({
         ...formData,
-        customerMobile: ''
+        phone: '',
+        email: '',
+        firstName: '',
+        lastName: ''
       })
     } catch (error) {
       setMessage({
@@ -57,10 +96,20 @@ export default function PaymentPanel() {
     }
   }
 
+  const handleCountryChange = (countryCode) => {
+    const country = countries.find(c => c.code === countryCode)
+    setSelectedCountry(country)
+    setFormData(prev => ({
+      ...prev,
+      country: countryCode,
+      network: country?.networks?.[0]?.code || ''
+    }))
+  }
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: 'KES'
+      currency: 'XOF'
     }).format(amount)
   }
 
@@ -91,24 +140,100 @@ export default function PaymentPanel() {
         <form onSubmit={handleInitiatePayment} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-hestia-dark mb-2">
-              Numéro de téléphone (SasaPay)
+              Pays
+            </label>
+            <select
+              value={formData.country}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              className="input-luxe w-full"
+              required
+            >
+              {countries.map(country => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-hestia-dark mb-2">
+              Réseau mobile money
+            </label>
+            <select
+              value={formData.network}
+              onChange={(e) => setFormData({ ...formData, network: e.target.value })}
+              className="input-luxe w-full"
+              required
+            >
+              {selectedCountry?.networks?.map(network => (
+                <option key={network.code} value={network.code}>
+                  {network.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-hestia-dark mb-2">
+              Numéro de téléphone
             </label>
             <input
               type="tel"
-              value={formData.customerMobile}
-              onChange={(e) => setFormData({ ...formData, customerMobile: e.target.value })}
-              placeholder="2547XXXXXXXX"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+22997505050"
               className="input-luxe w-full"
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Format: 2547XXXXXXXX (Kenyen)
+              Format: +[code pays][numéro] (ex: +22997505050)
             </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-hestia-dark mb-2">
-              Montant (KES)
+              Email (optionnel)
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="hotel@example.com"
+              className="input-luxe w-full"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-hestia-dark mb-2">
+                Prénom (optionnel)
+              </label>
+              <input
+                type="text"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                placeholder="Jean"
+                className="input-luxe w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-hestia-dark mb-2">
+                Nom (optionnel)
+              </label>
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                placeholder="Dupont"
+                className="input-luxe w-full"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-hestia-dark mb-2">
+              Montant (XOF)
             </label>
             <input
               type="number"
@@ -166,7 +291,7 @@ export default function PaymentPanel() {
                       {formatCurrency(sub.amount)}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Réf: {sub.transactionRef}
+                      Réf: {sub.paymentId || sub.transactionRef}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${

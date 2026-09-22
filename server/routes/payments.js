@@ -1,21 +1,42 @@
 const express = require('express');
 const router = express.Router();
-const sasaPay = require('../services/sasapay');
+const sasPay = require('../services/sasapay');
 const Subscription = require('../models/Subscription');
 const Hotel = require('../models/Hotel');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
 /**
+ * GET /api/payments/countries
+ * Get supported countries and networks
+ */
+router.get('/countries', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const result = await sasPay.getCountries();
+    
+    if (!result.success) {
+      return res.status(500).json({ message: 'Failed to get countries', error: result.error });
+    }
+
+    res.json(result.data);
+  } catch (error) {
+    console.error('Get countries error:', error);
+    res.status(500).json({ message: 'Failed to get countries' });
+  }
+});
+
+/**
  * POST /api/payments/initiate
- * Initiate a subscription payment via SasaPay
+ * Initiate a subscription payment via SasPay
  */
 router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const { hotelId, amount, customerMobile, description } = req.body;
+    const { hotelId, amount, phone, email, firstName, lastName, country, network, description } = req.body;
 
     // Validate required fields
-    if (!hotelId || !amount || !customerMobile) {
-      return res.status(400).json({ message: 'Missing required fields: hotelId, amount, customerMobile' });
+    if (!hotelId || !amount || !phone || !country || !network) {
+      return res.status(400).json({ 
+        message: 'Missing required fields: hotelId, amount, phone, country, network' 
+      });
     }
 
     // Find hotel
@@ -24,22 +45,19 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
       return res.status(404).json({ message: 'Hotel not found' });
     }
 
-    // Generate unique transaction reference
-    const transactionRef = `HESTIA-${hotelId}-${Date.now()}`;
-
-    // Get callback URL from environment or use default
-    const callbackUrl = process.env.CLIENT_URL 
-      ? `${process.env.CLIENT_URL}/api/payments/webhook`
-      : 'https://hestia-ix33.onrender.com/api/payments/webhook';
-
     // Initiate payment
-    const result = await sasaPay.initiateC2BPayment({
-      customerMobile,
+    const result = await sasPay.initiateSoftpayPayment({
       amount,
-      transactionRef,
-      description: description || `Hestia subscription for ${hotel.name}`,
-      currency: 'KES',
-      callbackUrl
+      currency: 'XOF',
+      country,
+      network,
+      description: description || `Abonnement Hestia - ${hotel.name}`,
+      customer: {
+        phone,
+        email: email || `hotel${hotelId}@hestia.local`,
+        first_name: firstName || hotel.name.split(' ')[0] || 'Hotel',
+        last_name: lastName || hotel.name.split(' ').slice(1).join(' ') || 'Admin'
+      }
     });
 
     if (!result.success) {
@@ -51,15 +69,18 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
       hotel: hotelId,
       status: 'pending',
       amount,
-      transactionRef,
+      paymentId: result.data.id,
       paymentMethod: 'sasapay',
-      paymentData: result.data
+      paymentData: result.data,
+      idempotencyKey: result.idempotencyKey
     });
 
     res.json({
       success: true,
-      transactionRef,
-      message: 'Payment initiated successfully. Please complete payment on your phone.',
+      paymentId: result.data.id,
+      status: result.data.status,
+      checkoutUrl: result.data.checkout_url,
+      message: result.data.message || 'Payment initiated successfully',
       subscriptionId: subscription._id
     });
 
@@ -70,76 +91,68 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
 });
 
 /**
- * POST /api/payments/webhook
- * SasaPay webhook endpoint for payment notifications
+ * GET /api/payments/verify/:paymentId
+ * Verify payment status
  */
-router.post('/webhook', async (req, res) => {
+router.get('/verify/:paymentId', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    const { transaction_ref, status, amount, customer_mobile } = req.body;
+    const { paymentId } = req.params;
 
-    console.log('SasaPay webhook received:', req.body);
-
-    // Find subscription by transaction reference
-    const subscription = await Subscription.findOne({ transactionRef: transaction_ref });
-    if (!subscription) {
-      console.log('Subscription not found for transaction:', transaction_ref);
-      return res.status(404).json({ message: 'Subscription not found' });
-    }
-
-    // Update subscription status based on payment status
-    if (status === 'completed' || status === 'success') {
-      subscription.status = 'active';
-      subscription.paidAt = new Date();
-      
-      // Calculate subscription expiry (30 days from now)
-      const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 30);
-      subscription.expiresAt = expiryDate;
-
-      await subscription.save();
-
-      // Update hotel subscription status
-      await Hotel.findByIdAndUpdate(subscription.hotel, {
-        subscriptionStatus: 'active',
-        subscriptionExpiresAt: expiryDate
-      });
-
-      console.log('Subscription activated successfully:', subscription._id);
-    } else if (status === 'failed' || status === 'cancelled') {
-      subscription.status = 'failed';
-      subscription.failedAt = new Date();
-      await subscription.save();
-
-      console.log('Subscription failed:', subscription._id);
-    }
-
-    res.json({ success: true });
-
-  } catch (error) {
-    console.error('Webhook processing error:', error);
-    res.status(500).json({ message: 'Failed to process webhook' });
-  }
-});
-
-/**
- * GET /api/payments/status/:transactionRef
- * Check payment status
- */
-router.get('/status/:transactionRef', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
-  try {
-    const { transactionRef } = req.params;
-
-    const result = await sasaPay.checkTransactionStatus(transactionRef);
+    const result = await sasPay.verifyPayment(paymentId);
 
     if (!result.success) {
-      return res.status(500).json({ message: 'Failed to check payment status', error: result.error });
+      return res.status(500).json({ message: 'Failed to verify payment', error: result.error });
+    }
+
+    // Update subscription if payment is successful
+    if (result.data.status === 'SUCCESS') {
+      const subscription = await Subscription.findOne({ paymentId });
+      if (subscription && subscription.status !== 'active') {
+        subscription.status = 'active';
+        subscription.paidAt = new Date();
+        
+        // Calculate subscription expiry (30 days from now)
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        subscription.expiresAt = expiryDate;
+
+        await subscription.save();
+
+        // Update hotel subscription status
+        await Hotel.findByIdAndUpdate(subscription.hotel, {
+          subscriptionStatus: 'active',
+          subscriptionExpiresAt: expiryDate
+        });
+      }
     }
 
     res.json(result.data);
 
   } catch (error) {
-    console.error('Payment status check error:', error);
-    res.status(500).json({ message: 'Failed to check payment status' });
+    console.error('Payment verification error:', error);
+    res.status(500).json({ message: 'Failed to verify payment' });
+  }
+});
+
+/**
+ * POST /api/payments/retry/:paymentId
+ * Retry failed payment
+ */
+router.post('/retry/:paymentId', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const result = await sasPay.retryPayment(paymentId);
+
+    if (!result.success) {
+      return res.status(500).json({ message: 'Failed to retry payment', error: result.error });
+    }
+
+    res.json(result.data);
+
+  } catch (error) {
+    console.error('Payment retry error:', error);
+    res.status(500).json({ message: 'Failed to retry payment' });
   }
 });
 

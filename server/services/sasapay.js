@@ -1,87 +1,80 @@
 const axios = require('axios');
+const { v4: uuidv4 } = require('uuid');
 
-class SasaPayService {
+class SasPayService {
   constructor() {
-    this.clientId = process.env.SASAPAY_CLIENT_ID;
-    this.clientSecret = process.env.SASAPAY_CLIENT_SECRET;
-    this.merchantCode = process.env.SASAPAY_MERCHANT_CODE;
-    this.environment = process.env.SASAPAY_ENVIRONMENT || 'sandbox';
-    
-    // API endpoints based on environment
-    this.baseUrl = this.environment === 'production' 
-      ? 'https://api.sasapay.app/api/v1'
-      : 'https://sandbox.skoinapp.net/api/v1';
-    
-    this.accessToken = null;
-    this.tokenExpiry = null;
+    this.apiKey = process.env.SASAPAY_API_KEY;
+    this.baseUrl = 'https://api.saspay.me/api/v1';
   }
 
   /**
-   * Get OAuth2 access token
+   * Get supported countries and networks
    */
-  async getAccessToken() {
-    // Return cached token if still valid
-    if (this.accessToken && this.tokenExpiry && Date.now() < this.tokenExpiry) {
-      return this.accessToken;
-    }
-
+  async getCountries() {
     try {
-      const response = await axios.post(`${this.baseUrl}/auth/token/`, {
-        username: this.clientId,
-        password: this.clientSecret,
-        client_id: this.clientId,
-        client_secret: this.clientSecret
-      });
-
-      this.accessToken = response.data.access_token;
-      // Token expires in 1 hour (3600 seconds), subtract 60 seconds buffer
-      this.tokenExpiry = Date.now() + (response.data.expires_in - 60) * 1000;
-      
-      return this.accessToken;
+      const response = await axios.get(`${this.baseUrl}/countries/`);
+      return {
+        success: true,
+        data: response.data
+      };
     } catch (error) {
-      console.error('SasaPay authentication error:', error.response?.data || error.message);
-      throw new Error('Failed to authenticate with SasaPay');
+      console.error('SasPay countries error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
     }
   }
 
   /**
-   * Initiate C2B payment (Customer to Business)
+   * Initiate softpay payment (direct mobile money push)
    * @param {Object} paymentData - Payment details
-   * @param {string} paymentData.customerMobile - Customer's mobile number
    * @param {number} paymentData.amount - Amount to pay
-   * @param {string} paymentData.transactionRef - Unique transaction reference
+   * @param {string} paymentData.currency - Currency code (XOF, etc.)
+   * @param {string} paymentData.country - Country code (BJ, CI, etc.)
+   * @param {string} paymentData.network - Network code (mtn_bj, orange_ci, etc.)
    * @param {string} paymentData.description - Transaction description
-   * @param {string} paymentData.callbackUrl - Webhook URL for payment notification
+   * @param {Object} paymentData.customer - Customer details
+   * @param {string} paymentData.customer.phone - Customer phone number
+   * @param {string} paymentData.customer.email - Customer email
+   * @param {string} paymentData.customer.first_name - Customer first name
+   * @param {string} paymentData.customer.last_name - Customer last name
    */
-  async initiateC2BPayment(paymentData) {
+  async initiateSoftpayPayment(paymentData) {
     try {
-      const token = await this.getAccessToken();
+      const idempotencyKey = uuidv4();
       
       const response = await axios.post(
-        `${this.baseUrl}/payments/request-payment/`,
+        `${this.baseUrl}/payments/softpay/`,
         {
-          bill_number: this.merchantCode,
-          customer_mobile: paymentData.customerMobile,
-          transaction_ref: paymentData.transactionRef,
-          transaction_description: paymentData.description,
-          currency: paymentData.currency || 'KES',
-          amount: paymentData.amount,
-          callback_url: paymentData.callbackUrl
+          amount: paymentData.amount.toString(),
+          currency: paymentData.currency || 'XOF',
+          country: paymentData.country || 'BJ',
+          network: paymentData.network,
+          description: paymentData.description || 'Abonnement Hestia',
+          customer: {
+            phone: paymentData.customer.phone,
+            email: paymentData.customer.email,
+            first_name: paymentData.customer.first_name,
+            last_name: paymentData.customer.last_name
+          }
         },
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey
           }
         }
       );
 
       return {
         success: true,
-        data: response.data
+        data: response.data,
+        idempotencyKey
       };
     } catch (error) {
-      console.error('SasaPay C2B payment error:', error.response?.data || error.message);
+      console.error('SasPay softpay error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || error.message
@@ -90,18 +83,16 @@ class SasaPayService {
   }
 
   /**
-   * Check transaction status
-   * @param {string} transactionRef - Transaction reference
+   * Verify payment status
+   * @param {string} paymentId - Payment ID from SasPay
    */
-  async checkTransactionStatus(transactionRef) {
+  async verifyPayment(paymentId) {
     try {
-      const token = await this.getAccessToken();
-      
       const response = await axios.get(
-        `${this.baseUrl}/payments/status/${transactionRef}`,
+        `${this.baseUrl}/payments/${paymentId}/verify/`,
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
+            'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
           }
         }
@@ -112,7 +103,7 @@ class SasaPayService {
         data: response.data
       };
     } catch (error) {
-      console.error('SasaPay transaction status error:', error.response?.data || error.message);
+      console.error('SasPay verify error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.message || error.message
@@ -121,16 +112,38 @@ class SasaPayService {
   }
 
   /**
-   * Verify webhook signature (if signature verification is supported)
-   * @param {Object} payload - Webhook payload
-   * @param {string} signature - Webhook signature
+   * Retry failed payment
+   * @param {string} paymentId - Payment ID to retry
    */
-  verifyWebhookSignature(payload, signature) {
-    // SasaPay webhook signature verification implementation
-    // This depends on their specific signature algorithm
-    // For now, we'll return true as we implement later
-    return true;
+  async retryPayment(paymentId) {
+    try {
+      const idempotencyKey = uuidv4();
+      
+      const response = await axios.post(
+        `${this.baseUrl}/payments/${paymentId}/retry/`,
+        {},
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'Idempotency-Key': idempotencyKey
+          }
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+        idempotencyKey
+      };
+    } catch (error) {
+      console.error('SasPay retry error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
   }
 }
 
-module.exports = new SasaPayService();
+module.exports = new SasPayService();

@@ -13,11 +13,21 @@ class SasPayService {
   async getCountries() {
     try {
       // Get countries
-      const countriesResponse = await axios.get(`${this.baseUrl}/countries/`);
+      const countriesResponse = await axios.get(`${this.baseUrl}/countries/`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const countries = countriesResponse.data.data || [];
 
       // Get networks
-      const networksResponse = await axios.get(`${this.baseUrl}/networks/`);
+      const networksResponse = await axios.get(`${this.baseUrl}/networks/`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const networks = networksResponse.data.data?.results || [];
 
       // Create a map of country ID to networks

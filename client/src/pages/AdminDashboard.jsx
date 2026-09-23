@@ -10,7 +10,6 @@ import RoomsPanel from '../components/RoomsPanel'
 import SettingsPanel from '../components/SettingsPanel'
 import HotelsPanel from '../components/HotelsPanel'
 import StaffPanel from '../components/StaffPanel'
-import PaymentPanel from '../components/PaymentPanel'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -93,7 +92,6 @@ function Layout({ children }) {
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}
           {isAdmin && <NavItem to="/admin/staff" label={t('admin.staff')} />}
-          {isAdmin && <NavItem to="/admin/payment" label="Paiement" />}
           {isAdmin && <NavItem to="/admin/settings" label={t('admin.settings')} />}
           {isSuperadmin && <NavItem to="/admin/hotels" label={t('admin.hotels')} />}
         </nav>
@@ -134,7 +132,6 @@ export default function AdminDashboard() {
         <Route path="menu" element={<MenuPanel />} />
         <Route path="rooms" element={<RoomsPanel />} />
         <Route path="staff" element={<StaffPanel />} />
-        <Route path="payment" element={<PaymentPanel />} />
         <Route path="settings" element={<SettingsPanel />} />
         <Route path="hotels" element={<HotelsPanel />} />
         <Route path="*" element={<OrdersPanel />} />

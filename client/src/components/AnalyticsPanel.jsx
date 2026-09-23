@@ -14,7 +14,20 @@ export default function AnalyticsPanel() {
   const [data, setData] = useState(null)
 
   const fetchData = useCallback(() => {
-    api.get('/admin/analytics').then(res => setData(res.data))
+    api.get('/admin/analytics').then(res => {
+      const analyticsData = res.data || {}
+      setData({
+        ...analyticsData,
+        categorySales: Array.isArray(analyticsData.categorySales) ? analyticsData.categorySales : [],
+        recentOrders: Array.isArray(analyticsData.recentOrders) ? analyticsData.recentOrders : []
+      })
+    }).catch(err => {
+      console.error('Failed to fetch analytics', err)
+      setData({
+        categorySales: [],
+        recentOrders: []
+      })
+    })
   }, [])
 
   useEffect(() => {

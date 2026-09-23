@@ -7,7 +7,12 @@ export default function ReviewsPanel() {
   const [reviews, setReviews] = useState([])
 
   useEffect(() => {
-    api.get('/reviews/admin/reviews').then(res => setReviews(res.data)).catch(() => {})
+    api.get('/reviews/admin/reviews').then(res => {
+      const reviewsData = Array.isArray(res.data) ? res.data : []
+      setReviews(reviewsData)
+    }).catch(() => {
+      setReviews([])
+    })
   }, [])
 
   const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : 0

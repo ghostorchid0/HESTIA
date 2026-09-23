@@ -29,10 +29,11 @@ export default function PaymentPanel() {
   const fetchCountries = async () => {
     try {
       const response = await api.get('/payments/countries')
-      setCountries(response.data)
+      const countriesData = Array.isArray(response.data) ? response.data : []
+      setCountries(countriesData)
       // Set default country to first available
-      if (response.data.length > 0) {
-        const firstCountry = response.data[0]
+      if (countriesData.length > 0) {
+        const firstCountry = countriesData[0]
         setSelectedCountry(firstCountry)
         setFormData(prev => ({
           ...prev,
@@ -42,15 +43,18 @@ export default function PaymentPanel() {
       }
     } catch (error) {
       console.error('Failed to fetch countries:', error)
+      setCountries([])
     }
   }
 
   const fetchPayments = async () => {
     try {
       const response = await api.get('/payments/subscriptions')
-      setPayments(response.data)
+      const paymentsData = Array.isArray(response.data) ? response.data : []
+      setPayments(paymentsData)
     } catch (error) {
       console.error('Failed to fetch payments:', error)
+      setPayments([])
     }
   }
 

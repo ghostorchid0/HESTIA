@@ -15,8 +15,14 @@ export default function SubscriptionsPanel() {
   const [message, setMessage] = useState('')
 
   const fetchHotels = async () => {
-    const res = await api.get('/billing/admin/hotels')
-    setHotels(res.data)
+    try {
+      const res = await api.get('/billing/admin/hotels')
+      const hotelsData = Array.isArray(res.data) ? res.data : []
+      setHotels(hotelsData)
+    } catch (err) {
+      console.error('Failed to fetch hotels', err)
+      setHotels([])
+    }
   }
 
   useEffect(() => { fetchHotels() }, [])

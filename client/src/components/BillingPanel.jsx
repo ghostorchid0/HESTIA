@@ -26,8 +26,14 @@ export default function BillingPanel() {
   }
 
   const fetchPayments = async () => {
-    const res = await api.get('/billing/payments')
-    setPayments(res.data)
+    try {
+      const res = await api.get('/billing/payments')
+      const paymentsData = Array.isArray(res.data) ? res.data : []
+      setPayments(paymentsData)
+    } catch (err) {
+      console.error('Failed to fetch payments', err)
+      setPayments([])
+    }
   }
 
   useEffect(() => {

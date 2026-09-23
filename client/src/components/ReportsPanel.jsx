@@ -20,7 +20,24 @@ export default function ReportsPanel() {
   const [data, setData] = useState(null)
 
   useEffect(() => {
-    api.get('/admin/analytics/rush').then(res => setData(res.data))
+    api.get('/admin/analytics/rush').then(res => {
+      const rushData = res.data || {}
+      setData({
+        ...rushData,
+        hourly: Array.isArray(rushData.hourly) ? rushData.hourly : [],
+        daily: Array.isArray(rushData.daily) ? rushData.daily : [],
+        monthly: Array.isArray(rushData.monthly) ? rushData.monthly : [],
+        yearly: Array.isArray(rushData.yearly) ? rushData.yearly : []
+      })
+    }).catch(err => {
+      console.error('Failed to fetch rush data', err)
+      setData({
+        hourly: [],
+        daily: [],
+        monthly: [],
+        yearly: []
+      })
+    })
   }, [])
 
   const days = t('days', { returnObjects: true })

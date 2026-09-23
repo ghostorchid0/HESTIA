@@ -24,7 +24,25 @@ export default function SalesReportPanel() {
   const [emailStatus, setEmailStatus] = useState(null)
 
   const fetchReport = useCallback(() => {
-    api.get(`/admin/analytics/sales?date=${date}&period=${period}`).then(res => setReport(res.data))
+    api.get(`/admin/analytics/sales?date=${date}&period=${period}`).then(res => {
+      const reportData = res.data || {}
+      setReport({
+        ...reportData,
+        topItems: Array.isArray(reportData.topItems) ? reportData.topItems : [],
+        categorySales: Array.isArray(reportData.categorySales) ? reportData.categorySales : [],
+        orders: Array.isArray(reportData.orders) ? reportData.orders : []
+      })
+    }).catch(err => {
+      console.error('Failed to fetch report', err)
+      setReport({
+        totalOrders: 0,
+        totalRevenue: 0,
+        averageOrderValue: 0,
+        topItems: [],
+        categorySales: [],
+        orders: []
+      })
+    })
   }, [date, period])
 
   useEffect(() => {

@@ -28,8 +28,14 @@ export default function RoomsPanel() {
   }, [rooms, host])
 
   const fetchRooms = async () => {
-    const res = await api.get('/admin/rooms')
-    setRooms(res.data)
+    try {
+      const res = await api.get('/admin/rooms')
+      const roomsData = Array.isArray(res.data) ? res.data : []
+      setRooms(roomsData)
+    } catch (err) {
+      console.error('Failed to fetch rooms', err)
+      setRooms([])
+    }
   }
 
   const addRoom = async (e) => {

@@ -3,15 +3,27 @@ import { useState } from 'react'
 export default function PaymentPanel() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
+  const [customLink, setCustomLink] = useState('')
 
   const handlePayment = () => {
-    // Rediriger vers le dashboard SasPay pour créer un lien de paiement
-    // L'utilisateur peut créer un lien de paiement manuellement pour la demo
-    window.open('https://app.saspay.me/dashboard', '_blank')
-    setMessage({
-      type: 'info',
-      text: 'Redirection vers SasPay pour créer un lien de paiement. Une fois le paiement effectué, votre abonnement sera activé automatiquement.'
-    })
+    // Utiliser le lien personnalisé si fourni, sinon rediriger vers le dashboard
+    const paymentLink = customLink || 'https://app.saspay.me/dashboard'
+    
+    if (customLink) {
+      // Si l'utilisateur a fourni un lien direct, l'ouvrir
+      window.open(customLink, '_blank')
+      setMessage({
+        type: 'success',
+        text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, votre abonnement sera activé.'
+      })
+    } else {
+      // Sinon rediriger vers le dashboard pour créer un lien
+      window.open('https://app.saspay.me/dashboard', '_blank')
+      setMessage({
+        type: 'info',
+        text: 'Redirection vers SasPay pour créer un lien de paiement. Une fois le paiement effectué, votre abonnement sera activé.'
+      })
+    }
   }
 
   return (
@@ -32,14 +44,17 @@ export default function PaymentPanel() {
 
         <div className="space-y-4">
           <div className="bg-hestia-cream p-4 rounded-lg">
-            <h3 className="font-semibold text-hestia-dark mb-2">Pour activer votre abonnement :</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
-              <li>Cliquez sur le bouton "Payer via SasPay"</li>
-              <li>Connectez-vous à votre compte SasPay</li>
-              <li>Créez un lien de paiement de 50.000 FCFA</li>
-              <li>Partagez le lien avec votre client ou payez directement</li>
-              <li>Une fois le paiement validé, contactez-nous pour activer votre compte</li>
-            </ol>
+            <h3 className="font-semibold text-hestia-dark mb-2">Lien de paiement SasPay (optionnel)</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Si vous avez déjà un lien de paiement SasPay, entrez-le ci-dessous. Sinon, cliquez sur le bouton pour créer un nouveau lien.
+            </p>
+            <input
+              type="url"
+              value={customLink}
+              onChange={(e) => setCustomLink(e.target.value)}
+              placeholder="https://link.saspay.me/..."
+              className="input-luxe w-full"
+            />
           </div>
 
           <button
@@ -47,7 +62,7 @@ export default function PaymentPanel() {
             disabled={loading}
             className="btn-primary w-full"
           >
-            {loading ? 'Chargement...' : 'Payer via SasPay'}
+            {loading ? 'Chargement...' : customLink ? 'Payer via le lien' : 'Créer un lien de paiement'}
           </button>
 
           <div className="text-center text-xs text-gray-500 mt-4">

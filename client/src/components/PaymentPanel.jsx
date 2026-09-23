@@ -6,14 +6,14 @@ export default function PaymentPanel() {
   const { t } = useTranslation()
   const [formData, setFormData] = useState({
     hotelId: '',
-    amount: 30000,
+    amount: 50000,
     phone: '',
     email: '',
     firstName: '',
     lastName: '',
     country: 'BJ',
     network: 'mtn_bj',
-    description: ''
+    description: 'Abonnement mensuel Hestia'
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
@@ -131,7 +131,8 @@ export default function PaymentPanel() {
   return (
     <div className="space-y-6">
       <div className="card-luxe p-6">
-        <h2 className="text-2xl font-bold text-hestia-dark mb-6">Payer l'abonnement</h2>
+        <h2 className="text-2xl font-bold text-hestia-dark mb-2">Abonnement Hestia</h2>
+        <p className="text-sm text-gray-600 mb-6">50.000 FCFA/mois - Tout inclus, sans engagement</p>
 
         {message && (
           <div className={`p-4 rounded-lg mb-4 ${
@@ -237,7 +238,7 @@ export default function PaymentPanel() {
 
           <div>
             <label className="block text-sm font-medium text-hestia-dark mb-2">
-              Montant (XOF)
+              Montant (XOF) - Abonnement mensuel
             </label>
             <input
               type="number"
@@ -247,6 +248,9 @@ export default function PaymentPanel() {
               min="100"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Abonnement mensuel Hestia : 50.000 FCFA
+            </p>
           </div>
 
           <div>

@@ -178,4 +178,105 @@ router.get('/subscriptions', requireAuth, requireRole('admin', 'superadmin'), as
   }
 });
 
+/**
+ * POST /api/payments/verify-session
+ * Verify checkout session and activate subscription
+ */
+router.post('/verify-session', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { sessionId, hotelId } = req.body;
+    
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID is required' });
+    }
+
+    const targetHotelId = hotelId || req.user.hotelId;
+    if (!targetHotelId) {
+      return res.status(400).json({ message: 'Hotel ID is required' });
+    }
+
+    // Verify the checkout session with SasPay
+    const result = await sasPay.verifyPayment(sessionId);
+    
+    if (!result.success) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Session de paiement non trouvée ou invalide' 
+      });
+    }
+
+    // Check if payment is successful
+    const paymentData = result.data;
+    if (paymentData.status !== 'success' && paymentData.status !== 'completed') {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Le paiement n'est pas encore terminé. Statut actuel: ${paymentData.status}` 
+      });
+    }
+
+    // Create payment record
+    const payment = await Payment.create({
+      hotelId: targetHotelId,
+      amount: paymentData.amount || 50000,
+      currency: paymentData.currency || 'XOF',
+      status: 'success',
+      provider: 'sasapay',
+      transref: sessionId,
+      sasapayResponse: paymentData,
+      type: 'renewal',
+      paidAt: new Date()
+    });
+
+    // Calculate subscription expiry (30 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
+    // Update hotel subscription
+    await Hotel.findByIdAndUpdate(targetHotelId, {
+      subscriptionStatus: 'active',
+      subscriptionExpiresAt: expiresAt
+    });
+
+    res.json({
+      success: true,
+      message: 'Paiement vérifié avec succès. Abonnement activé.',
+      expiresAt: expiresAt
+    });
+  } catch (error) {
+    console.error('Verify session error:', error);
+    res.status(500).json({ message: 'Erreur lors de la vérification de la session' });
+  }
+});
+
+/**
+ * GET /api/payments/subscription-status
+ * Get current subscription status
+ */
+router.get('/subscription-status', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const hotelId = req.user.hotelId;
+    if (!hotelId) {
+      return res.status(400).json({ message: 'Hotel ID is required' });
+    }
+
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({ message: 'Hotel not found' });
+    }
+
+    const isActive = hotel.subscriptionStatus === 'active' && 
+                    hotel.subscriptionExpiresAt && 
+                    new Date(hotel.subscriptionExpiresAt) > new Date();
+
+    res.json({
+      active: isActive,
+      status: hotel.subscriptionStatus,
+      expiresAt: hotel.subscriptionExpiresAt
+    });
+  } catch (error) {
+    console.error('Get subscription status error:', error);
+    res.status(500).json({ message: 'Failed to get subscription status' });
+  }
+});
+
 module.exports = router;

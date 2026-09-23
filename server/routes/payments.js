@@ -80,11 +80,11 @@ router.post('/initiate', requireAuth, requireRole('admin', 'superadmin'), async 
 
     res.json({
       success: true,
-      paymentId: result.data.id,
+      providerPaymentId: result.data.id,
       status: result.data.status,
       checkoutUrl: result.data.checkout_url,
       message: result.data.message || 'Payment initiated successfully',
-      paymentId: payment._id
+      paymentRecordId: payment._id
     });
 
   } catch (error) {

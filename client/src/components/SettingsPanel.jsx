@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
-import PlanOverview from './PlanOverview'
 import BrandingPanel from './BrandingPanel'
 
 export default function SettingsPanel() {
@@ -33,8 +32,6 @@ export default function SettingsPanel() {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-light text-hestia-navy">{t('settingsPanel.title')}</h1>
-
-      <PlanOverview />
 
       <BrandingPanel />
 

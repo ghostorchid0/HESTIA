@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import Pagination from './Pagination'
 
 export default function StaffPanel() {
   const { t } = useTranslation()
@@ -8,13 +9,21 @@ export default function StaffPanel() {
   const [form, setForm] = useState({ username: '', password: '', role: 'kitchen' })
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedUsers, setSelectedUsers] = useState(new Set())
 
   const fetchUsers = async () => {
-    const res = await api.get('/admin/users')
+    const res = await api.get(`/admin/users?page=${currentPage}&limit=${itemsPerPage}`)
     setUsers(res.data)
+    const totalCount = res.headers?.get('x-total-count')
+    if (totalCount) {
+      setTotalPages(Math.ceil(totalCount / itemsPerPage))
+    }
   }
 
-  useEffect(() => { fetchUsers() }, [])
+  useEffect(() => { fetchUsers() }, [currentPage, itemsPerPage])
 
   const create = async (e) => {
     e.preventDefault()
@@ -31,9 +40,50 @@ export default function StaffPanel() {
   }
 
   const remove = async (id) => {
-    if (!confirm('Delete this account?')) return
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce compte ?')) return
     await api.delete(`/admin/users/${id}`)
     fetchUsers()
+  }
+
+  const toggleUserSelection = (userId) => {
+    const newSelected = new Set(selectedUsers)
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId)
+    } else {
+      newSelected.add(userId)
+    }
+    setSelectedUsers(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedUsers.size === users.length) {
+      setSelectedUsers(new Set())
+    } else {
+      setSelectedUsers(new Set(users.map(u => u._id)))
+    }
+  }
+
+  const deleteSelectedUsers = async () => {
+    if (selectedUsers.size === 0) return
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedUsers.size} compte(s) ?`)) return
+    try {
+      await api.delete('/admin/users', { data: { ids: Array.from(selectedUsers) } })
+      setSelectedUsers(new Set())
+      fetchUsers()
+    } catch (err) {
+      console.error('Failed to delete users', err)
+    }
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    setSelectedUsers(new Set())
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+    setSelectedUsers(new Set())
   }
 
   return (
@@ -64,6 +114,24 @@ export default function StaffPanel() {
         <button className="btn-primary mt-6">{t('staffPanel.create')}</button>
       </form>
 
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={selectedUsers.size === users.length && users.length > 0}
+          onChange={toggleSelectAll}
+          className="w-4 h-4"
+        />
+        <span className="text-sm text-gray-600">Tout sélectionner</span>
+        {selectedUsers.size > 0 && (
+          <button
+            onClick={deleteSelectedUsers}
+            className="rounded-lg bg-red-100 text-red-700 px-4 py-2 text-sm font-medium transition hover:bg-red-200"
+          >
+            Supprimer ({selectedUsers.size})
+          </button>
+        )}
+      </div>
+
       <div className="card-luxe p-6">
         {users.length === 0 ? (
           <p className="text-center text-gray-500">{t('staffPanel.empty')}</p>
@@ -71,6 +139,7 @@ export default function StaffPanel() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-hestia-linen text-left text-xs uppercase tracking-wider text-gray-400">
+                <th className="pb-3 w-8"></th>
                 <th className="pb-3">{t('staffPanel.username')}</th>
                 <th className="pb-3">{t('staffPanel.role')}</th>
                 <th className="pb-3">{t('staffPanel.created')}</th>
@@ -80,6 +149,14 @@ export default function StaffPanel() {
             <tbody>
               {users.map(u => (
                 <tr key={u._id} className="border-b border-hestia-linen last:border-0">
+                  <td className="py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(u._id)}
+                      onChange={() => toggleUserSelection(u._id)}
+                      className="w-4 h-4"
+                    />
+                  </td>
                   <td className="py-3 font-medium text-hestia-navy">{u.username}</td>
                   <td className="py-3">
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
@@ -102,6 +179,14 @@ export default function StaffPanel() {
           </table>
         )}
       </div>
+      
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </div>
   )
 }

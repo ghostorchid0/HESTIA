@@ -5,6 +5,7 @@ import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
 import CategorySelect from './CategorySelect'
 import ImageWithFallback from './ImageWithFallback'
+import Pagination from './Pagination'
 
 const emptyItem = { name: '', description: '', price: '', category: '', department: 'kitchen', available: true, imageUrl: '' }
 
@@ -15,12 +16,20 @@ export default function MenuPanel() {
   const [form, setForm] = useState(emptyItem)
   const [file, setFile] = useState(null)
   const [editingId, setEditingId] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedItems, setSelectedItems] = useState(new Set())
 
-  useEffect(() => { fetchItems() }, [])
+  useEffect(() => { fetchItems() }, [currentPage, itemsPerPage])
 
   const fetchItems = async () => {
-    const res = await api.get('/admin/menu')
+    const res = await api.get(`/admin/menu?page=${currentPage}&limit=${itemsPerPage}`)
     setItems(res.data)
+    const totalCount = res.headers?.get('x-total-count')
+    if (totalCount) {
+      setTotalPages(Math.ceil(totalCount / itemsPerPage))
+    }
   }
 
   const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))], [items])
@@ -60,8 +69,50 @@ export default function MenuPanel() {
   }
 
   const remove = async (id) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) return
     await api.delete(`/admin/menu/${id}`)
     fetchItems()
+  }
+
+  const toggleItemSelection = (itemId) => {
+    const newSelected = new Set(selectedItems)
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId)
+    } else {
+      newSelected.add(itemId)
+    }
+    setSelectedItems(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === items.length) {
+      setSelectedItems(new Set())
+    } else {
+      setSelectedItems(new Set(items.map(i => i._id)))
+    }
+  }
+
+  const deleteSelectedItems = async () => {
+    if (selectedItems.size === 0) return
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedItems.size} élément(s) ?`)) return
+    try {
+      await api.delete('/admin/menu', { data: { ids: Array.from(selectedItems) } })
+      setSelectedItems(new Set())
+      fetchItems()
+    } catch (err) {
+      console.error('Failed to delete items', err)
+    }
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    setSelectedItems(new Set())
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+    setSelectedItems(new Set())
   }
 
   const imagePreview = file ? URL.createObjectURL(file) : form.imageUrl || null
@@ -118,10 +169,34 @@ export default function MenuPanel() {
         <button className="btn-primary mt-8">{editingId ? t('menuPanel.updateItem') : t('menuPanel.addItem')}</button>
       </form>
 
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={selectedItems.size === items.length && items.length > 0}
+          onChange={toggleSelectAll}
+          className="w-4 h-4"
+        />
+        <span className="text-sm text-gray-600">Tout sélectionner</span>
+        {selectedItems.size > 0 && (
+          <button
+            onClick={deleteSelectedItems}
+            className="rounded-lg bg-red-100 text-red-700 px-4 py-2 text-sm font-medium transition hover:bg-red-200"
+          >
+            Supprimer ({selectedItems.size})
+          </button>
+        )}
+      </div>
+
       <div className="grid gap-5 md:grid-cols-2">
         {items.map(item => (
           <div key={item._id} className="card-luxe flex flex-col p-6 transition hover:shadow-luxe">
             <div className="flex items-start gap-4">
+              <input
+                type="checkbox"
+                checked={selectedItems.has(item._id)}
+                onChange={() => toggleItemSelection(item._id)}
+                className="w-4 h-4 mt-2"
+              />
               <ImageWithFallback src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover shadow-sm" />
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-hestia-navy">{item.name}</h3>
@@ -137,6 +212,14 @@ export default function MenuPanel() {
           </div>
         ))}
       </div>
+      
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </div>
   )
 }

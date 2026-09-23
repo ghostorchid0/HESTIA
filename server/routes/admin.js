@@ -78,18 +78,26 @@ function hotelFilter(req) {
 }
 
 router.get('/orders',
+  query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
   query('status').optional().isIn(['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const { status, limit = 100 } = req.query;
+    const { status, page = 1, limit = 25 } = req.query;
     const filter = { ...hotelFilter(req) };
     if (status) filter.status = status;
     const role = req.user.role;
     if (['kitchen', 'reception'].includes(role)) {
       filter['items.department'] = role;
     }
-    const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(parseInt(limit));
+    
+    const skip = (page - 1) * limit;
+    const [orders, total] = await Promise.all([
+      Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Order.countDocuments(filter)
+    ]);
+    
+    res.set('x-total-count', total);
     res.json(orders);
   });
 
@@ -222,10 +230,23 @@ router.get('/rooms/:id/qr',
     }
   });
 
-router.get('/menu', requireRole('admin'), async (req, res) => {
-  const items = await MenuItem.find(hotelFilter(req)).sort({ category: 1, name: 1 });
-  res.json(items);
-});
+router.get('/menu',
+  requireRole('admin'),
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
+  async (req, res) => {
+    const { page = 1, limit = 25 } = req.query;
+    const filter = hotelFilter(req);
+    
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      MenuItem.find(filter).sort({ category: 1, name: 1 }).skip(skip).limit(limit),
+      MenuItem.countDocuments(filter)
+    ]);
+    
+    res.set('x-total-count', total);
+    res.json(items);
+  });
 
 const menuValidation = [
   body('name').trim().notEmpty().escape(),
@@ -269,6 +290,37 @@ router.delete('/menu/:id',
     if (!handleValidation(req, res)) return;
     await MenuItem.findOneAndDelete({ _id: req.params.id, ...hotelFilter(req) });
     res.json({ message: 'Deleted' });
+  });
+
+router.delete('/menu',
+  requireRole('admin'),
+  body('ids').isArray(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { ids } = req.body;
+    const filter = { ...hotelFilter(req), _id: { $in: ids } };
+    const result = await MenuItem.deleteMany(filter);
+    res.json({ message: `Deleted ${result.deletedCount} items` });
+  });
+
+router.delete('/orders/:id',
+  requireRole('admin'),
+  param('id').isMongoId(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    await Order.findOneAndDelete({ _id: req.params.id, ...hotelFilter(req) });
+    res.json({ message: 'Deleted' });
+  });
+
+router.delete('/orders',
+  requireRole('admin'),
+  body('ids').isArray(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { ids } = req.body;
+    const filter = { ...hotelFilter(req), _id: { $in: ids } };
+    const result = await Order.deleteMany(filter);
+    res.json({ message: `Deleted ${result.deletedCount} orders` });
   });
 
 router.get('/analytics', requireRole('admin'), async (req, res) => {
@@ -574,11 +626,23 @@ router.post('/reports/email',
   }
 );
 
-router.get('/users', requireRole('admin'), async (req, res) => {
-  const filter = req.user.role === 'superadmin' ? {} : hotelFilter(req);
-  const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
-  res.json(users);
-});
+router.get('/users',
+  requireRole('admin'),
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
+  async (req, res) => {
+    const { page = 1, limit = 25 } = req.query;
+    const filter = req.user.role === 'superadmin' ? {} : hotelFilter(req);
+    
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      User.find(filter).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments(filter)
+    ]);
+    
+    res.set('x-total-count', total);
+    res.json(users);
+  });
 
 router.post('/users',
   requireRole('admin'),
@@ -607,10 +671,34 @@ router.delete('/users/:id',
     res.json({ message: 'Deleted' });
   });
 
-router.get('/hotels', requireRole('superadmin'), async (req, res) => {
-  const hotels = await Hotel.find().sort({ createdAt: -1 });
-  res.json(hotels);
-});
+router.delete('/users',
+  requireRole('admin'),
+  body('ids').isArray(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { ids } = req.body;
+    const filter = { _id: { $in: ids } };
+    if (req.user.role !== 'superadmin') filter.hotelId = req.hotelId;
+    const result = await User.deleteMany(filter);
+    res.json({ message: `Deleted ${result.deletedCount} users` });
+  });
+
+router.get('/hotels',
+  requireRole('superadmin'),
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
+  async (req, res) => {
+    const { page = 1, limit = 25 } = req.query;
+    
+    const skip = (page - 1) * limit;
+    const [hotels, total] = await Promise.all([
+      Hotel.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Hotel.countDocuments()
+    ]);
+    
+    res.set('x-total-count', total);
+    res.json(hotels);
+  });
 
 router.post('/hotels',
   requireRole('superadmin'),
@@ -677,6 +765,22 @@ router.delete('/hotels/:id', requireRole('superadmin'), param('id').isMongoId(),
   await User.deleteMany({ hotelId: req.params.id });
   res.json({ message: 'Hotel deleted' });
 });
+
+router.delete('/hotels',
+  requireRole('superadmin'),
+  body('ids').isArray(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const { ids } = req.body;
+    
+    for (const hotelId of ids) {
+      await Hotel.findByIdAndDelete(hotelId);
+      await Settings.findOneAndDelete({ hotelId });
+      await User.deleteMany({ hotelId });
+    }
+    
+    res.json({ message: `Deleted ${ids.length} hotels` });
+  });
 
 router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) => {
   const orders = await Order.find(hotelFilter(req)).sort({ createdAt: -1 });

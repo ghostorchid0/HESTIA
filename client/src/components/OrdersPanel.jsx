@@ -5,6 +5,7 @@ import { socket } from '../socket'
 import { playBeep } from '../utils/beep'
 import { formatCurrency } from '../utils/format'
 import useSettings from '../hooks/useSettings'
+import Pagination from './Pagination'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 const paymentMethodKeys = {
@@ -23,10 +24,14 @@ export default function OrdersPanel() {
     return stored === null ? true : stored === 'true'
   })
   const [knownOrderIds, setKnownOrderIds] = useState(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedOrders, setSelectedOrders] = useState(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await api.get('/admin/orders?limit=200')
+      const res = await api.get(`/admin/orders?page=${currentPage}&limit=${itemsPerPage}`)
       const newOrders = res.data
       // Detect new orders by comparing IDs
       const hasNewOrder = newOrders.some(o => !knownOrderIds.has(o._id))
@@ -36,15 +41,71 @@ export default function OrdersPanel() {
       // Update known order IDs
       setKnownOrderIds(new Set(newOrders.map(o => o._id)))
       setOrders(newOrders)
+      // Update total pages from response headers if available
+      const totalCount = res.headers?.get('x-total-count')
+      if (totalCount) {
+        setTotalPages(Math.ceil(totalCount / itemsPerPage))
+      }
     } catch (err) {
       console.error('Failed to fetch orders', err)
     }
-  }, [soundEnabled, knownOrderIds])
+  }, [currentPage, itemsPerPage, soundEnabled, knownOrderIds])
 
   const toggleSound = () => {
     const next = !soundEnabled
     setSoundEnabled(next)
     localStorage.setItem('hestia_sound', next)
+  }
+
+  const toggleOrderSelection = (orderId) => {
+    const newSelected = new Set(selectedOrders)
+    if (newSelected.has(orderId)) {
+      newSelected.delete(orderId)
+    } else {
+      newSelected.add(orderId)
+    }
+    setSelectedOrders(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedOrders.size === orders.length) {
+      setSelectedOrders(new Set())
+    } else {
+      setSelectedOrders(new Set(orders.map(o => o._id)))
+    }
+  }
+
+  const deleteOrder = async (orderId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette commande ?')) return
+    try {
+      await api.delete(`/admin/orders/${orderId}`)
+      fetchOrders()
+    } catch (err) {
+      console.error('Failed to delete order', err)
+    }
+  }
+
+  const deleteSelectedOrders = async () => {
+    if (selectedOrders.size === 0) return
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedOrders.size} commande(s) ?`)) return
+    try {
+      await api.delete('/admin/orders', { data: { ids: Array.from(selectedOrders) } })
+      setSelectedOrders(new Set())
+      fetchOrders()
+    } catch (err) {
+      console.error('Failed to delete orders', err)
+    }
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    setSelectedOrders(new Set())
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+    setSelectedOrders(new Set())
   }
 
   const downloadExcel = async () => {
@@ -121,6 +182,14 @@ export default function OrdersPanel() {
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-light text-hestia-navy">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-3">
+          {selectedOrders.size > 0 && (
+            <button
+              onClick={deleteSelectedOrders}
+              className="rounded-lg bg-red-100 text-red-700 px-4 py-2 text-sm font-medium transition hover:bg-red-200"
+            >
+              Supprimer ({selectedOrders.size})
+            </button>
+          )}
           <button
             onClick={toggleSound}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold' : 'bg-gray-100 text-gray-600'}`}
@@ -146,12 +215,29 @@ export default function OrdersPanel() {
       </div>
 
       <div className="space-y-5">
+        <div className="flex items-center gap-2 mb-4">
+          <input
+            type="checkbox"
+            checked={selectedOrders.size === filtered.length && filtered.length > 0}
+            onChange={toggleSelectAll}
+            className="w-4 h-4"
+          />
+          <span className="text-sm text-gray-600">Tout sélectionner</span>
+        </div>
         {filtered.map((order) => (
           <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
-                <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedOrders.has(order._id)}
+                  onChange={() => toggleOrderSelection(order._id)}
+                  className="w-4 h-4"
+                />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                  <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
+                </div>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
@@ -208,11 +294,25 @@ export default function OrdersPanel() {
                 >
                   {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
                 </button>
+                <button
+                  onClick={() => deleteOrder(order._id)}
+                  className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
+                >
+                  Supprimer
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+      
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </div>
   )
 }

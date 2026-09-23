@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
+import Pagination from './Pagination'
 
 export default function HotelsPanel() {
   const { t } = useTranslation()
@@ -8,10 +9,20 @@ export default function HotelsPanel() {
   const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '', logo: null })
   const [message, setMessage] = useState('')
   const [createdAdmin, setCreatedAdmin] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
+  const [totalPages, setTotalPages] = useState(1)
+  const [selectedHotels, setSelectedHotels] = useState(new Set())
 
-  const load = () => api.get('/admin/hotels').then(res => setHotels(res.data))
+  const load = () => api.get(`/admin/hotels?page=${currentPage}&limit=${itemsPerPage}`).then(res => {
+    setHotels(res.data)
+    const totalCount = res.headers?.get('x-total-count')
+    if (totalCount) {
+      setTotalPages(Math.ceil(totalCount / itemsPerPage))
+    }
+  })
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [currentPage, itemsPerPage])
 
   const create = async (e) => {
     e.preventDefault()
@@ -39,6 +50,57 @@ export default function HotelsPanel() {
     } catch (err) {
       setMessage(err.response?.data?.message || t('hotelsPanel.error'))
     }
+  }
+
+  const toggleHotelSelection = (hotelId) => {
+    const newSelected = new Set(selectedHotels)
+    if (newSelected.has(hotelId)) {
+      newSelected.delete(hotelId)
+    } else {
+      newSelected.add(hotelId)
+    }
+    setSelectedHotels(newSelected)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedHotels.size === hotels.length) {
+      setSelectedHotels(new Set())
+    } else {
+      setSelectedHotels(new Set(hotels.map(h => h._id)))
+    }
+  }
+
+  const deleteHotel = async (hotelId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet hôtel ?')) return
+    try {
+      await api.delete(`/admin/hotels/${hotelId}`)
+      load()
+    } catch (err) {
+      console.error('Failed to delete hotel', err)
+    }
+  }
+
+  const deleteSelectedHotels = async () => {
+    if (selectedHotels.size === 0) return
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedHotels.size} hôtel(s) ?`)) return
+    try {
+      await api.delete('/admin/hotels', { data: { ids: Array.from(selectedHotels) } })
+      setSelectedHotels(new Set())
+      load()
+    } catch (err) {
+      console.error('Failed to delete hotels', err)
+    }
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+    setSelectedHotels(new Set())
+  }
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage)
+    setCurrentPage(1)
+    setSelectedHotels(new Set())
   }
 
   return (
@@ -95,10 +157,34 @@ export default function HotelsPanel() {
         <button className="btn-primary mt-8">{t('hotelsPanel.create')}</button>
       </form>
 
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={selectedHotels.size === hotels.length && hotels.length > 0}
+          onChange={toggleSelectAll}
+          className="w-4 h-4"
+        />
+        <span className="text-sm text-gray-600">Tout sélectionner</span>
+        {selectedHotels.size > 0 && (
+          <button
+            onClick={deleteSelectedHotels}
+            className="rounded-lg bg-red-100 text-red-700 px-4 py-2 text-sm font-medium transition hover:bg-red-200"
+          >
+            Supprimer ({selectedHotels.size})
+          </button>
+        )}
+      </div>
+
       <div className="space-y-4">
         {hotels.map(h => (
           <div key={h._id} className="card-luxe flex items-center justify-between p-6">
             <div className="flex items-center gap-4">
+              <input
+                type="checkbox"
+                checked={selectedHotels.has(h._id)}
+                onChange={() => toggleHotelSelection(h._id)}
+                className="w-4 h-4"
+              />
               {h.logo && (
                 <img src={h.logo} alt={h.name} className="h-12 w-12 rounded-full object-cover" />
               )}
@@ -107,10 +193,26 @@ export default function HotelsPanel() {
                 <p className="text-xs text-gray-400">{h.slug} • {h.currency}</p>
               </div>
             </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${h.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{h.active ? t('hotelsPanel.active') : t('hotelsPanel.inactive')}</span>
+            <div className="flex items-center gap-2">
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${h.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{h.active ? t('hotelsPanel.active') : t('hotelsPanel.inactive')}</span>
+              <button
+                onClick={() => deleteHotel(h._id)}
+                className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
+              >
+                Supprimer
+              </button>
+            </div>
           </div>
         ))}
       </div>
+      
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        itemsPerPage={itemsPerPage}
+        onItemsPerPageChange={handleItemsPerPageChange}
+      />
     </div>
   )
 }

@@ -15,11 +15,15 @@ export default function HotelsPanel() {
   const [selectedHotels, setSelectedHotels] = useState(new Set())
 
   const load = () => api.get(`/admin/hotels?page=${currentPage}&limit=${itemsPerPage}`).then(res => {
-    setHotels(res.data)
+    const hotelsData = Array.isArray(res.data) ? res.data : []
+    setHotels(hotelsData)
     const totalCount = res.headers?.get('x-total-count')
     if (totalCount) {
       setTotalPages(Math.ceil(totalCount / itemsPerPage))
     }
+  }).catch(err => {
+    console.error('Failed to fetch hotels', err)
+    setHotels([])
   })
 
   useEffect(() => { load() }, [currentPage, itemsPerPage])

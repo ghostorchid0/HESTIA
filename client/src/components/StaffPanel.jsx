@@ -15,11 +15,17 @@ export default function StaffPanel() {
   const [selectedUsers, setSelectedUsers] = useState(new Set())
 
   const fetchUsers = async () => {
-    const res = await api.get(`/admin/users?page=${currentPage}&limit=${itemsPerPage}`)
-    setUsers(res.data)
-    const totalCount = res.headers?.get('x-total-count')
-    if (totalCount) {
-      setTotalPages(Math.ceil(totalCount / itemsPerPage))
+    try {
+      const res = await api.get(`/admin/users?page=${currentPage}&limit=${itemsPerPage}`)
+      const usersData = Array.isArray(res.data) ? res.data : []
+      setUsers(usersData)
+      const totalCount = res.headers?.get('x-total-count')
+      if (totalCount) {
+        setTotalPages(Math.ceil(totalCount / itemsPerPage))
+      }
+    } catch (err) {
+      console.error('Failed to fetch users', err)
+      setUsers([])
     }
   }
 

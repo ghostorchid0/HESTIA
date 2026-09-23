@@ -32,7 +32,7 @@ export default function OrdersPanel() {
   const fetchOrders = useCallback(async () => {
     try {
       const res = await api.get(`/admin/orders?page=${currentPage}&limit=${itemsPerPage}`)
-      const newOrders = res.data
+      const newOrders = Array.isArray(res.data) ? res.data : []
       // Detect new orders by comparing IDs
       const hasNewOrder = newOrders.some(o => !knownOrderIds.has(o._id))
       if (hasNewOrder && soundEnabled && knownOrderIds.size > 0) {
@@ -48,6 +48,7 @@ export default function OrdersPanel() {
       }
     } catch (err) {
       console.error('Failed to fetch orders', err)
+      setOrders([])
     }
   }, [currentPage, itemsPerPage, soundEnabled, knownOrderIds])
 

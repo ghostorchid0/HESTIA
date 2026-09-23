@@ -24,11 +24,17 @@ export default function MenuPanel() {
   useEffect(() => { fetchItems() }, [currentPage, itemsPerPage])
 
   const fetchItems = async () => {
-    const res = await api.get(`/admin/menu?page=${currentPage}&limit=${itemsPerPage}`)
-    setItems(res.data)
-    const totalCount = res.headers?.get('x-total-count')
-    if (totalCount) {
-      setTotalPages(Math.ceil(totalCount / itemsPerPage))
+    try {
+      const res = await api.get(`/admin/menu?page=${currentPage}&limit=${itemsPerPage}`)
+      const itemsData = Array.isArray(res.data) ? res.data : []
+      setItems(itemsData)
+      const totalCount = res.headers?.get('x-total-count')
+      if (totalCount) {
+        setTotalPages(Math.ceil(totalCount / itemsPerPage))
+      }
+    } catch (err) {
+      console.error('Failed to fetch menu items', err)
+      setItems([])
     }
   }
 

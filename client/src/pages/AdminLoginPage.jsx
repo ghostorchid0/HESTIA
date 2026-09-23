@@ -39,6 +39,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setForm({ ...form, username: e.target.value })}
               className="input-luxe w-full"
               required
+              autoComplete="username"
             />
           </div>
           <div>

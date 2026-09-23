@@ -35,6 +35,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Ne pas intercepter les requêtes vers Cloudinary (images externes)
+  if (url.hostname.includes('cloudinary.com') || url.hostname.includes('res.cloudinary.com')) {
+    return;
+  }
+
   if (url.pathname.includes('/api/')) {
     event.respondWith(
       fetch(event.request)

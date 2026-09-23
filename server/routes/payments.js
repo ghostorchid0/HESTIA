@@ -3,13 +3,13 @@ const router = express.Router();
 const sasPay = require('../services/sasapay');
 const Payment = require('../models/Payment');
 const Hotel = require('../models/Hotel');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole } = require('../middleware/auth');
 
 /**
  * GET /api/payments/countries
  * Get supported countries and networks
  */
-router.get('/countries', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/countries', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const result = await sasPay.getCountries();
     
@@ -28,7 +28,7 @@ router.get('/countries', authenticateToken, requireRole('admin', 'superadmin'), 
  * POST /api/payments/initiate
  * Initiate a subscription payment via SasPay
  */
-router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/initiate', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { hotelId, amount, phone, email, firstName, lastName, country, network, description } = req.body;
 
@@ -97,7 +97,7 @@ router.post('/initiate', authenticateToken, requireRole('admin', 'superadmin'), 
  * GET /api/payments/verify/:paymentId
  * Verify payment status
  */
-router.get('/verify/:paymentId', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/verify/:paymentId', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { paymentId } = req.params;
 
@@ -140,7 +140,7 @@ router.get('/verify/:paymentId', authenticateToken, requireRole('admin', 'supera
  * POST /api/payments/retry/:paymentId
  * Retry failed payment
  */
-router.post('/retry/:paymentId', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/retry/:paymentId', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { paymentId } = req.params;
 
@@ -162,7 +162,7 @@ router.post('/retry/:paymentId', authenticateToken, requireRole('admin', 'supera
  * GET /api/payments/subscriptions
  * Get payment history for hotel
  */
-router.get('/subscriptions', authenticateToken, requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/subscriptions', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const hotelId = req.user.hotelId;
 

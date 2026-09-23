@@ -68,6 +68,11 @@ router.put('/',
       if (req.body[field] !== undefined) updates[field] = req.body[field];
     });
 
+    // Update hotel name in Hotel model as well
+    if (updates.hotelName) {
+      await Hotel.findByIdAndUpdate(hotelId, { name: updates.hotelName });
+    }
+
     const settings = await Settings.findOneAndUpdate(
       { hotelId },
       updates,

@@ -12,10 +12,40 @@ class SasPayService {
    */
   async getCountries() {
     try {
-      const response = await axios.get(`${this.baseUrl}/countries/`);
+      // Get countries
+      const countriesResponse = await axios.get(`${this.baseUrl}/countries/`);
+      const countries = countriesResponse.data.data || [];
+
+      // Get networks
+      const networksResponse = await axios.get(`${this.baseUrl}/networks/`);
+      const networks = networksResponse.data.data?.results || [];
+
+      // Create a map of country ID to networks
+      const countryNetworksMap = {};
+      networks.forEach(network => {
+        const countryId = network.country;
+        if (!countryNetworksMap[countryId]) {
+          countryNetworksMap[countryId] = [];
+        }
+        countryNetworksMap[countryId].push({
+          code: network.code,
+          name: network.name
+        });
+      });
+
+      // Merge countries with their networks
+      const countriesWithNetworks = countries
+        .filter(country => country.is_active) // Only active countries
+        .map(country => ({
+          code: country.iso_code,
+          name: country.name,
+          networks: countryNetworksMap[country.id] || []
+        }))
+        .filter(country => country.networks.length > 0); // Only countries with networks
+
       return {
         success: true,
-        data: response.data
+        data: countriesWithNetworks
       };
     } catch (error) {
       console.error('SasPay countries error:', error.response?.data || error.message);
@@ -27,8 +57,18 @@ class SasPayService {
             code: 'BJ',
             name: 'Bénin',
             networks: [
-              { code: 'mtn_bj', name: 'MTN Bénin' },
-              { code: 'moov_bj', name: 'Moov Bénin' }
+              { code: 'mtn_bj', name: 'MTN MoMo Benin' },
+              { code: 'moov_bj', name: 'Moov Money Benin' },
+              { code: 'celtiis_bj', name: 'Celtiis Cash Bénin' }
+            ]
+          },
+          {
+            code: 'BF',
+            name: 'Burkina Faso',
+            networks: [
+              { code: 'orange_bf', name: 'Orange Burkina Faso' },
+              { code: 'moov_bf', name: 'Moov Burkina Faso' },
+              { code: 'touchcash_bf', name: 'TouchCash Burkina Faso' }
             ]
           },
           {

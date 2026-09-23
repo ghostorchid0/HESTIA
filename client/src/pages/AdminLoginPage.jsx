@@ -49,6 +49,7 @@ export default function AdminLoginPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="input-luxe w-full"
               required
+              autoComplete="current-password"
             />
           </div>
         </div>

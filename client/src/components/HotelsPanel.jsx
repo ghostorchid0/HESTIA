@@ -147,7 +147,7 @@ export default function HotelsPanel() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('hotelsPanel.adminPassword')}</label>
-            <input type="password" value={form.adminPassword} onChange={e => setForm({ ...form, adminPassword: e.target.value })} className="input-luxe w-full" minLength={6} />
+            <input type="password" value={form.adminPassword} onChange={e => setForm({ ...form, adminPassword: e.target.value })} className="input-luxe w-full" minLength={6} autoComplete="new-password" />
           </div>
         </div>
         {message && <p className="mt-4 text-sm text-green-600">{message}</p>}

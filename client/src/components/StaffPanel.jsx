@@ -104,7 +104,7 @@ export default function StaffPanel() {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('staffPanel.password')}</label>
-            <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="input-luxe w-full" required minLength={6} />
+            <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="input-luxe w-full" required minLength={6} autoComplete="new-password" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('staffPanel.role')}</label>

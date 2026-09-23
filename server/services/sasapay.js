@@ -50,8 +50,7 @@ class SasPayService {
           code: country.iso_code,
           name: country.name,
           networks: countryNetworksMap[country.id] || []
-        }))
-        .filter(country => country.networks.length > 0); // Only countries with networks
+        }));
 
       return {
         success: true,

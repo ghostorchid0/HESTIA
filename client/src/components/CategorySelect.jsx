@@ -9,7 +9,7 @@ export default function CategorySelect({ value, onChange, options, label }) {
     setQuery(value || '')
   }, [value])
 
-  const normalizedOptions = [...new Set(options.filter(Boolean))].sort()
+  const normalizedOptions = [...new Set((Array.isArray(options) ? options : []).filter(Boolean))].sort()
   const filtered = normalizedOptions.filter(o => o.toLowerCase().includes(query.toLowerCase()))
   const exactMatch = normalizedOptions.some(o => o.toLowerCase() === query.toLowerCase())
 

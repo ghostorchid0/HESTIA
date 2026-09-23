@@ -9,17 +9,19 @@ export default function SettingsPanel() {
   const { settings, refresh } = useSettings()
   const [form, setForm] = useState({ hotelName: '', currency: '$', contactPhone: '', address: '' })
   const [message, setMessage] = useState('')
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (settings) {
+    if (settings && !initialized) {
       setForm({
         hotelName: settings.hotelName || '',
         currency: settings.currency || '$',
         contactPhone: settings.contactPhone || '',
         address: settings.address || '',
       })
+      setInitialized(true)
     }
-  }, [settings])
+  }, [settings, initialized])
 
   const save = async (e) => {
     e.preventDefault()

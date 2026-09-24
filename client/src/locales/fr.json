@@ -172,8 +172,7 @@
     "accentColor": "Couleur d'accent",
     "welcomeMessage": "Message de bienvenue",
     "saved": "Personnalisation enregistrée",
-    "error": "Échec de l'enregistrement",
-    "locked": "Personnalisation disponible en Pro ou Enterprise."
+    "error": "Échec de l'enregistrement"
   },
   "analyticsPanel": {
     "title": "Analyses",

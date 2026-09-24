@@ -6,6 +6,20 @@ export default function PaymentPanel() {
   const [message, setMessage] = useState(null)
   const [customLink, setCustomLink] = useState('')
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [hotels, setHotels] = useState([])
+  const [selectedHotel, setSelectedHotel] = useState('')
+
+  useEffect(() => {
+    const role = localStorage.getItem('hestia_role')
+    setIsAdmin(role === 'superadmin')
+    
+    if (role === 'superadmin') {
+      api.get('/admin/hotels').then(res => setHotels(res.data)).catch(() => {})
+    }
+    
+    checkSubscriptionStatus()
+  }, [])
 
   const handlePayment = () => {
     const paymentLink = customLink || 'https://app.saspay.me/dashboard'
@@ -25,6 +39,41 @@ export default function PaymentPanel() {
     }
   }
 
+  const handleActivateSubscription = async () => {
+    if (!selectedHotel) {
+      setMessage({
+        type: 'error',
+        text: 'Veuillez sélectionner un hôtel'
+      })
+      return
+    }
+
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await api.post('/payments/activate', {
+        hotelId: selectedHotel,
+        days: 30
+      })
+
+      setMessage({
+        type: 'success',
+        text: `Abonnement activé avec succès pour ${response.data.expiresAt ? new Date(response.data.expiresAt).toLocaleDateString('fr-FR') : '30 jours'}`
+      })
+      
+      // Refresh subscription status
+      checkSubscriptionStatus()
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'Erreur lors de l\'activation'
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const checkSubscriptionStatus = async () => {
     try {
       const response = await api.get('/payments/subscription-status')
@@ -33,10 +82,6 @@ export default function PaymentPanel() {
       console.error('Failed to check subscription status:', error)
     }
   }
-
-  useEffect(() => {
-    checkSubscriptionStatus()
-  }, [])
 
   return (
     <div className="space-y-6">
@@ -91,6 +136,34 @@ export default function PaymentPanel() {
           >
             {loading ? 'Chargement...' : 'Payer via le lien'}
           </button>
+
+          {isAdmin && (
+            <div className="border-t border-gray-200 pt-4">
+              <h3 className="font-semibold text-hestia-dark mb-2">Activation Superadmin</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Sélectionnez un hôtel et activez son abonnement après vérification du paiement.
+              </p>
+              <div className="space-y-3">
+                <select
+                  value={selectedHotel}
+                  onChange={(e) => setSelectedHotel(e.target.value)}
+                  className="input-luxe w-full"
+                >
+                  <option value="">Sélectionner un hôtel</option>
+                  {hotels.map(h => (
+                    <option key={h._id} value={h._id}>{h.name}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleActivateSubscription}
+                  disabled={loading || !selectedHotel}
+                  className="btn-luxe w-full"
+                >
+                  {loading ? 'Activation...' : 'Activer l\'abonnement (30 jours)'}
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-hestia-dark mb-2">Pour activer votre abonnement</h3>

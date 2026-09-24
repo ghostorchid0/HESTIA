@@ -138,6 +138,7 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     const onNew = (order) => {
+      console.log('New order received:', order._id)
       setOrders((prev) => {
         setKnownOrderIds(new Set([...prev.map(o => o._id), order._id]))
         return [order, ...prev]
@@ -146,7 +147,11 @@ export default function OrdersPanel() {
       // Visual notification
       setNewOrderCount(prev => prev + 1)
       setNewOrderAnimation(true)
-      setTimeout(() => setNewOrderAnimation(false), 3000)
+      console.log('Visual notification triggered')
+      setTimeout(() => {
+        setNewOrderAnimation(false)
+        setNewOrderCount(0)
+      }, 3000)
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
@@ -188,8 +193,11 @@ export default function OrdersPanel() {
     <div>
       {/* Visual notification for new orders */}
       {newOrderAnimation && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-hestia-gold text-white py-3 px-6 text-center animate-pulse shadow-lg">
-          <span className="font-semibold">🔔 Nouvelle commande{newOrderCount > 1 ? ` (${newOrderCount})` : ''} !</span>
+        <div className="fixed top-0 left-0 right-0 z-50 bg-hestia-gold text-white py-4 px-6 text-center animate-pulse shadow-2xl">
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-3xl">🔔</span>
+            <span className="font-bold text-xl">Nouvelle commande{newOrderCount > 1 ? ` (${newOrderCount})` : ''} !</span>
+          </div>
         </div>
       )}
 

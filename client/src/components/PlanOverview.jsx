@@ -7,13 +7,13 @@ const plans = ['STARTER', 'PRO', 'ENTERPRISE']
 const featuresByPlan = {
   STARTER: [
     'Zero-login QR ordering',
-    'Up to 12 rooms',
+    'Unlimited rooms',
     'Basic staff dashboard',
     'Real-time order alerts',
   ],
   PRO: [
     'Everything in Starter',
-    'Up to 35 rooms',
+    'Unlimited rooms',
     'Amenities & special requests',
     'White-label branding',
     'Revenue dashboard & CSV export',

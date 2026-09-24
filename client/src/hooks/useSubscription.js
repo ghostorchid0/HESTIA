@@ -5,7 +5,7 @@ const defaultFeatures = {}
 
 export default function useSubscription() {
   const [subscription, setSubscription] = useState(null)
-  const [rooms, setRooms] = useState({ used: 0, max: 12 })
+  const [rooms, setRooms] = useState({ used: 0, max: 9999 })
   const [features, setFeatures] = useState(defaultFeatures)
   const [loading, setLoading] = useState(true)
 

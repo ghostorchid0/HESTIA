@@ -878,7 +878,7 @@ router.get('/subscription', requireRole('admin'), async (req, res) => {
   const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt) - now) / (1000 * 60 * 60 * 24))) : 0;
   res.json({
     subscription: hotel.subscription,
-    rooms: { used, max: hotel.subscription?.maxRoomsAllowed || 12 },
+    rooms: { used, max: 9999 },
     trialDaysLeft,
     features: getFeatureFlags(hotel.subscription?.plan),
   });

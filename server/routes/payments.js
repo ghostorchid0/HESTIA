@@ -179,72 +179,48 @@ router.get('/subscriptions', requireAuth, requireRole('admin', 'superadmin'), as
 });
 
 /**
- * POST /api/payments/verify-session
- * Verify checkout session and activate subscription
+ * POST /api/payments/activate
+ * Activate subscription manually (called by admin after payment verification)
  */
-router.post('/verify-session', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/activate', requireAuth, requireRole('superadmin'), async (req, res) => {
   try {
-    const { sessionId, hotelId } = req.body;
+    const { hotelId, days } = req.body;
     
-    if (!sessionId) {
-      return res.status(400).json({ message: 'Session ID is required' });
-    }
-
-    const targetHotelId = hotelId || req.user.hotelId;
-    if (!targetHotelId) {
+    if (!hotelId) {
       return res.status(400).json({ message: 'Hotel ID is required' });
     }
 
-    // Verify the checkout session with SasPay
-    const result = await sasPay.verifyPayment(sessionId);
-    
-    if (!result.success) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Session de paiement non trouvée ou invalide' 
-      });
-    }
-
-    // Check if payment is successful
-    const paymentData = result.data;
-    if (paymentData.status !== 'success' && paymentData.status !== 'completed') {
-      return res.status(400).json({ 
-        success: false, 
-        message: `Le paiement n'est pas encore terminé. Statut actuel: ${paymentData.status}` 
-      });
-    }
-
-    // Create payment record
-    const payment = await Payment.create({
-      hotelId: targetHotelId,
-      amount: paymentData.amount || 50000,
-      currency: paymentData.currency || 'XOF',
-      status: 'success',
-      provider: 'sasapay',
-      transref: sessionId,
-      sasapayResponse: paymentData,
-      type: 'renewal',
-      paidAt: new Date()
-    });
-
-    // Calculate subscription expiry (30 days from now)
+    const activationDays = days || 30;
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
+    expiresAt.setDate(expiresAt.getDate() + activationDays);
 
     // Update hotel subscription
-    await Hotel.findByIdAndUpdate(targetHotelId, {
+    await Hotel.findByIdAndUpdate(hotelId, {
       subscriptionStatus: 'active',
       subscriptionExpiresAt: expiresAt
     });
 
+    // Create payment record
+    await Payment.create({
+      hotelId,
+      amount: 50000,
+      currency: 'XOF',
+      status: 'success',
+      provider: 'sasapay',
+      transref: 'MANUAL-' + Date.now(),
+      type: 'renewal',
+      paidAt: new Date(),
+      description: `Manual activation by ${req.user.username}`
+    });
+
     res.json({
       success: true,
-      message: 'Paiement vérifié avec succès. Abonnement activé.',
-      expiresAt: expiresAt
+      message: 'Abonnement activé avec succès',
+      expiresAt
     });
   } catch (error) {
-    console.error('Verify session error:', error);
-    res.status(500).json({ message: 'Erreur lors de la vérification de la session' });
+    console.error('Activate subscription error:', error);
+    res.status(500).json({ message: 'Failed to activate subscription' });
   }
 });
 

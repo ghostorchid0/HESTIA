@@ -5,7 +5,6 @@ export default function PaymentPanel() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
   const [customLink, setCustomLink] = useState('')
-  const [sessionId, setSessionId] = useState('')
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
 
   const handlePayment = () => {
@@ -15,56 +14,14 @@ export default function PaymentPanel() {
       window.open(customLink, '_blank')
       setMessage({
         type: 'success',
-        text: 'Redirection vers le lien de paiement SasPay. Après avoir payé, entrez l\'ID de la session de checkout ci-dessous pour activer votre abonnement.'
+        text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, votre abonnement sera activé après vérification.'
       })
     } else {
       window.open('https://app.saspay.me/dashboard', '_blank')
       setMessage({
         type: 'info',
-        text: 'Redirection vers SasPay pour créer une session de checkout. Après avoir payé, entrez l\'ID de la session ci-dessous pour activer votre abonnement.'
+        text: 'Redirection vers SasPay pour créer une session de checkout. Une fois le paiement effectué, votre abonnement sera activé après vérification.'
       })
-    }
-  }
-
-  const handleVerifySession = async (e) => {
-    e.preventDefault()
-    if (!sessionId.trim()) {
-      setMessage({
-        type: 'error',
-        text: 'Veuillez entrer l\'ID de la session de checkout'
-      })
-      return
-    }
-
-    setLoading(true)
-    setMessage(null)
-
-    try {
-      const response = await api.post('/payments/verify-session', {
-        sessionId: sessionId.trim(),
-        hotelId: localStorage.getItem('hestia_hotel')
-      })
-
-      if (response.data.success) {
-        setMessage({
-          type: 'success',
-          text: '✓ Paiement vérifié avec succès ! Votre abonnement est maintenant actif.'
-        })
-        setSubscriptionStatus({ active: true, expiresAt: response.data.expiresAt })
-        setSessionId('')
-      } else {
-        setMessage({
-          type: 'error',
-          text: response.data.message || 'La session de paiement n\'a pas été trouvée ou n\'est pas encore payée.'
-        })
-      }
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.message || 'Erreur lors de la vérification de la session'
-      })
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -114,9 +71,9 @@ export default function PaymentPanel() {
 
         <div className="space-y-4">
           <div className="bg-hestia-cream p-4 rounded-lg">
-            <h3 className="font-semibold text-hestia-dark mb-2">Lien de paiement SasPay (optionnel)</h3>
+            <h3 className="font-semibold text-hestia-dark mb-2">Lien de paiement SasPay</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Si vous avez déjà un lien de paiement SasPay, entrez-le ci-dessous. Sinon, cliquez sur le bouton pour créer une nouvelle session de checkout.
+              Utilisez ce lien pour créer une session de paiement sur le dashboard SasPay.
             </p>
             <input
               type="url"
@@ -132,31 +89,17 @@ export default function PaymentPanel() {
             disabled={loading}
             className="btn-primary w-full"
           >
-            {loading ? 'Chargement...' : customLink ? 'Payer via le lien' : 'Créer une session de checkout'}
+            {loading ? 'Chargement...' : 'Ouvrir SasPay Dashboard'}
           </button>
 
-          <div className="border-t border-gray-200 pt-4">
-            <h3 className="font-semibold text-hestia-dark mb-2">Vérifier et activer l'abonnement</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Après avoir payé, entrez l'ID de la session de checkout (ex: "ch_1234567890") pour activer votre abonnement automatiquement.
-            </p>
-            <form onSubmit={handleVerifySession} className="space-y-3">
-              <input
-                type="text"
-                value={sessionId}
-                onChange={(e) => setSessionId(e.target.value)}
-                placeholder="ID de la session de checkout"
-                className="input-luxe w-full"
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-luxe w-full"
-              >
-                {loading ? 'Vérification...' : 'Vérifier et activer'}
-              </button>
-            </form>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-hestia-dark mb-2">Pour activer votre abonnement</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+              <li>Payer via le lien SasPay (50.000 FCFA)</li>
+              <li>Contactez-nous avec la preuve de paiement</li>
+              <li>Nous activerons votre abonnement manuellement</li>
+              <li>Votre abonnement sera actif pour 30 jours</li>
+            </ol>
           </div>
 
           <div className="text-center text-xs text-gray-500 mt-4">

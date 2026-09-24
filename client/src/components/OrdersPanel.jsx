@@ -28,8 +28,7 @@ export default function OrdersPanel() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [totalPages, setTotalPages] = useState(1)
   const [selectedOrders, setSelectedOrders] = useState(new Set())
-  const [newOrderAnimation, setNewOrderAnimation] = useState(false)
-  const [newOrderCount, setNewOrderCount] = useState(0)
+  const [newOrderIds, setNewOrderIds] = useState(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -141,17 +140,18 @@ export default function OrdersPanel() {
       console.log('New order received:', order._id)
       setOrders((prev) => {
         setKnownOrderIds(new Set([...prev.map(o => o._id), order._id]))
+        setNewOrderIds(prev => new Set([...prev, order._id]))
         return [order, ...prev]
       })
       if (soundEnabled) playBeep()
-      // Visual notification
-      setNewOrderCount(prev => prev + 1)
-      setNewOrderAnimation(true)
-      console.log('Visual notification triggered')
+      // Remove from new orders after 5 seconds
       setTimeout(() => {
-        setNewOrderAnimation(false)
-        setNewOrderCount(0)
-      }, 3000)
+        setNewOrderIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(order._id)
+          return newSet
+        })
+      }, 5000)
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
@@ -191,16 +191,6 @@ export default function OrdersPanel() {
 
   return (
     <div>
-      {/* Visual notification for new orders */}
-      {newOrderAnimation && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-hestia-gold text-white py-4 px-6 text-center animate-pulse shadow-2xl">
-          <div className="flex items-center justify-center gap-3">
-            <span className="text-3xl">🔔</span>
-            <span className="font-bold text-xl">Nouvelle commande{newOrderCount > 1 ? ` (${newOrderCount})` : ''} !</span>
-          </div>
-        </div>
-      )}
-
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-light text-hestia-navy">{t('ordersPanel.title')}</h1>
         <div className="flex items-center gap-3">
@@ -247,9 +237,9 @@ export default function OrdersPanel() {
           <span className="text-sm text-gray-600">Tout sélectionner</span>
         </div>
         {filtered.map((order) => {
-          const isNew = !knownOrderIds.has(order._id)
+          const isNew = newOrderIds.has(order._id)
           return (
-            <div key={order._id} className={`card-luxe p-6 transition hover:shadow-luxe ${isNew ? 'bg-hestia-gold/10 border-2 border-hestia-gold' : ''}`}>
+            <div key={order._id} className={`card-luxe p-6 transition hover:shadow-luxe ${isNew ? 'animate-pulse shadow-2xl shadow-hestia-gold/50 border-2 border-hestia-gold bg-hestia-gold/10' : ''}`}>
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <input
@@ -262,9 +252,6 @@ export default function OrdersPanel() {
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
                     <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
                   </div>
-                  {isNew && (
-                    <span className="rounded-full bg-hestia-gold px-2 py-1 text-xs font-bold text-white animate-pulse">NOUVEAU</span>
-                  )}
                 </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>

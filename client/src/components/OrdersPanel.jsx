@@ -322,7 +322,8 @@ export default function OrdersPanel() {
               </div>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
       
       <Pagination

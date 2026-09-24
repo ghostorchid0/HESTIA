@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
-import useSubscription from '../hooks/useSubscription'
 
 export default function RoomsPanel() {
   const { t } = useTranslation()
-  const { rooms: usage, isRoomLimitReached, plan } = useSubscription()
   const [rooms, setRooms] = useState([])
   const [number, setNumber] = useState('')
   const [host, setHost] = useState(window.location.origin)
   const [qrData, setQrData] = useState({})
+  const [selectedRooms, setSelectedRooms] = useState([])
 
   useEffect(() => {
     fetchRooms()
@@ -40,7 +39,6 @@ export default function RoomsPanel() {
 
   const addRoom = async (e) => {
     e.preventDefault()
-    if (isRoomLimitReached) return
     try {
       await api.post('/admin/rooms', { number })
       setNumber('')
@@ -53,6 +51,42 @@ export default function RoomsPanel() {
   const toggle = async (id) => {
     await api.patch(`/admin/rooms/${id}/toggle`)
     fetchRooms()
+  }
+
+  const deleteRoom = async (id) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette chambre ?')) return
+    try {
+      await api.delete(`/admin/rooms/${id}`)
+      fetchRooms()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete room')
+    }
+  }
+
+  const deleteSelectedRooms = async () => {
+    if (selectedRooms.length === 0) return
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${selectedRooms.length} chambre(s) ?`)) return
+    try {
+      await Promise.all(selectedRooms.map(id => api.delete(`/admin/rooms/${id}`)))
+      setSelectedRooms([])
+      fetchRooms()
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete rooms')
+    }
+  }
+
+  const toggleSelectRoom = (id) => {
+    setSelectedRooms(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedRooms.length === rooms.length) {
+      setSelectedRooms([])
+    } else {
+      setSelectedRooms(rooms.map(r => r._id))
+    }
   }
 
   const escapeHtml = (str) =>
@@ -85,22 +119,6 @@ export default function RoomsPanel() {
     <div>
       <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('roomsPanel.title')}</h1>
 
-      <div className="card-luxe mb-6 p-6">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.usage')}</p>
-          <p className="text-sm font-medium text-hestia-navy">{usage.used} / {usage.max} {t('roomsPanel.rooms')}</p>
-        </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-hestia-linen">
-          <div
-            className={`h-full rounded-full transition-all ${isRoomLimitReached ? 'bg-red-500' : 'bg-hestia-gold'}`}
-            style={{ width: `${Math.min(100, (usage.max ? usage.used / usage.max : 0) * 100)}%` }}
-          />
-        </div>
-        {isRoomLimitReached && (
-          <p className="mt-2 text-sm text-red-500">{t('roomsPanel.limitReached')} <span className="font-medium uppercase">{plan}</span></p>
-        )}
-      </div>
-
       <form onSubmit={addRoom} className="card-luxe mb-6 flex gap-4 p-6">
         <div className="flex-1">
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.roomNumber')}</label>
@@ -109,15 +127,33 @@ export default function RoomsPanel() {
             onChange={e => setNumber(e.target.value)}
             className="input-luxe w-full"
             required
-            disabled={isRoomLimitReached}
           />
         </div>
-        <button className="btn-primary self-end disabled:opacity-50" disabled={isRoomLimitReached}>{t('roomsPanel.addRoom')}</button>
+        <button className="btn-primary self-end">{t('roomsPanel.addRoom')}</button>
       </form>
+
+      {selectedRooms.length > 0 && (
+        <div className="card-luxe mb-6 flex items-center justify-between p-4 bg-red-50 border border-red-200">
+          <span className="text-sm font-medium text-red-700">{selectedRooms.length} chambre(s) sélectionnée(s)</span>
+          <button onClick={deleteSelectedRooms} className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600">
+            Supprimer
+          </button>
+        </div>
+      )}
 
       <div className="card-luxe mb-6 p-6">
         <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t('roomsPanel.qrBaseUrl')}</label>
         <input value={host} onChange={e => setHost(e.target.value)} className="input-luxe mt-1 w-full" />
+      </div>
+
+      <div className="mb-4 flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={selectedRooms.length === rooms.length && rooms.length > 0}
+          onChange={toggleSelectAll}
+          className="h-4 w-4 rounded border-gray-300 text-hestia-gold focus:ring-hestia-gold"
+        />
+        <span className="text-sm text-gray-600">Tout sélectionner</span>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,9 +162,17 @@ export default function RoomsPanel() {
           return (
             <div key={room._id} className="card-luxe p-6 transition hover:shadow-luxe">
               <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
-                  <p className="font-serif text-2xl text-hestia-navy">{room.number}</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedRooms.includes(room._id)}
+                    onChange={() => toggleSelectRoom(room._id)}
+                    className="h-4 w-4 rounded border-gray-300 text-hestia-gold focus:ring-hestia-gold"
+                  />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                    <p className="font-serif text-2xl text-hestia-navy">{room.number}</p>
+                  </div>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${room.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{room.active ? t('active') : t('inactive')}</span>
               </div>
@@ -142,7 +186,7 @@ export default function RoomsPanel() {
                   <p className="text-sm text-gray-500">{t('roomsPanel.loadingQr')}</p>
                 )}
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 <button onClick={() => toggle(room._id)} className="rounded-lg border border-hestia-linen bg-white py-2 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen">
                   {room.active ? t('deactivate') : t('activate')}
                 </button>
@@ -151,6 +195,9 @@ export default function RoomsPanel() {
                 </button>
                 <button onClick={() => copyUrl(room)} className="rounded-lg border border-hestia-linen bg-white py-2 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen">
                   {t('copy')}
+                </button>
+                <button onClick={() => deleteRoom(room._id)} className="rounded-lg border border-red-200 bg-red-50 py-2 text-xs font-medium text-red-600 transition hover:bg-red-100">
+                  {t('delete')}
                 </button>
               </div>
             </div>

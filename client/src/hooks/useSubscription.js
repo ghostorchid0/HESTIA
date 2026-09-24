@@ -25,24 +25,15 @@ export default function useSubscription() {
   useEffect(() => { fetch() }, [fetch])
 
   const canAccessFeature = useCallback(
-    (feature) => !!features[feature],
-    [features]
+    (feature) => true, // All features available with single subscription
+    []
   )
 
-  const isRoomLimitReached = rooms.used >= rooms.max
+  const isRoomLimitReached = false // No room limit
 
-  const upgrade = async (plan) => {
-    const res = await api.patch('/admin/subscription/upgrade', { plan })
-    setSubscription(res.data.subscription)
-    setFeatures(res.data.features)
-    return res.data
-  }
-
-  const plan = subscription?.plan || 'STARTER'
-  const status = subscription?.status || 'TRIAL'
-  const trialDaysLeft = subscription?.trialEndsAt
-    ? Math.max(0, Math.ceil((new Date(subscription.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)))
-    : 0
+  const plan = 'UNLIMITED' // Single plan
+  const status = subscription?.status || 'active'
+  const trialDaysLeft = 0 // No trial
 
   return {
     plan,
@@ -53,7 +44,6 @@ export default function useSubscription() {
     loading,
     isRoomLimitReached,
     canAccessFeature,
-    upgrade,
     refresh: fetch,
   }
 }

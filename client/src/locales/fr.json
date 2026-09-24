@@ -156,13 +156,12 @@
     "limitReached": "Limite de chambres atteinte pour"
   },
   "planOverview": {
-    "title": "Formule & facturation",
-    "currentPlan": "Formule actuelle",
+    "title": "Abonnement Hestia",
+    "currentPlan": "Abonnement actuel",
     "trialDays": "jours restants",
     "rooms": "Chambres",
     "current": "Actuel",
-    "upgradeTo": "Passer à {{plan}}",
-    "alreadyOnPlan": "Déjà sur cette formule",
+    "alreadyOnPlan": "Déjà abonné",
     "upgrading": "Mise à jour..."
   },
   "branding": {

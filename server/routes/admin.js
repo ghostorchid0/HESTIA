@@ -173,7 +173,6 @@ router.get('/rooms', requireRole('admin'), async (req, res) => {
 router.post('/rooms',
   requireRole('admin'),
   body('number').trim().notEmpty().escape(),
-  checkRoomLimit,
   async (req, res) => {
     if (!handleValidation(req, res)) return;
     const room = await Room.create({ hotelId: req.hotelId, uuid: uuidv4(), number: req.body.number, active: true });
@@ -190,6 +189,16 @@ router.patch('/rooms/:id/toggle',
     room.active = !room.active;
     await room.save();
     res.json(room);
+  });
+
+router.delete('/rooms/:id',
+  requireRole('admin'),
+  param('id').isMongoId(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const room = await Room.findOneAndDelete({ _id: req.params.id, ...hotelFilter(req) });
+    if (!room) return res.status(404).json({ message: 'Room not found' });
+    res.json({ message: 'Room deleted successfully' });
   });
 
 router.get('/rooms/:id/qr',
@@ -862,9 +871,10 @@ router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) =
 });
 
 function getFeatureFlags(plan) {
+  // All features enabled for single subscription
   const flags = {};
-  for (const [feature, plans] of Object.entries(featureTiers)) {
-    flags[feature] = plans.includes(plan);
+  for (const feature of Object.keys(featureTiers)) {
+    flags[feature] = true;
   }
   return flags;
 }
@@ -873,33 +883,12 @@ router.get('/subscription', requireRole('admin'), async (req, res) => {
   const hotel = await Hotel.findById(req.hotelId).lean();
   if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
   const used = await Room.countDocuments({ hotelId: req.hotelId, active: true });
-  const now = new Date();
-  const trialEndsAt = hotel.subscription?.trialEndsAt;
-  const trialDaysLeft = trialEndsAt ? Math.max(0, Math.ceil((new Date(trialEndsAt) - now) / (1000 * 60 * 60 * 24))) : 0;
   res.json({
-    subscription: hotel.subscription,
+    subscription: { ...hotel.subscription, plan: 'UNLIMITED', status: 'active' },
     rooms: { used, max: 9999 },
-    trialDaysLeft,
-    features: getFeatureFlags(hotel.subscription?.plan),
+    trialDaysLeft: 0,
+    features: getFeatureFlags('UNLIMITED'),
   });
 });
-
-router.patch('/subscription/upgrade',
-  requireRole('admin'),
-  body('plan').isIn(['STARTER', 'PRO', 'ENTERPRISE']),
-  async (req, res) => {
-    if (!handleValidation(req, res)) return;
-    const hotel = await Hotel.findById(req.hotelId);
-    if (!hotel) return res.status(404).json({ message: 'Hotel not found' });
-    hotel.subscription.plan = req.body.plan;
-    if (hotel.subscription.status === 'TRIAL' || hotel.subscription.status === 'PAST_DUE') {
-      hotel.subscription.status = 'ACTIVE';
-    }
-    await hotel.save();
-    res.json({
-      subscription: hotel.subscription,
-      features: getFeatureFlags(hotel.subscription.plan),
-    });
-  });
 
 module.exports = router;

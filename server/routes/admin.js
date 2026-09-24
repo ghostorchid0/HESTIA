@@ -71,7 +71,11 @@ router.use(async (req, res, next) => {
 });
 
 function hotelFilter(req) {
-  if (!req.hotelId) return {};
+  if (!req.hotelId) {
+    // If superadmin and no hotel selected, return empty filter (show all)
+    if (req.user?.role === 'superadmin') return {};
+    return {};
+  }
   return mongoose.isValidObjectId(req.hotelId)
     ? { hotelId: new mongoose.Types.ObjectId(req.hotelId) }
     : {};
@@ -166,7 +170,8 @@ router.patch(
 );
 
 router.get('/rooms', requireRole('admin'), async (req, res) => {
-  const rooms = await Room.find(hotelFilter(req)).sort({ number: 1 });
+  const filter = req.user.role === 'superadmin' ? {} : hotelFilter(req);
+  const rooms = await Room.find(filter).sort({ number: 1 });
   res.json(rooms);
 });
 
@@ -184,7 +189,10 @@ router.patch('/rooms/:id/toggle',
   param('id').isMongoId(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.findOne({ _id: req.params.id, ...hotelFilter(req) });
+    const filter = req.user.role === 'superadmin' 
+      ? { _id: req.params.id }
+      : { _id: req.params.id, ...hotelFilter(req) };
+    const room = await Room.findOne(filter);
     if (!room) return res.status(404).json({ message: 'Room not found' });
     room.active = !room.active;
     await room.save();
@@ -196,7 +204,10 @@ router.delete('/rooms/:id',
   param('id').isMongoId(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.findOneAndDelete({ _id: req.params.id, ...hotelFilter(req) });
+    const filter = req.user.role === 'superadmin' 
+      ? { _id: req.params.id }
+      : { _id: req.params.id, ...hotelFilter(req) };
+    const room = await Room.findOneAndDelete(filter);
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json({ message: 'Room deleted successfully' });
   });
@@ -207,7 +218,11 @@ router.get('/rooms/:id/qr',
   query('size').optional().isInt({ min: 50, max: 1000 }).toInt(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const room = await Room.findOne({ _id: req.params.id, ...hotelFilter(req) });
+    // For superadmin, search without hotel filter
+    const filter = req.user.role === 'superadmin' 
+      ? { _id: req.params.id }
+      : { _id: req.params.id, ...hotelFilter(req) };
+    const room = await Room.findOne(filter);
     if (!room) return res.status(404).json({ message: 'Room not found' });
 
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;

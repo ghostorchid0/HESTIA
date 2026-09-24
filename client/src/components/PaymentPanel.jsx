@@ -14,13 +14,13 @@ export default function PaymentPanel() {
       window.open(customLink, '_blank')
       setMessage({
         type: 'success',
-        text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, votre abonnement sera activé après vérification.'
+        text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, contactez-nous pour activer votre abonnement.'
       })
     } else {
       window.open('https://app.saspay.me/dashboard', '_blank')
       setMessage({
         type: 'info',
-        text: 'Redirection vers SasPay pour créer une session de checkout. Une fois le paiement effectué, votre abonnement sera activé après vérification.'
+        text: 'Redirection vers SasPay pour créer un lien de paiement. Une fois le paiement effectué, contactez-nous pour activer votre abonnement.'
       })
     }
   }
@@ -73,7 +73,7 @@ export default function PaymentPanel() {
           <div className="bg-hestia-cream p-4 rounded-lg">
             <h3 className="font-semibold text-hestia-dark mb-2">Lien de paiement SasPay</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Utilisez ce lien pour créer une session de paiement sur le dashboard SasPay.
+              Entrez votre lien de paiement SasPay pour accéder au paiement direct.
             </p>
             <input
               type="url"
@@ -89,7 +89,7 @@ export default function PaymentPanel() {
             disabled={loading}
             className="btn-primary w-full"
           >
-            {loading ? 'Chargement...' : 'Ouvrir SasPay Dashboard'}
+            {loading ? 'Chargement...' : 'Payer via le lien'}
           </button>
 
           <div className="bg-blue-50 p-4 rounded-lg">

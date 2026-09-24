@@ -22,6 +22,7 @@ const Room = require('../models/Room');
 const User = require('../models/User');
 const Hotel = require('../models/Hotel');
 const Settings = require('../models/Settings');
+const Payment = require('../models/Payment');
 
 const allowedMenuFields = ['name', 'description', 'price', 'category', 'department', 'available', 'imageUrl'];
 
@@ -787,7 +788,11 @@ router.delete('/hotels/:id', requireRole('superadmin'), param('id').isMongoId(),
   await Hotel.findByIdAndDelete(req.params.id);
   await Settings.findOneAndDelete({ hotelId: req.params.id });
   await User.deleteMany({ hotelId: req.params.id });
-  res.json({ message: 'Hotel deleted' });
+  await Room.deleteMany({ hotelId: req.params.id });
+  await Order.deleteMany({ hotelId: req.params.id });
+  await MenuItem.deleteMany({ hotelId: req.params.id });
+  await Payment.deleteMany({ hotelId: req.params.id });
+  res.json({ message: 'Hotel and all related data deleted' });
 });
 
 router.delete('/hotels',
@@ -801,9 +806,13 @@ router.delete('/hotels',
       await Hotel.findByIdAndDelete(hotelId);
       await Settings.findOneAndDelete({ hotelId });
       await User.deleteMany({ hotelId });
+      await Room.deleteMany({ hotelId });
+      await Order.deleteMany({ hotelId });
+      await MenuItem.deleteMany({ hotelId });
+      await Payment.deleteMany({ hotelId });
     }
     
-    res.json({ message: `Deleted ${ids.length} hotels` });
+    res.json({ message: `Deleted ${ids.length} hotels and all related data` });
   });
 
 router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) => {

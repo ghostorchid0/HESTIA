@@ -22,8 +22,7 @@ export default function LandingPage() {
           <h1 className="mt-6 text-4xl font-light leading-tight text-hestia-navy sm:text-5xl md:text-6xl">{t('landing.headline')}</h1>
           <p className="mx-auto mt-6 max-w-xl text-base text-gray-600 sm:text-lg">{t('landing.subheadline')}</p>
           <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
-            <Link to="/demo" className="btn-primary">{t('landing.demo')}</Link>
-            <Link to="/admin/login" className="btn-outline">{t('landing.staffLogin')}</Link>
+            <Link to="/admin/login" className="btn-primary">{t('landing.staffLogin')}</Link>
           </div>
         </div>
       </section>

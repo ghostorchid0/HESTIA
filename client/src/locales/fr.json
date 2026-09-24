@@ -41,8 +41,6 @@
     "staffLogin": "Connexion staff",
     "headline": "Moins de chaos à la réception, plus de revenus pour votre hôtel",
     "subheadline": "Hestia centralise les commandes, les demandes de service et les paiements de votre hôtel. Finis les messages perdus, les appels et les oublis.",
-    "demo": "Voir la démo",
-    "admin": "Tableau de bord",
     "featuresTitle": "Pourquoi Hestia change le quotidien de votre hôtel",
     "feature": {
       "qrOrdering": { "title": "Toutes les commandes au même endroit", "desc": "Finis les messages WhatsApp et les papiers. La cuisine et la réception voient tout en temps réel." },
@@ -50,25 +48,17 @@
       "payment": { "title": "Votre équipe gagne du temps", "desc": "Moins d'appels, moins d'allers-retours. Votre personnel se concentre sur l'accueil et le service." }
     },
     "pricingTitle": "Essayez Hestia sans engagement",
-    "pricingDesc": "30 jours d'essai gratuit. Pas de commission, pas de carte bancaire.",
-    "plan": "Essai gratuit",
-    "price": "Gratuit",
-    "perMonth": "30 jours, puis forfait adapté à votre hôtel",
+    "pricingDesc": "50.000 FCFA/mois - Tout inclus, sans engagement",
+    "plan": "Abonnement unique",
+    "price": "50.000 FCFA",
+    "perMonth": "par mois",
     "includes": {
-      "rooms": "QR codes par chambre illimités",
+      "rooms": "QR codes illimités par chambre",
       "orders": "Commandes illimitées",
       "support": "Support WhatsApp & appel"
     },
-    "start": "Demander l'essai",
+    "start": "Commencer",
     "footer": "© 2025 Hestia. Conçu pour les hôtels africains."
-  },
-  "demoPage": {
-    "tagline": "Voyez ce que vos clients verront",
-    "instructions": "Vous êtes un client dans une chambre. Ouvrez-en une pour scanner et commander comme dans votre hôtel.",
-    "scanOrClick": "Scannez le QR code ou cliquez pour ouvrir",
-    "openRoom": "Ouvrir en tant qu'invité",
-    "tryStaff": "Essayer le dashboard réception",
-    "notFound": "Démo non configurée"
   },
   "roomPage": {
     "checking": "Vérification de la chambre...",

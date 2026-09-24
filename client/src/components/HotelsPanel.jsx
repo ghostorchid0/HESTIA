@@ -6,7 +6,7 @@ import Pagination from './Pagination'
 export default function HotelsPanel() {
   const { t } = useTranslation()
   const [hotels, setHotels] = useState([])
-  const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '', logo: null })
+  const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
   const [message, setMessage] = useState('')
   const [createdAdmin, setCreatedAdmin] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -35,9 +35,7 @@ export default function HotelsPanel() {
     try {
       const formData = new FormData()
       Object.keys(form).forEach(key => {
-        if (key === 'logo' && form.logo) {
-          formData.append('logo', form.logo)
-        } else if (form[key]) {
+        if (form[key]) {
           formData.append(key, form[key])
         }
       })
@@ -46,7 +44,7 @@ export default function HotelsPanel() {
       const res = await api.post('/admin/hotels', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      setForm({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '', logo: null })
+      setForm({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
       setHotels(prev => [res.data.hotel, ...prev])
       if (res.data.admin) setCreatedAdmin({ ...res.data.admin, password: adminPasswordPlain })
       else setMessage(t('hotelsPanel.saved'))
@@ -112,15 +110,6 @@ export default function HotelsPanel() {
       <h1 className="mb-8 text-3xl font-light text-hestia-navy">{t('hotelsPanel.title')}</h1>
       <form onSubmit={create} className="card-luxe mb-8 p-8">
         <div className="grid gap-5 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Logo de l'hôtel</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={e => setForm({ ...form, logo: e.target.files[0] })}
-              className="input-luxe w-full"
-            />
-          </div>
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">{t('hotelsPanel.name')}</label>
             <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="input-luxe w-full" required />
@@ -189,9 +178,6 @@ export default function HotelsPanel() {
                 onChange={() => toggleHotelSelection(h._id)}
                 className="w-4 h-4"
               />
-              {h.logo && (
-                <img src={h.logo} alt={h.name} className="h-12 w-12 rounded-full object-cover" />
-              )}
               <div>
                 <p className="font-serif text-xl text-hestia-navy">{h.name}</p>
                 <p className="text-xs text-gray-400">{h.slug} • {h.currency}</p>

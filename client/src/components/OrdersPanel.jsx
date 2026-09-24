@@ -28,7 +28,6 @@ export default function OrdersPanel() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [totalPages, setTotalPages] = useState(1)
   const [selectedOrders, setSelectedOrders] = useState(new Set())
-  const [newOrderIds, setNewOrderIds] = useState(new Set())
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -137,21 +136,11 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     const onNew = (order) => {
-      console.log('New order received:', order._id)
       setOrders((prev) => {
         setKnownOrderIds(new Set([...prev.map(o => o._id), order._id]))
-        setNewOrderIds(prev => new Set([...prev, order._id]))
         return [order, ...prev]
       })
       if (soundEnabled) playBeep()
-      // Remove from new orders after 5 seconds
-      setTimeout(() => {
-        setNewOrderIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(order._id)
-          return newSet
-        })
-      }, 5000)
     }
     const onUpdate = (order) => {
       setOrders((prev) => prev.map((o) => (o._id === order._id ? order : o)))
@@ -236,23 +225,21 @@ export default function OrdersPanel() {
           />
           <span className="text-sm text-gray-600">Tout sélectionner</span>
         </div>
-        {filtered.map((order) => {
-          const isNew = newOrderIds.has(order._id)
-          return (
-            <div key={order._id} className={`card-luxe p-6 transition hover:shadow-luxe ${isNew ? 'animate-pulse shadow-2xl shadow-hestia-gold/50 border-2 border-hestia-gold bg-hestia-gold/10' : ''}`}>
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrders.has(order._id)}
-                    onChange={() => toggleOrderSelection(order._id)}
-                    className="w-4 h-4"
-                  />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
-                    <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
-                  </div>
+        {filtered.map((order) => (
+          <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={selectedOrders.has(order._id)}
+                  onChange={() => toggleOrderSelection(order._id)}
+                  className="w-4 h-4"
+                />
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                  <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
                 </div>
+              </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
                 <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
@@ -317,8 +304,7 @@ export default function OrdersPanel() {
               </div>
             </div>
           </div>
-          )
-        })}
+        ))}
       </div>
       
       <Pagination

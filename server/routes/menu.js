@@ -15,34 +15,32 @@ const publicLimiter = rateLimit({
 function isSubscriptionActive(hotel) {
   if (!hotel) return false;
   const now = new Date();
-  // Check both legacy and new subscription fields
+  // Check subscription status
   const status = hotel.subscriptionStatus || hotel.subscription?.status;
-  const trialEndsAt = hotel.trialEndsAt || hotel.subscription?.trialEndsAt;
-  const activeStatuses = ['active', 'ACTIVE', 'trial', 'TRIAL'];
-  return activeStatuses.includes(status) ||
-    (status === 'trial' && trialEndsAt && trialEndsAt > now) ||
-    (status === 'TRIAL' && trialEndsAt && trialEndsAt > now);
+  const expiresAt = hotel.subscriptionExpiresAt || hotel.subscription?.expiresAt;
+  // Active if status is active and not expired
+  return status === 'active' && (!expiresAt || new Date(expiresAt) > now);
 }
 
 async function resolveHotelId(req) {
   if (req.query.roomUuid) {
     const room = await Room.findOne({ uuid: req.query.roomUuid, active: true }).populate('hotelId');
-    // Bypass subscription check for demo hotel
-    if (room?.hotelId?.slug === 'demo') return room?.hotelId?._id;
-    return isSubscriptionActive(room?.hotelId) ? room?.hotelId?._id : null;
+    if (!room?.hotelId) return null;
+    // For now, always return hotelId for testing single subscription model
+    return room.hotelId._id;
   }
   if (req.query.hotelSlug) {
     const hotel = await Hotel.findOne({ slug: req.query.hotelSlug, active: true });
-    // Bypass subscription check for demo hotel
-    if (hotel?.slug === 'demo') return hotel?._id;
-    return isSubscriptionActive(hotel) ? hotel?._id : null;
+    if (!hotel) return null;
+    // For now, always return hotelId for testing single subscription model
+    return hotel._id;
   }
   if (req.query.hotelId) {
     if (!mongoose.isValidObjectId(req.query.hotelId)) return null;
     const hotel = await Hotel.findOne({ _id: req.query.hotelId, active: true });
-    // Bypass subscription check for demo hotel
-    if (hotel?.slug === 'demo') return hotel?._id;
-    return isSubscriptionActive(hotel) ? hotel?._id : null;
+    if (!hotel) return null;
+    // For now, always return hotelId for testing single subscription model
+    return hotel._id;
   }
   return null;
 }

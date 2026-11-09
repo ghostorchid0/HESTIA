@@ -270,9 +270,21 @@ router.post('/verify-reference', requireAuth, requireRole('admin', 'superadmin')
       });
     }
 
+    // The API returns a paginated list of transactions
+    const transactions = result.data.results || [];
+    
+    if (transactions.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Aucune transaction trouvée avec cette référence.'
+      });
+    }
+
+    // Get the first matching transaction
+    const paymentData = transactions[0];
+
     // Check if payment is successful
-    const paymentData = result.data;
-    if (paymentData.status !== 'SUCCESS' && paymentData.status !== 'COMPLETED') {
+    if (paymentData.status !== 'SUCCESS') {
       return res.status(400).json({ 
         success: false,
         message: `Le paiement est actuellement au statut: ${paymentData.status}. Veuillez attendre que le paiement soit complété.`
@@ -305,13 +317,13 @@ router.post('/verify-reference', requireAuth, requireRole('admin', 'superadmin')
     // Create payment record
     await Payment.create({
       hotelId,
-      amount: 50000,
-      currency: 'XOF',
+      amount: parseFloat(paymentData.requested_amount),
+      currency: paymentData.currency,
       status: 'success',
       provider: 'sasapay',
       transref: reference,
       type: 'renewal',
-      paidAt: new Date(),
+      paidAt: new Date(paymentData.updated_at),
       sasapayResponse: paymentData,
       description: `Subscription payment via reference ${reference}`
     });

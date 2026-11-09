@@ -186,18 +186,21 @@ class SasPayService {
 
   /**
    * Verify payment by reference number
-   * @param {string} reference - Payment reference number (e.g., from permanent link)
+   * @param {string} reference - Payment reference number (e.g., TXN-20260812-000512)
    */
   async verifyPaymentByReference(reference) {
     try {
-      // Try to get payment by reference from SasPay
-      // The API endpoint might vary - this is a common pattern
+      // First, try to find transaction by reference in the transactions list
+      // This requires fetching all transactions and filtering by reference
       const response = await axios.get(
-        `${this.baseUrl}/payments/reference/${reference}/`,
+        `${this.baseUrl}/transactions/`,
         {
           headers: {
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json'
+          },
+          params: {
+            reference: reference
           }
         }
       );

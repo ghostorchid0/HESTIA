@@ -25,7 +25,7 @@ export default function useSubscription() {
   useEffect(() => { fetch() }, [fetch])
 
   const canAccessFeature = useCallback(
-    (feature) => true, // All features available with single subscription
+    () => true, // All features available with single subscription
     []
   )
 

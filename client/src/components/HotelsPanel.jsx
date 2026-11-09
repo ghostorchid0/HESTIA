@@ -1,20 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import Pagination from './Pagination'
+import { useToast } from '../contexts/ToastContext'
 
 export default function HotelsPanel() {
   const { t } = useTranslation()
+  const toast = useToast()
   const [hotels, setHotels] = useState([])
   const [form, setForm] = useState({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
-  const [message, setMessage] = useState('')
   const [createdAdmin, setCreatedAdmin] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [totalPages, setTotalPages] = useState(1)
   const [selectedHotels, setSelectedHotels] = useState(new Set())
 
-  const load = () => api.get(`/admin/hotels?page=${currentPage}&limit=${itemsPerPage}`).then(res => {
+  const load = useCallback(() => api.get(`/admin/hotels?page=${currentPage}&limit=${itemsPerPage}`).then(res => {
     const hotelsData = Array.isArray(res.data) ? res.data : []
     setHotels(hotelsData)
     const totalCount = res.headers?.get('x-total-count')
@@ -24,13 +25,12 @@ export default function HotelsPanel() {
   }).catch(err => {
     console.error('Failed to fetch hotels', err)
     setHotels([])
-  })
+  }), [currentPage, itemsPerPage])
 
-  useEffect(() => { load() }, [currentPage, itemsPerPage])
+  useEffect(() => { load() }, [currentPage, itemsPerPage, load])
 
   const create = async (e) => {
     e.preventDefault()
-    setMessage('')
     setCreatedAdmin(null)
     try {
       const formData = new FormData()
@@ -47,10 +47,10 @@ export default function HotelsPanel() {
       setForm({ name: '', slug: '', currency: 'XOF', contactPhone: '', address: '', adminUsername: '', adminPassword: '' })
       setHotels(prev => [res.data.hotel, ...prev])
       if (res.data.admin) setCreatedAdmin({ ...res.data.admin, password: adminPasswordPlain })
-      else setMessage(t('hotelsPanel.saved'))
+      else toast.success(t('hotelsPanel.saved'))
       load()
     } catch (err) {
-      setMessage(err.response?.data?.message || t('hotelsPanel.error'))
+      toast.error(err.response?.data?.message || t('hotelsPanel.error'))
     }
   }
 
@@ -76,8 +76,10 @@ export default function HotelsPanel() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet hôtel ?')) return
     try {
       await api.delete(`/admin/hotels/${hotelId}`)
+      toast.success('Hôtel supprimé avec succès')
       load()
     } catch (err) {
+      toast.error('Erreur lors de la suppression')
       console.error('Failed to delete hotel', err)
     }
   }
@@ -88,8 +90,10 @@ export default function HotelsPanel() {
     try {
       await api.delete('/admin/hotels', { data: { ids: Array.from(selectedHotels) } })
       setSelectedHotels(new Set())
+      toast.success(`${selectedHotels.size} hôtel(s) supprimé(s) avec succès`)
       load()
     } catch (err) {
+      toast.error('Erreur lors de la suppression')
       console.error('Failed to delete hotels', err)
     }
   }
@@ -139,7 +143,6 @@ export default function HotelsPanel() {
             <input type="password" value={form.adminPassword} onChange={e => setForm({ ...form, adminPassword: e.target.value })} className="input-luxe w-full" minLength={6} autoComplete="new-password" />
           </div>
         </div>
-        {message && <p className="mt-4 text-sm text-green-600">{message}</p>}
         {createdAdmin && (
           <div className="mt-4 rounded-lg bg-green-50 p-4 text-sm text-green-700">
             <p className="font-medium">{t('hotelsPanel.adminCreated')}</p>

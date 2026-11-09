@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import Pagination from './Pagination'
@@ -14,7 +14,7 @@ export default function StaffPanel() {
   const [totalPages, setTotalPages] = useState(1)
   const [selectedUsers, setSelectedUsers] = useState(new Set())
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await api.get(`/admin/users?page=${currentPage}&limit=${itemsPerPage}`)
       const usersData = Array.isArray(res.data) ? res.data : []
@@ -27,9 +27,9 @@ export default function StaffPanel() {
       console.error('Failed to fetch users', err)
       setUsers([])
     }
-  }
+  }, [currentPage, itemsPerPage])
 
-  useEffect(() => { fetchUsers() }, [currentPage, itemsPerPage])
+  useEffect(() => { fetchUsers() }, [currentPage, itemsPerPage, fetchUsers])
 
   const create = async (e) => {
     e.preventDefault()

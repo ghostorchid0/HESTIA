@@ -22,7 +22,7 @@ export default function PaymentPanel() {
   }, [])
 
   const handlePayment = () => {
-    const paymentLink = customLink || 'https://link.saspay.me/yqeedvzzbnk'
+    const paymentLink = 'https://link.saspay.me/yqeedvzzbnk'
     
     window.open(paymentLink, '_blank')
     setMessage({
@@ -225,7 +225,7 @@ export default function PaymentPanel() {
               <li>Payer via le lien SasPay (50.000 FCFA)</li>
               <li>Copiez votre référence de paiement depuis SasPay</li>
               <li>Entrez la référence dans le champ ci-dessus</li>
-              <li>Cliquez sur "Vérifier et activer" pour activation automatique</li>
+              <li>Cliquez sur &quot;Vérifier et activer&quot; pour activation automatique</li>
               <li>Votre abonnement sera actif pour 30 jours</li>
             </ol>
           </div>
@@ -238,7 +238,7 @@ export default function PaymentPanel() {
       </div>
 
       <div className="card-luxe p-6">
-        <h3 className="text-lg font-semibold text-hestia-dark mb-4">Avantages de l'abonnement</h3>
+        <h3 className="text-lg font-semibold text-hestia-dark mb-4">Avantages de l&apos;abonnement</h3>
         <ul className="space-y-2 text-sm text-gray-700">
           <li className="flex items-start">
             <span className="text-green-500 mr-2">✓</span>

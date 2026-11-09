@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../api'
 import useSettings from '../hooks/useSettings'
@@ -21,9 +21,7 @@ export default function MenuPanel() {
   const [totalPages, setTotalPages] = useState(1)
   const [selectedItems, setSelectedItems] = useState(new Set())
 
-  useEffect(() => { fetchItems() }, [currentPage, itemsPerPage])
-
-  const fetchItems = async () => {
+  const fetchItems = useCallback(async () => {
     try {
       const res = await api.get(`/admin/menu?page=${currentPage}&limit=${itemsPerPage}`)
       const itemsData = Array.isArray(res.data) ? res.data : []
@@ -36,7 +34,9 @@ export default function MenuPanel() {
       console.error('Failed to fetch menu items', err)
       setItems([])
     }
-  }
+  }, [currentPage, itemsPerPage])
+
+  useEffect(() => { fetchItems() }, [currentPage, itemsPerPage, fetchItems])
 
   const categories = useMemo(() => [...new Set(items.map(i => i.category).filter(Boolean))], [items])
 

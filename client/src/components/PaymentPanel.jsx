@@ -4,11 +4,11 @@ import api from '../api'
 export default function PaymentPanel() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
-  const [customLink, setCustomLink] = useState('')
   const [subscriptionStatus, setSubscriptionStatus] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [hotels, setHotels] = useState([])
   const [selectedHotel, setSelectedHotel] = useState('')
+  const [paymentReference, setPaymentReference] = useState('')
 
   useEffect(() => {
     const role = localStorage.getItem('hestia_role')
@@ -22,20 +22,54 @@ export default function PaymentPanel() {
   }, [])
 
   const handlePayment = () => {
-    const paymentLink = customLink || 'https://app.saspay.me/dashboard'
+    const paymentLink = customLink || 'https://link.saspay.me/yqeedvzzbnk'
     
-    if (customLink) {
-      window.open(customLink, '_blank')
+    window.open(paymentLink, '_blank')
+    setMessage({
+      type: 'info',
+      text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, entrez votre référence de paiement ci-dessous pour activer automatiquement votre abonnement.'
+    })
+  }
+
+  const handleVerifyPayment = async (e) => {
+    e.preventDefault()
+    if (!paymentReference.trim()) {
       setMessage({
-        type: 'success',
-        text: 'Redirection vers le lien de paiement SasPay. Une fois le paiement effectué, contactez-nous pour activer votre abonnement.'
+        type: 'error',
+        text: 'Veuillez entrer votre référence de paiement'
       })
-    } else {
-      window.open('https://app.saspay.me/dashboard', '_blank')
+      return
+    }
+
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const response = await api.post('/payments/verify-reference', {
+        reference: paymentReference.trim(),
+        hotelId: localStorage.getItem('hestia_hotel')
+      })
+
+      if (response.data.success) {
+        setMessage({
+          type: 'success',
+          text: '✓ Paiement vérifié avec succès ! Votre abonnement est maintenant actif.'
+        })
+        setPaymentReference('')
+        checkSubscriptionStatus()
+      } else {
+        setMessage({
+          type: 'error',
+          text: response.data.message || 'La référence de paiement n\'a pas été trouvée ou n\'est pas encore payée.'
+        })
+      }
+    } catch (error) {
       setMessage({
-        type: 'info',
-        text: 'Redirection vers SasPay pour créer un lien de paiement. Une fois le paiement effectué, contactez-nous pour activer votre abonnement.'
+        type: 'error',
+        text: error.response?.data?.message || 'Erreur lors de la vérification de la référence'
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -118,15 +152,11 @@ export default function PaymentPanel() {
           <div className="bg-hestia-cream p-4 rounded-lg">
             <h3 className="font-semibold text-hestia-dark mb-2">Lien de paiement SasPay</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Entrez votre lien de paiement SasPay pour accéder au paiement direct.
+              Cliquez sur le bouton ci-dessous pour accéder au lien de paiement SasPay permanent.
             </p>
-            <input
-              type="url"
-              value={customLink}
-              onChange={(e) => setCustomLink(e.target.value)}
-              placeholder="https://link.saspay.me/..."
-              className="input-luxe w-full"
-            />
+            <div className="text-xs text-gray-500 break-all mb-2">
+              https://link.saspay.me/yqeedvzzbnk
+            </div>
           </div>
 
           <button
@@ -136,6 +166,30 @@ export default function PaymentPanel() {
           >
             {loading ? 'Chargement...' : 'Payer via le lien'}
           </button>
+
+          <div className="border-t border-gray-200 pt-4">
+            <h3 className="font-semibold text-hestia-dark mb-2">Vérifier votre paiement</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              Après avoir payé via le lien SasPay, entrez votre référence de paiement pour activer automatiquement votre abonnement.
+            </p>
+            <form onSubmit={handleVerifyPayment} className="space-y-3">
+              <input
+                type="text"
+                value={paymentReference}
+                onChange={(e) => setPaymentReference(e.target.value)}
+                placeholder="Référence de paiement (ex: SAS-123456789)"
+                className="input-luxe w-full"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-luxe w-full"
+              >
+                {loading ? 'Vérification...' : 'Vérifier et activer'}
+              </button>
+            </form>
+          </div>
 
           {isAdmin && (
             <div className="border-t border-gray-200 pt-4">
@@ -169,8 +223,9 @@ export default function PaymentPanel() {
             <h3 className="font-semibold text-hestia-dark mb-2">Pour activer votre abonnement</h3>
             <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
               <li>Payer via le lien SasPay (50.000 FCFA)</li>
-              <li>Contactez-nous avec la preuve de paiement</li>
-              <li>Nous activerons votre abonnement manuellement</li>
+              <li>Copiez votre référence de paiement depuis SasPay</li>
+              <li>Entrez la référence dans le champ ci-dessus</li>
+              <li>Cliquez sur "Vérifier et activer" pour activation automatique</li>
               <li>Votre abonnement sera actif pour 30 jours</li>
             </ol>
           </div>

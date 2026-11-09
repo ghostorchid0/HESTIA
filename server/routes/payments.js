@@ -225,6 +225,97 @@ router.post('/activate', requireAuth, requireRole('superadmin'), async (req, res
 });
 
 /**
+ * POST /api/payments/verify-reference
+ * Verify payment by reference and activate subscription automatically
+ */
+router.post('/verify-reference', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const { reference, hotelId } = req.body;
+
+    if (!reference || !hotelId) {
+      return res.status(400).json({ 
+        message: 'Reference and hotelId are required' 
+      });
+    }
+
+    // Verify payment with SasPay
+    const result = await sasPay.verifyPaymentByReference(reference);
+
+    if (!result.success) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Impossible de vérifier la référence auprès de SasPay. Vérifiez que la référence est correcte et que le paiement a été effectué.' 
+      });
+    }
+
+    // Check if payment is successful
+    const paymentData = result.data;
+    if (paymentData.status !== 'SUCCESS' && paymentData.status !== 'COMPLETED') {
+      return res.status(400).json({ 
+        success: false,
+        message: `Le paiement est actuellement au statut: ${paymentData.status}. Veuillez attendre que le paiement soit complété.`
+      });
+    }
+
+    // Check if payment already used for this hotel
+    const existingPayment = await Payment.findOne({ 
+      transref: reference,
+      hotelId 
+    });
+
+    if (existingPayment) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Cette référence de paiement a déjà été utilisée pour cet hôtel.'
+      });
+    }
+
+    // Verify hotel exists
+    const hotel = await Hotel.findById(hotelId);
+    if (!hotel) {
+      return res.status(404).json({ message: 'Hotel not found' });
+    }
+
+    // Calculate subscription expiry (30 days from now)
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 30);
+
+    // Create payment record
+    await Payment.create({
+      hotelId,
+      amount: 50000,
+      currency: 'XOF',
+      status: 'success',
+      provider: 'sasapay',
+      transref: reference,
+      type: 'renewal',
+      paidAt: new Date(),
+      sasapayResponse: paymentData,
+      description: `Subscription payment via reference ${reference}`
+    });
+
+    // Update hotel subscription status
+    await Hotel.findByIdAndUpdate(hotelId, {
+      subscriptionStatus: 'active',
+      subscriptionExpiresAt: expiryDate
+    });
+
+    res.json({
+      success: true,
+      message: 'Paiement vérifié avec succès ! Abonnement activé pour 30 jours.',
+      expiresAt: expiryDate
+    });
+
+  } catch (error) {
+    console.error('Verify reference error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Erreur lors de la vérification de la référence' 
+    });
+  }
+});
+
+/**
  * GET /api/payments/subscription-status
  * Get current subscription status
  */

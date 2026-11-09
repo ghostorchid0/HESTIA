@@ -183,6 +183,37 @@ class SasPayService {
       };
     }
   }
+
+  /**
+   * Verify payment by reference number
+   * @param {string} reference - Payment reference number (e.g., from permanent link)
+   */
+  async verifyPaymentByReference(reference) {
+    try {
+      // Try to get payment by reference from SasPay
+      // The API endpoint might vary - this is a common pattern
+      const response = await axios.get(
+        `${this.baseUrl}/payments/reference/${reference}/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('SasPay verify reference error:', error.response?.data || error.message);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
+  }
 }
 
 module.exports = new SasPayService();

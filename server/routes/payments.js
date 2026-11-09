@@ -6,6 +6,28 @@ const Hotel = require('../models/Hotel');
 const { requireAuth, requireRole } = require('../middleware/auth');
 
 /**
+ * GET /api/payments/test-saspay
+ * Test SasPay API connection (no auth required for debugging)
+ */
+router.get('/test-saspay', async (req, res) => {
+  try {
+    const result = await sasPay.getCountries();
+    res.json({
+      success: result.success,
+      message: result.success ? 'SasPay API connection successful' : 'SasPay API connection failed',
+      error: result.error,
+      dataCount: result.data ? result.data.length : 0
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Test failed',
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/payments/countries
  * Get supported countries and networks
  */

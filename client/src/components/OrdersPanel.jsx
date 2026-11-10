@@ -255,7 +255,7 @@ export default function OrdersPanel() {
     const created = new Date(createdAt)
     const diffMs = now - created
     const diffMinutes = Math.floor(diffMs / 60000)
-    return diffMinutes > 15
+    return diffMinutes > 1 // Changed from 15 to 1 minute
   }
 
   const groupByRoom = (orders) => {

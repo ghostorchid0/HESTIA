@@ -6,6 +6,7 @@ import useSettings from '../hooks/useSettings'
 import { formatCurrency } from '../utils/format'
 import ImageWithFallback from '../components/ImageWithFallback'
 import Icon from '../components/Icon'
+import BrandAccent from '../components/BrandAccent'
 
 export default function MenuPage() {
   const { t } = useTranslation()
@@ -126,18 +127,28 @@ export default function MenuPage() {
 
   if (loading) {
     return (
-      <div className={`flex min-h-screen items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-hestia-cream'}`}>
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" />
-      </div>
+      <BrandAccent>
+        <div className={`flex min-h-screen items-center justify-center ${darkMode ? 'bg-gray-900' : 'bg-hestia-cream'}`}>
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-hestia-linen border-t-hestia-gold" />
+        </div>
+      </BrandAccent>
     )
   }
 
   return (
+    <BrandAccent>
     <div className={`min-h-screen pb-24 sm:pb-8 transition-colors duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-hestia-cream text-gray-900'}`}>
       {/* Hero Section */}
       <section className={`relative overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-hestia-navy'}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-hestia-navy via-hestia-navy-light to-hestia-navy" />
         <div className="relative z-10 mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 sm:py-20">
+          {settings?.logoUrl && (
+            <ImageWithFallback 
+              src={settings.logoUrl} 
+              alt={settings.hotelName} 
+              className="mx-auto mb-4 h-20 w-20 rounded-2xl bg-white/10 object-contain p-2 backdrop-blur-sm"
+            />
+          )}
           <div className="mb-4 flex items-center justify-center gap-2">
             <Icon name="home" size={24} color="#C9A227" />
             <span className="text-sm font-semibold uppercase tracking-[0.3em] text-hestia-gold">
@@ -519,5 +530,6 @@ export default function MenuPage() {
         </div>
       </footer>
     </div>
+    </BrandAccent>
   )
 }

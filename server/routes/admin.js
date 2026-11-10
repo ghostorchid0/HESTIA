@@ -915,4 +915,104 @@ router.get('/subscription', requireRole('admin'), async (req, res) => {
   });
 });
 
+/**
+ * GET /api/admin/dashboard-stats
+ * Get dashboard statistics
+ */
+router.get('/dashboard-stats', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const hotelId = req.user.hotelId;
+
+    if (!hotelId) {
+      return res.status(400).json({ message: 'Hotel ID is required' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get today's orders
+    const todayOrders = await Order.find({
+      hotelId,
+      createdAt: { $gte: today, $lt: tomorrow }
+    });
+
+    const todayOrderCount = todayOrders.length;
+    const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+    // Get active rooms
+    const activeRooms = await Room.countDocuments({ hotelId, active: true });
+
+    // Get total rooms
+    const totalRooms = await Room.countDocuments({ hotelId });
+
+    // Get hotel subscription status
+    const hotel = await Hotel.findById(hotelId);
+    const subscriptionStatus = hotel?.subscriptionStatus || 'inactive';
+    const subscriptionExpiresAt = hotel?.subscriptionExpiresAt;
+
+    let daysRemaining = 0;
+    if (subscriptionExpiresAt) {
+      const now = new Date();
+      const expiry = new Date(subscriptionExpiresAt);
+      const diffTime = expiry - now;
+      daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (daysRemaining < 0) daysRemaining = 0;
+    }
+
+    // Get orders for last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const last7DaysOrders = await Order.find({
+      hotelId,
+      createdAt: { $gte: sevenDaysAgo }
+    }).sort({ createdAt: 1 });
+
+    // Group by day
+    const ordersByDay = {};
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(sevenDaysAgo);
+      date.setDate(date.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      ordersByDay[dateStr] = 0;
+    }
+
+    last7DaysOrders.forEach(order => {
+      const dateStr = order.createdAt.toISOString().split('T')[0];
+      if (ordersByDay.hasOwnProperty(dateStr)) {
+        ordersByDay[dateStr]++;
+      }
+    });
+
+    const last7DaysData = Object.entries(ordersByDay).map(([date, count]) => ({
+      date,
+      count
+    }));
+
+    res.json({
+      today: {
+        orderCount: todayOrderCount,
+        revenue: todayRevenue
+      },
+      rooms: {
+        active: activeRooms,
+        total: totalRooms
+      },
+      subscription: {
+        status: subscriptionStatus,
+        expiresAt: subscriptionExpiresAt,
+        daysRemaining
+      },
+      last7Days: last7DaysData
+    });
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ message: 'Failed to fetch dashboard statistics' });
+  }
+});
+
 module.exports = router;

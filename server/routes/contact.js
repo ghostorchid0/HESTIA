@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
+const { sendEmail } = require('../services/email');
+const config = require('../config');
 
 /**
  * POST /api/contact
@@ -20,8 +22,31 @@ router.post('/',
     try {
       const { name, email, phone, message } = req.body;
 
-      // For now, just log the contact message
-      // In production, you would send this via email or store in database
+      // Send email notification to superadmin
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@hestia.local';
+      const subject = `Nouveau message de contact - ${name}`;
+      const text = `
+Nouveau message de contact reçu :
+
+Nom: ${name}
+Email: ${email}
+Téléphone: ${phone || 'Non fourni'}
+
+Message:
+${message}
+
+Date: ${new Date().toLocaleString('fr-FR')}
+      `;
+
+      const emailSent = await sendEmail(adminEmail, subject, text);
+      
+      if (emailSent) {
+        console.log('Contact form email sent to', adminEmail);
+      } else {
+        console.log('Contact form email not sent (SMTP not configured or failed)');
+      }
+
+      // Also log to console for debugging
       console.log('Contact form submission:', {
         name,
         email,
@@ -29,9 +54,6 @@ router.post('/',
         message,
         timestamp: new Date().toISOString()
       });
-
-      // TODO: Send email notification to admin
-      // TODO: Store in database for tracking
 
       res.json({
         success: true,

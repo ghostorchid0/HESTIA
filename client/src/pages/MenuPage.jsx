@@ -133,7 +133,7 @@ export default function MenuPage() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-hestia-cream text-gray-900'}`}>
+    <div className={`min-h-screen pb-24 sm:pb-8 transition-colors duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-hestia-cream text-gray-900'}`}>
       {/* Hero Section */}
       <section className={`relative overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-hestia-navy'}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-hestia-navy via-hestia-navy-light to-hestia-navy" />
@@ -345,14 +345,14 @@ export default function MenuPage() {
         )}
       </main>
 
-      {/* Cart Drawer */}
+      {/* Cart Bottom Sheet */}
       {cartOpen && (
         <div className="fixed inset-0 z-50">
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setCartOpen(false)}
           />
-          <div className={`absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto shadow-2xl ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
+          <div className={`absolute bottom-0 left-0 right-0 max-h-[85vh] overflow-y-auto rounded-t-3xl shadow-2xl ${darkMode ? 'bg-gray-900' : 'bg-white'}`}>
             <div className={`sticky top-0 border-b p-4 ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-hestia-linen bg-white'}`}>
               <div className="flex items-center justify-between">
                 <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-hestia-navy'}`}>
@@ -367,7 +367,7 @@ export default function MenuPage() {
               </div>
             </div>
             
-            <div className="p-4">
+            <div className="p-4 pb-8">
               {cart.length === 0 ? (
                 <div className="py-12 text-center text-gray-500">
                   {t('menuPage.emptyCart') || 'Votre panier est vide'}
@@ -486,6 +486,19 @@ export default function MenuPage() {
             <span className="text-sm font-medium">{t('menuPage.addedToCart') || 'Ajouté au panier'}</span>
           </div>
         </div>
+      )}
+
+      {/* Floating Cart Button (Mobile) */}
+      {cart.length > 0 && !cartOpen && (
+        <button
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-hestia-navy text-white shadow-luxe transition hover:bg-hestia-navy-light sm:hidden"
+        >
+          <Icon name="cart" size={24} />
+          <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-hestia-gold text-xs font-bold text-white">
+            {cartCount}
+          </span>
+        </button>
       )}
 
       {/* Footer */}

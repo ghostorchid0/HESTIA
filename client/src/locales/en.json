@@ -86,7 +86,17 @@
     "additionalRequest": "Additional request (optional)",
     "paymentMethod": "Payment method",
     "placeOrder": "Place Order",
-    "placing": "Placing..."
+    "placing": "Placing...",
+    "search": "Search for a dish...",
+    "vegetarian": "Vegetarian",
+    "spicy": "Spicy",
+    "glutenFree": "Gluten-free",
+    "popular": "Popular",
+    "new": "New",
+    "emptyCart": "Your cart is empty",
+    "addedToCart": "Added to cart",
+    "footer": "Room Service - Order from your room",
+    "noItems": "No items found"
   },
   "orderStatus": {
     "title": "Order Status",

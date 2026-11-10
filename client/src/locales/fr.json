@@ -76,7 +76,17 @@
     "additionalRequest": "Demande supplémentaire (optionnel)",
     "paymentMethod": "Mode de paiement",
     "placeOrder": "Passer commande",
-    "placing": "Envoi..."
+    "placing": "Envoi...",
+    "search": "Rechercher un plat...",
+    "vegetarian": "Végétarien",
+    "spicy": "Épicé",
+    "glutenFree": "Sans gluten",
+    "popular": "Populaire",
+    "new": "Nouveau",
+    "emptyCart": "Votre panier est vide",
+    "addedToCart": "Ajouté au panier",
+    "footer": "Service Room Service - Commandez depuis votre chambre",
+    "noItems": "Aucun article trouvé"
   },
   "orderStatus": {
     "title": "Statut de la commande",

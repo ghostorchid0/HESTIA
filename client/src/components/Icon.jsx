@@ -18,7 +18,11 @@ import {
   FiVolume2,
   FiCoffee,
   FiGrid,
-  FiBox
+  FiBox,
+  FiSearch,
+  FiShoppingCart,
+  FiSun,
+  FiMoon
 } from 'react-icons/fi'
 
 const iconMap = {
@@ -42,7 +46,11 @@ const iconMap = {
   quality: FiCoffee,
   rooms: FiHome,
   hotels: FiGrid,
-  dashboard: FiBox
+  dashboard: FiBox,
+  search: FiSearch,
+  cart: FiShoppingCart,
+  sun: FiSun,
+  moon: FiMoon
 }
 
 export default function Icon({ name, size = 24, color = 'currentColor', className = '' }) {

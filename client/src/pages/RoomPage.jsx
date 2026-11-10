@@ -27,6 +27,15 @@ export default function RoomPage() {
             address: res.data.hotel.address,
           })
         }
+        // Update branding settings separately
+        if (res.data.settings) {
+          updateSettings(prev => ({
+            ...prev,
+            logoUrl: res.data.settings.logoUrl,
+            accentColor: res.data.settings.accentColor,
+            welcomeMessage: res.data.settings.welcomeMessage,
+          }))
+        }
         setStatus('valid')
       })
       .catch(() => setStatus('invalid'))

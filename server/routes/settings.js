@@ -42,6 +42,9 @@ router.get('/', async (req, res) => {
       currency: hotel?.currency || 'XOF',
       contactPhone: hotel?.contactPhone || '',
       address: hotel?.address || '',
+      logoUrl: '',
+      accentColor: '#C9A227',
+      welcomeMessage: '',
     });
   }
   res.json(settings);

@@ -874,30 +874,45 @@ router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) =
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Hestia';
   workbook.created = new Date();
+  workbook.company = 'NEOTRIX';
 
-  const sheet = workbook.addWorksheet('Orders');
+  const sheet = workbook.addWorksheet('Orders', {
+    properties: { tabColor: { argb: 'FF0B1A2A' } }
+  });
+  
+  // Hestia brand colors
+  const HESTIA_NAVY = 'FF0B1A2A';
+  const HESTIA_GOLD = 'FFC9A227';
+  const HESTIA_CREAM = 'FFF7F5F0';
+  const HESTIA_LIGHT = 'FFFDFBF7';
+  
   sheet.columns = [
-    { header: 'Order ID', key: 'orderId', width: 28 },
-    { header: 'Room', key: 'room', width: 12 },
-    { header: 'Status', key: 'status', width: 16 },
-    { header: 'Payment Method', key: 'paymentMethod', width: 20 },
-    { header: 'Payment Status', key: 'paymentStatus', width: 16 },
+    { header: 'N° Commande', key: 'orderId', width: 15 },
+    { header: 'Chambre', key: 'room', width: 12 },
+    { header: 'Statut', key: 'status', width: 14 },
+    { header: 'Paiement', key: 'paymentMethod', width: 18 },
+    { header: 'Statut Paiement', key: 'paymentStatus', width: 16 },
     { header: 'Total', key: 'total', width: 14 },
-    { header: 'Items', key: 'items', width: 50 },
+    { header: 'Articles', key: 'items', width: 50 },
     { header: 'Notes', key: 'notes', width: 40 },
-    { header: 'Created At', key: 'createdAt', width: 22 },
+    { header: 'Date', key: 'createdAt', width: 20 },
   ];
 
+  // Style header row with Hestia branding
   const headerRow = sheet.getRow(1);
+  headerRow.height = 30;
   headerRow.eachCell((cell) => {
-    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B1A2A' } };
-    cell.font = { bold: true, color: { argb: 'FFC9A227' }, size: 12 };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HESTIA_NAVY } };
+    cell.font = { bold: true, color: { argb: HESTIA_GOLD }, size: 11, name: 'Calibri' };
     cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.border = {
+      bottom: { style: 'medium', color: { argb: HESTIA_GOLD } }
+    };
   });
 
-  orders.forEach(order => {
-    sheet.addRow({
-      orderId: order._id.toString(),
+  orders.forEach((order, index) => {
+    const row = sheet.addRow({
+      orderId: order._id.toString().slice(-8).toUpperCase(),
       room: order.roomNumber,
       status: order.status,
       paymentMethod: order.paymentMethod,
@@ -907,35 +922,75 @@ router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) =
       notes: order.notes || '',
       createdAt: order.createdAt,
     });
-  });
-
-  sheet.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) return;
-    const statusCell = row.getCell('status');
-    const statusStyles = {
-      Received: 'FF0B1A2A',
-      Preparing: 'FFB45309',
-      'On the way': 'FFC9A227',
-      Delivered: 'FF166534',
-      Cancelled: 'FF991B1B',
-    };
-    if (statusStyles[statusCell.value]) {
-      statusCell.font = { bold: true, color: { argb: statusStyles[statusCell.value] } };
-    }
-
-    const totalCell = row.getCell('total');
-    totalCell.numFmt = '$#,##0.00';
-    totalCell.alignment = { horizontal: 'right' };
-
-    const createdCell = row.getCell('createdAt');
-    createdCell.numFmt = 'yyyy-mm-dd hh:mm:ss';
-    createdCell.alignment = { horizontal: 'center' };
-
-    if (rowNumber % 2 === 0) {
+    
+    // Alternate row colors
+    if (index % 2 === 0) {
       row.eachCell((cell) => {
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F5F0' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HESTIA_CREAM } };
+      });
+    } else {
+      row.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HESTIA_LIGHT } };
       });
     }
+  });
+
+  // Style data rows
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    
+    // Status styling
+    const statusCell = row.getCell('status');
+    const statusStyles = {
+      'Received': { color: HESTIA_NAVY, bg: 'FFE8F0FE' },
+      'Preparing': { color: 'FFB45309', bg: 'FFFEF3C7' },
+      'On the way': { color: HESTIA_GOLD, bg: 'FFFEF9C3' },
+      'Delivered': { color: 'FF166534', bg: 'FFD1FAE5' },
+      'Cancelled': { color: 'FF991B1B', bg: 'FFFEE2E2' },
+    };
+    
+    if (statusStyles[statusCell.value]) {
+      statusCell.font = { bold: true, color: { argb: statusStyles[statusCell.value].color }, size: 10 };
+      statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: statusStyles[statusCell.value].bg } };
+    }
+    
+    // Payment status styling
+    const paymentCell = row.getCell('paymentStatus');
+    if (paymentCell.value === 'Paid') {
+      paymentCell.font = { bold: true, color: { argb: 'FF166534' }, size: 10 };
+      paymentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD1FAE5' } };
+    } else {
+      paymentCell.font = { bold: true, color: { argb: 'FFB45309' }, size: 10 };
+      paymentCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+    }
+    
+    // Total formatting
+    const totalCell = row.getCell('total');
+    totalCell.numFmt = '#,##0.00 FCFA';
+    totalCell.font = { bold: true, color: { argb: HESTIA_NAVY }, size: 11 };
+    totalCell.alignment = { horizontal: 'right' };
+    
+    // Date formatting
+    const createdCell = row.getCell('createdAt');
+    createdCell.numFmt = 'dd/mm/yyyy hh:mm';
+    createdCell.alignment = { horizontal: 'center' };
+    
+    // Order ID styling
+    const orderIdCell = row.getCell('orderId');
+    orderIdCell.font = { color: { argb: HESTIA_GOLD }, size: 10 };
+    orderIdCell.alignment = { horizontal: 'center' };
+  });
+
+  // Add borders to all cells
+  sheet.eachRow((row) => {
+    row.eachCell((cell) => {
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+        right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+      };
+    });
   });
 
   sheet.autoFilter = { from: 'A1', to: 'I1' };
@@ -978,45 +1033,113 @@ router.get('/orders/export-pdf', requireRole('admin', 'kitchen'), async (req, re
   
   const orders = await Order.find(filter).sort({ createdAt: -1 });
 
-  const doc = new PDFDocument();
+  const doc = new PDFDocument({ 
+    size: 'A4',
+    margins: { top: 50, bottom: 50, left: 50, right: 50 }
+  });
+  
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.pdf"');
   doc.pipe(res);
 
-  // Header
-  doc.fontSize(20).text('Hestia - Commandes', { align: 'center' });
-  doc.moveDown();
-  doc.fontSize(10).text(`Exporté le: ${new Date().toLocaleString('fr-FR')}`, { align: 'center' });
+  // Hestia brand colors
+  const NAVY = '#0B1A2A';
+  const GOLD = '#C9A227';
+  const CREAM = '#F7F5F0';
+  const LIGHT_GRAY = '#E5E7EB';
+
+  // Header with Hestia branding
+  doc.rect(0, 0, doc.page.width, 100).fill(NAVY);
+  doc.fillColor(GOLD).fontSize(24).font('Helvetica-Bold').text('HESTIA', 50, 30);
+  doc.fillColor('white').fontSize(14).font('Helvetica').text('Gestion des Commandes', 50, 60);
+  doc.fillColor(GOLD).fontSize(10).text(`Exporté le: ${new Date().toLocaleString('fr-FR')}`, 400, 30);
+  
+  doc.y = 120;
+
+  // Summary section
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pendingOrders = orders.filter(o => o.status === 'Received' || o.status === 'Preparing').length;
+
+  doc.fillColor(NAVY).fontSize(12).font('Helvetica-Bold').text('Résumé', 50, doc.y);
+  doc.moveDown(0.5);
+  doc.fillColor('#374151').fontSize(10).font('Helvetica');
+  doc.text(`Total commandes: ${totalOrders}`);
+  doc.text(`Commandes en attente: ${pendingOrders}`);
+  doc.text(`Chiffre d'affaires: ${totalRevenue.toFixed(2)} FCFA`);
   doc.moveDown();
 
-  // Orders table
+  // Orders section
+  doc.fillColor(NAVY).fontSize(12).font('Helvetica-Bold').text('Détail des Commandes', 50, doc.y);
+  doc.moveDown(0.5);
+
   orders.forEach((order, index) => {
-    doc.fontSize(12).text(`Commande #${index + 1}`, { underline: true });
-    doc.moveDown(0.5);
-    
-    doc.fontSize(10);
-    doc.text(`ID: ${order._id.toString()}`);
-    doc.text(`Chambre: ${order.roomNumber || 'N/A'}`);
-    doc.text(`Statut: ${order.status}`);
-    doc.text(`Paiement: ${order.paymentMethod || 'N/A'} (${order.paymentStatus || 'N/A'})`);
-    doc.text(`Total: ${order.total.toFixed(2)}`);
-    doc.text(`Créée le: ${order.createdAt.toLocaleString('fr-FR')}`);
-    
-    doc.moveDown(0.5);
-    doc.text('Articles:', { bold: true });
-    order.items.forEach(item => {
-      doc.text(`  - ${item.quantity}x ${item.name} (${item.price.toFixed(2)})`);
-    });
-    
-    if (order.notes) {
-      doc.moveDown(0.5);
-      doc.text(`Notes: ${order.notes}`);
+    // Check if we need a new page
+    if (doc.y > 700) {
+      doc.addPage();
+      doc.y = 50;
     }
+
+    // Order card background
+    const cardTop = doc.y;
+    const cardHeight = 120;
+    doc.rect(50, cardTop, 500, cardHeight).fill(CREAM);
+    doc.rect(50, cardTop, 500, cardHeight).stroke(LIGHT_GRAY);
+
+    // Order header
+    doc.fillColor(NAVY).fontSize(11).font('Helvetica-Bold');
+    doc.text(`Commande #${order._id.toString().slice(-8).toUpperCase()}`, 60, cardTop + 10);
     
-    doc.moveDown();
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown();
+    // Status badge
+    const statusColors = {
+      'Received': '#0B1A2A',
+      'Preparing': '#B45309',
+      'On the way': '#C9A227',
+      'Delivered': '#166534',
+      'Cancelled': '#991B1B'
+    };
+    const statusColor = statusColors[order.status] || '#6B7280';
+    doc.fillColor(statusColor).fontSize(9).font('Helvetica-Bold');
+    doc.text(order.status, 400, cardTop + 10);
+
+    // Order details
+    doc.fillColor('#374151').fontSize(9).font('Helvetica');
+    doc.text(`Chambre: ${order.roomNumber || 'N/A'}`, 60, cardTop + 25);
+    doc.text(`Paiement: ${order.paymentMethod || 'N/A'}`, 60, cardTop + 35);
+    doc.text(`Statut paiement: ${order.paymentStatus || 'N/A'}`, 60, cardTop + 45);
+    doc.text(`Date: ${order.createdAt.toLocaleString('fr-FR')}`, 60, cardTop + 55);
+
+    // Total
+    doc.fillColor(GOLD).fontSize(11).font('Helvetica-Bold');
+    doc.text(`Total: ${order.total.toFixed(2)} FCFA`, 60, cardTop + 70);
+
+    // Items
+    doc.fillColor(NAVY).fontSize(9).font('Helvetica-Bold');
+    doc.text('Articles:', 60, cardTop + 85);
+    doc.fillColor('#374151').fontSize(8).font('Helvetica');
+    
+    let itemY = cardTop + 95;
+    order.items.forEach(item => {
+      if (itemY < cardTop + cardHeight - 5) {
+        doc.text(`  ${item.quantity}x ${item.name}`, 60, itemY);
+        itemY += 10;
+      }
+    });
+
+    // Notes
+    if (order.notes && itemY < cardTop + cardHeight - 5) {
+      doc.fillColor('#6B7280').fontSize(8).font('Helvetica-Oblique');
+      doc.text(`Note: ${order.notes}`, 60, itemY);
+    }
+
+    doc.y = cardTop + cardHeight + 10;
+    doc.moveDown(0.5);
   });
+
+  // Footer
+  doc.fillColor('#9CA3AF').fontSize(8).font('Helvetica');
+  doc.text('Hestia - Solution de gestion hôtelière', 50, doc.page.height - 30, { align: 'center' });
+  doc.text('Powered by NEOTRIX', 50, doc.page.height - 20, { align: 'center' });
 
   doc.end();
 });

@@ -9,7 +9,7 @@ const { body, validationResult } = require('express-validator');
 router.post('/',
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
-  body('phone').optional().isMobilePhone().withMessage('Invalid phone number'),
+  body('phone').optional(), // Simplified - accept any phone format
   body('message').notEmpty().withMessage('Message is required'),
   async (req, res) => {
     const errors = validationResult(req);

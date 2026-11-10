@@ -35,6 +35,7 @@ export default function OrdersPanel() {
     room: ''
   })
   const [showFilters, setShowFilters] = useState(false)
+  const [rooms, setRooms] = useState([])
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -188,6 +189,19 @@ export default function OrdersPanel() {
 
   useEffect(() => {
     // No-op for HTML5 audio - doesn't need unlocking
+  }, [])
+
+  useEffect(() => {
+    // Fetch rooms for filter dropdown
+    const fetchRooms = async () => {
+      try {
+        const res = await api.get('/admin/rooms')
+        setRooms(res.data || [])
+      } catch (err) {
+        console.error('Failed to fetch rooms', err)
+      }
+    }
+    fetchRooms()
   }, [])
 
   useEffect(() => {
@@ -358,13 +372,18 @@ export default function OrdersPanel() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Chambre</label>
-              <input
-                type="text"
+              <select
                 value={filters.room}
                 onChange={(e) => setFilters({ ...filters, room: e.target.value })}
-                placeholder="Numéro de chambre"
                 className="input-luxe w-full"
-              />
+              >
+                <option value="">Toutes les chambres</option>
+                {rooms.map(room => (
+                  <option key={room._id} value={room.number}>
+                    {room.number}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="flex gap-3 mt-4">

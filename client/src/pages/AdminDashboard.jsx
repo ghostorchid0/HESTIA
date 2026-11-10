@@ -11,6 +11,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import HotelsPanel from '../components/HotelsPanel'
 import StaffPanel from '../components/StaffPanel'
 import PaymentPanel from '../components/PaymentPanel'
+import LordIcon from '../components/LordIcon'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -53,16 +54,17 @@ function Layout({ children }) {
     i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')
   }
 
-  const NavItem = ({ to, label }) => (
+  const NavItem = ({ to, label, icon }) => (
     <Link
       to={to}
       onClick={() => setMobileMenuOpen(false)}
-      className={`rounded-xl px-5 py-3 text-sm font-medium transition ${
+      className={`flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-medium transition ${
         path.startsWith(to)
           ? 'bg-hestia-gold/10 text-hestia-gold'
           : 'text-gray-400 hover:bg-hestia-navy-light hover:text-white'
       }`}
     >
+      {icon && <LordIcon name={icon} size={20} trigger="hover" colors={path.startsWith(to) ? 'primary:#D4AF37' : 'primary:#9CA3AF'} />}
       {label}
     </Link>
   )
@@ -104,13 +106,13 @@ function Layout({ children }) {
       </header>
       <div className="mx-auto max-w-6xl p-6 print:max-w-none print:p-0 md:flex md:gap-8">
         <nav className={`print:hidden mb-6 md:mb-0 md:w-56 ${mobileMenuOpen ? 'flex flex-col gap-2' : 'hidden md:flex md:flex-col md:gap-2'}`}>
-          {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} />}
-          {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
-          {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}
-          {isAdmin && <NavItem to="/admin/staff" label={t('admin.staff')} />}
-          {isAdmin && <NavItem to="/admin/payment" label="Paiement" />}
-          {isAdmin && <NavItem to="/admin/settings" label={t('admin.settings')} />}
-          {isSuperadmin && <NavItem to="/admin/hotels" label={t('admin.hotels')} />}
+          {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} icon="order" />}
+          {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} icon="quality" />}
+          {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} icon="home" />}
+          {isAdmin && <NavItem to="/admin/staff" label={t('admin.staff')} icon="profile" />}
+          {isAdmin && <NavItem to="/admin/payment" label="Paiement" icon="delivery" />}
+          {isAdmin && <NavItem to="/admin/settings" label={t('admin.settings')} icon="settings" />}
+          {isSuperadmin && <NavItem to="/admin/hotels" label={t('admin.hotels')} icon="home" />}
         </nav>
         <main className="flex-1">{children}</main>
       </div>

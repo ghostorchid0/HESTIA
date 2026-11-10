@@ -6,6 +6,7 @@ import { playBeep } from '../utils/beep'
 import { formatCurrency } from '../utils/format'
 import useSettings from '../hooks/useSettings'
 import Pagination from './Pagination'
+import LordIcon from './LordIcon'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 const paymentMethodKeys = {
@@ -292,29 +293,14 @@ export default function OrdersPanel() {
             onClick={toggleSound}
             className={`inline-flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            {soundEnabled ? (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                </svg>
-                Son ON
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                </svg>
-                Son OFF
-              </>
-            )}
+            <LordIcon name="sound" size={20} trigger="hover" colors={`primary:${soundEnabled ? '#B8860B' : '#4B5563'}`} />
+            {soundEnabled ? 'Son ON' : 'Son OFF'}
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="inline-flex items-center gap-1 rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen hover:border-hestia-gold"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
+            <LordIcon name="filter" size={20} trigger="hover" colors="primary:#0B1A2A" />
             Filtres
           </button>
           <button onClick={downloadExcel} className="inline-flex items-center gap-1 rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen hover:border-hestia-gold">
@@ -413,9 +399,7 @@ export default function OrdersPanel() {
             <div key={room} className="card-luxe p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <svg className="w-6 h-6 text-hestia-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
+                  <LordIcon name="home" size={28} trigger="loop" colors="primary:#0B1A2A" />
                   <h2 className="text-xl font-serif text-hestia-navy">Chambre {room}</h2>
                   <span className="rounded-full bg-hestia-gold/20 px-3 py-1 text-sm font-medium text-hestia-gold">
                     {roomOrders.length} commande(s)
@@ -453,9 +437,7 @@ export default function OrdersPanel() {
                         <div className="flex flex-col items-end gap-2">
                           <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
                           <span className={`inline-flex items-center gap-1 text-xs font-medium ${urgent ? 'text-red-600' : 'text-gray-500'}`}>
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <LordIcon name="order" size={16} trigger="loop" colors={`primary:${urgent ? '#DC2626' : '#6B7280'}`} />
                             {timeElapsed}
                           </span>
                           <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>

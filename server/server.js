@@ -38,11 +38,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.lordicon.com'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.lordicon.com'],
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
       mediaSrc: ["'self'", 'blob:', 'data:'],
-      connectSrc: ["'self'", 'ws:', 'wss:', ...(config.clientUrl === '*' ? [] : [config.clientUrl])],
+      connectSrc: ["'self'", 'ws:', 'wss:', 'https://cdn.lordicon.com', ...(config.clientUrl === '*' ? [] : [config.clientUrl])],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
     },

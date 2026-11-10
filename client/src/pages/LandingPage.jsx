@@ -1,8 +1,34 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import api from '../api'
+import { useToast } from '../contexts/ToastContext'
 
 export default function LandingPage() {
   const { t } = useTranslation()
+  const toast = useToast()
+  const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '', message: '' })
+  const [sending, setSending] = useState(false)
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault()
+    if (!contactForm.name || !contactForm.email || !contactForm.message) {
+      toast.error('Veuillez remplir tous les champs obligatoires')
+      return
+    }
+
+    setSending(true)
+    try {
+      await api.post('/contact', contactForm)
+      toast.success('Message envoyé avec succès ! Nous vous répondrons rapidement.')
+      setContactForm({ name: '', email: '', phone: '', message: '' })
+    } catch (error) {
+      toast.error('Erreur lors de l\'envoi du message. Veuillez réessayer.')
+      console.error('Contact form error:', error)
+    } finally {
+      setSending(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-hestia-cream">
@@ -55,6 +81,75 @@ export default function LandingPage() {
               ))}
             </ul>
             <Link to="/admin/login" className="btn-primary mt-8 block">{t('landing.start')}</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-16 bg-white sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-light text-hestia-navy sm:text-3xl">Contactez-nous</h2>
+            <p className="mt-4 text-sm text-gray-600 sm:text-base">Une question ? Une demande de démonstration ? Nous sommes là pour vous aider.</p>
+          </div>
+          
+          <div className="card-luxe p-8">
+            <form onSubmit={handleContactSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Nom *</label>
+                  <input
+                    type="text"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    placeholder="Votre nom"
+                    className="input-luxe w-full"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Email *</label>
+                  <input
+                    type="email"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    placeholder="votre@email.com"
+                    className="input-luxe w-full"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Téléphone (optionnel)</label>
+                <input
+                  type="tel"
+                  value={contactForm.phone}
+                  onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                  placeholder="+XXX XXX XXX XXX"
+                  className="input-luxe w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Message *</label>
+                <textarea
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  placeholder="Votre message..."
+                  rows="5"
+                  className="input-luxe w-full resize-none"
+                  required
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={sending}
+                className="btn-primary w-full md:w-auto"
+              >
+                {sending ? 'Envoi...' : 'Envoyer le message'}
+              </button>
+            </form>
           </div>
         </div>
       </section>

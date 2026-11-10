@@ -251,7 +251,11 @@ export default function OrdersPanel() {
     return `${diffMinutes}m`
   }
 
-  const isUrgent = (createdAt) => {
+  const isUrgent = (createdAt, status) => {
+    // Only show urgent for active orders (not delivered or cancelled)
+    if (status === 'Delivered' || status === 'Cancelled') {
+      return false
+    }
     const now = new Date()
     const created = new Date(createdAt)
     const diffMs = now - created
@@ -406,7 +410,7 @@ export default function OrdersPanel() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {roomOrders.some(o => isUrgent(o.createdAt)) && (
+                  {roomOrders.some(o => isUrgent(o.createdAt, o.status)) && (
                     <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                       URGENT
                     </span>
@@ -416,7 +420,7 @@ export default function OrdersPanel() {
               
               <div className="space-y-4">
                 {roomOrders.map((order) => {
-                  const urgent = isUrgent(order.createdAt)
+                  const urgent = isUrgent(order.createdAt, order.status)
                   const timeElapsed = getTimeElapsed(order.createdAt)
                   
                   return (

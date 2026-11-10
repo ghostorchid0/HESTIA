@@ -18,7 +18,6 @@ export default function OrdersPanel() {
   const { t } = useTranslation()
   const { settings } = useSettings()
   const [orders, setOrders] = useState([])
-  const [filter, setFilter] = useState('')
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const stored = localStorage.getItem('hestia_sound')
     return stored === null ? true : stored === 'true'
@@ -28,10 +27,27 @@ export default function OrdersPanel() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
   const [totalPages, setTotalPages] = useState(1)
   const [selectedOrders, setSelectedOrders] = useState(new Set())
+  const [filters, setFilters] = useState({
+    status: '',
+    startDate: '',
+    endDate: '',
+    room: ''
+  })
+  const [showFilters, setShowFilters] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await api.get(`/admin/orders?page=${currentPage}&limit=${itemsPerPage}`)
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: itemsPerPage
+      })
+      
+      if (filters.status) params.append('status', filters.status)
+      if (filters.startDate) params.append('startDate', filters.startDate)
+      if (filters.endDate) params.append('endDate', filters.endDate)
+      if (filters.room) params.append('room', filters.room)
+      
+      const res = await api.get(`/admin/orders?${params.toString()}`)
       const newOrders = Array.isArray(res.data) ? res.data : []
       // Detect new orders by comparing IDs
       const hasNewOrder = newOrders.some(o => !knownOrderIds.has(o._id))
@@ -50,7 +66,7 @@ export default function OrdersPanel() {
       console.error('Failed to fetch orders', err)
       setOrders([])
     }
-  }, [currentPage, itemsPerPage, soundEnabled, knownOrderIds])
+  }, [currentPage, itemsPerPage, soundEnabled, knownOrderIds, filters])
 
   const toggleSound = () => {
     const next = !soundEnabled
@@ -109,9 +125,32 @@ export default function OrdersPanel() {
     setSelectedOrders(new Set())
   }
 
+  const applyFilters = () => {
+    setCurrentPage(1)
+    setSelectedOrders(new Set())
+  }
+
+  const clearFilters = () => {
+    setFilters({
+      status: '',
+      startDate: '',
+      endDate: '',
+      room: ''
+    })
+    setCurrentPage(1)
+    setSelectedOrders(new Set())
+  }
+
   const downloadExcel = async () => {
     const token = localStorage.getItem('hestia_token')
-    const res = await fetch('/api/admin/orders/export', {
+    const params = new URLSearchParams()
+    
+    if (filters.status) params.append('status', filters.status)
+    if (filters.startDate) params.append('startDate', filters.startDate)
+    if (filters.endDate) params.append('endDate', filters.endDate)
+    if (filters.room) params.append('room', filters.room)
+    
+    const res = await fetch(`/api/admin/orders/export?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return
@@ -120,6 +159,28 @@ export default function OrdersPanel() {
     const a = document.createElement('a')
     a.href = url
     a.download = 'hestia-orders.xlsx'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const downloadPDF = async () => {
+    const token = localStorage.getItem('hestia_token')
+    const params = new URLSearchParams()
+    
+    if (filters.status) params.append('status', filters.status)
+    if (filters.startDate) params.append('startDate', filters.startDate)
+    if (filters.endDate) params.append('endDate', filters.endDate)
+    if (filters.room) params.append('room', filters.room)
+    
+    const res = await fetch(`/api/admin/orders/export-pdf?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return
+    const blob = await res.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'hestia-orders.pdf'
     a.click()
     window.URL.revokeObjectURL(url)
   }
@@ -176,8 +237,6 @@ export default function OrdersPanel() {
     return `${base} ${map[status] || 'bg-gray-100 text-gray-600'}`
   }
 
-  const filtered = filter ? orders.filter((o) => o.status === filter) : orders
-
   return (
     <div>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -197,114 +256,173 @@ export default function OrdersPanel() {
           >
             {soundEnabled ? 'Son ON' : 'Son OFF'}
           </button>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen"
+          >
+            Filtres
+          </button>
           <button onClick={downloadExcel} className="rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen">
             Excel
           </button>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="input-luxe"
-          >
-            <option value="">{t('ordersPanel.all')}</option>
-            {allStatuses.map((s) => (
-              <option key={s} value={s}>
-                {t(`status.${s}`)}
-              </option>
-            ))}
-          </select>
+          <button onClick={downloadPDF} className="rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen">
+            PDF
+          </button>
         </div>
       </div>
+
+      {showFilters && (
+        <div className="card-luxe p-6 mb-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Statut</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="input-luxe w-full"
+              >
+                <option value="">Tous</option>
+                {allStatuses.map((s) => (
+                  <option key={s} value={s}>{t(`status.${s}`)}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Date début</label>
+              <input
+                type="date"
+                value={filters.startDate}
+                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                className="input-luxe w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Date fin</label>
+              <input
+                type="date"
+                value={filters.endDate}
+                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                className="input-luxe w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-gray-500">Chambre</label>
+              <input
+                type="text"
+                value={filters.room}
+                onChange={(e) => setFilters({ ...filters, room: e.target.value })}
+                placeholder="Numéro de chambre"
+                className="input-luxe w-full"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <button onClick={applyFilters} className="btn-primary">
+              Appliquer
+            </button>
+            <button onClick={clearFilters} className="btn-outline">
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-5">
         <div className="flex items-center gap-2 mb-4">
           <input
             type="checkbox"
-            checked={selectedOrders.size === filtered.length && filtered.length > 0}
+            checked={selectedOrders.size === orders.length && orders.length > 0}
             onChange={toggleSelectAll}
             className="w-4 h-4"
           />
           <span className="text-sm text-gray-600">Tout sélectionner</span>
         </div>
-        {filtered.map((order) => (
-          <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
-            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={selectedOrders.has(order._id)}
-                  onChange={() => toggleOrderSelection(order._id)}
-                  className="w-4 h-4"
-                />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
-                  <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
-                <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                  {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}
-                </span>
-                <span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <ul className="space-y-2 border-t border-hestia-linen pt-4 text-sm text-gray-700">
-              {order.items.map((item, idx) => (
-                <li key={idx} className="flex justify-between">
-                  <span>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</span>
-                </li>
-              ))}
-            </ul>
-            {order.notes && <p className="mt-3 text-sm text-gray-500">{t('note')}: {order.notes}</p>}
-
-            {order.history && order.history.length > 0 && (
-              <div className="mt-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.statusHistory')}</p>
-                <div className="flex flex-wrap gap-2">
-                  {order.history.map((h, idx) => (
-                    <span key={idx} className="rounded-full bg-hestia-cream px-3 py-1 text-xs text-gray-600">
-                      {t(`status.${h.status}`)} <span className="text-gray-400">({t('ordersPanel.by')} {h.changedBy})</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
-              <div>
-                <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span></span>
-                <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {allStatuses
-                  .filter((s) => s !== order.status)
-                  .map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => updateStatus(order._id, s)}
-                      className="rounded-lg border border-hestia-linen bg-white px-3 py-1.5 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen"
-                    >
-                      {t(`status.${s}`)}
-                    </button>
-                  ))}
-                <button
-                  onClick={() => togglePayment(order)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${order.paymentStatus === 'Paid' ? 'border border-hestia-linen bg-white text-hestia-navy hover:bg-hestia-linen' : 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white'}`}
-                >
-                  {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
-                </button>
-                <button
-                  onClick={() => deleteOrder(order._id)}
-                  className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </div>
+        {orders.length === 0 ? (
+          <div className="card-luxe p-12 text-center">
+            <p className="text-gray-500">Aucune commande trouvée</p>
           </div>
-        ))}
+        ) : (
+          orders.map((order) => (
+            <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedOrders.has(order._id)}
+                    onChange={() => toggleOrderSelection(order._id)}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
+                    <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
+                  <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}
+                  </span>
+                  <span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <ul className="space-y-2 border-t border-hestia-linen pt-4 text-sm text-gray-700">
+                {order.items.map((item, idx) => (
+                  <li key={idx} className="flex justify-between">
+                    <span>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</span>
+                  </li>
+                ))}
+              </ul>
+              {order.notes && <p className="mt-3 text-sm text-gray-500">{t('note')}: {order.notes}</p>}
+
+              {order.history && order.history.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.statusHistory')}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {order.history.map((h, idx) => (
+                      <span key={idx} className="rounded-full bg-hestia-cream px-3 py-1 text-xs text-gray-600">
+                        {t(`status.${h.status}`)} <span className="text-gray-400">({t('ordersPanel.by')} {h.changedBy})</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
+                <div>
+                  <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span></span>
+                  <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {allStatuses
+                    .filter((s) => s !== order.status)
+                    .map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => updateStatus(order._id, s)}
+                        className="rounded-lg border border-hestia-linen bg-white px-3 py-1.5 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen"
+                      >
+                        {t(`status.${s}`)}
+                      </button>
+                    ))}
+                  <button
+                    onClick={() => togglePayment(order)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${order.paymentStatus === 'Paid' ? 'border border-hestia-linen bg-white text-hestia-navy hover:bg-hestia-linen' : 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white'}`}
+                  >
+                    {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
+                  </button>
+                  <button
+                    onClick={() => deleteOrder(order._id)}
+                    className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
       
       <Pagination

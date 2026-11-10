@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const QRCode = require('qrcode');
 const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
 const fsp = require('fs/promises');
 const router = express.Router();
 const config = require('../config');
@@ -86,11 +87,35 @@ router.get('/orders',
   query('page').optional().isInt({ min: 1 }).toInt(),
   query('limit').optional().isInt({ min: 1, max: 500 }).toInt(),
   query('status').optional().isIn(['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('room').optional().isString(),
   async (req, res) => {
     if (!handleValidation(req, res)) return;
-    const { status, page = 1, limit = 25 } = req.query;
+    const { status, page = 1, limit = 25, startDate, endDate, room } = req.query;
     const filter = { ...hotelFilter(req) };
     if (status) filter.status = status;
+    
+    // Date range filter
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = end;
+      }
+    }
+    
+    // Room filter
+    if (room) {
+      filter.roomId = room;
+    }
+    
     const role = req.user.role;
     if (['kitchen', 'reception'].includes(role)) {
       filter['items.department'] = role;
@@ -816,7 +841,35 @@ router.delete('/hotels',
   });
 
 router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) => {
-  const orders = await Order.find(hotelFilter(req)).sort({ createdAt: -1 });
+  const { startDate, endDate, room, status } = req.query;
+  const filter = { ...hotelFilter(req) };
+  
+  // Date range filter
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = end;
+    }
+  }
+  
+  // Room filter
+  if (room) {
+    filter.roomId = room;
+  }
+  
+  // Status filter
+  if (status) {
+    filter.status = status;
+  }
+  
+  const orders = await Order.find(filter).sort({ createdAt: -1 });
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'Hestia';
@@ -892,6 +945,80 @@ router.get('/orders/export', requireRole('admin', 'kitchen'), async (req, res) =
   res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.xlsx"');
   await workbook.xlsx.write(res);
   res.end();
+});
+
+router.get('/orders/export-pdf', requireRole('admin', 'kitchen'), async (req, res) => {
+  const { startDate, endDate, room, status } = req.query;
+  const filter = { ...hotelFilter(req) };
+  
+  // Date range filter
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = end;
+    }
+  }
+  
+  // Room filter
+  if (room) {
+    filter.roomId = room;
+  }
+  
+  // Status filter
+  if (status) {
+    filter.status = status;
+  }
+  
+  const orders = await Order.find(filter).sort({ createdAt: -1 });
+
+  const doc = new PDFDocument();
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'attachment; filename="hestia-orders.pdf"');
+  doc.pipe(res);
+
+  // Header
+  doc.fontSize(20).text('Hestia - Commandes', { align: 'center' });
+  doc.moveDown();
+  doc.fontSize(10).text(`Exporté le: ${new Date().toLocaleString('fr-FR')}`, { align: 'center' });
+  doc.moveDown();
+
+  // Orders table
+  orders.forEach((order, index) => {
+    doc.fontSize(12).text(`Commande #${index + 1}`, { underline: true });
+    doc.moveDown(0.5);
+    
+    doc.fontSize(10);
+    doc.text(`ID: ${order._id.toString()}`);
+    doc.text(`Chambre: ${order.roomNumber || 'N/A'}`);
+    doc.text(`Statut: ${order.status}`);
+    doc.text(`Paiement: ${order.paymentMethod || 'N/A'} (${order.paymentStatus || 'N/A'})`);
+    doc.text(`Total: ${order.total.toFixed(2)}`);
+    doc.text(`Créée le: ${order.createdAt.toLocaleString('fr-FR')}`);
+    
+    doc.moveDown(0.5);
+    doc.text('Articles:', { bold: true });
+    order.items.forEach(item => {
+      doc.text(`  - ${item.quantity}x ${item.name} (${item.price.toFixed(2)})`);
+    });
+    
+    if (order.notes) {
+      doc.moveDown(0.5);
+      doc.text(`Notes: ${order.notes}`);
+    }
+    
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown();
+  });
+
+  doc.end();
 });
 
 function getFeatureFlags(plan) {

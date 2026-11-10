@@ -16,7 +16,7 @@ import {
   FiMenu,
   FiDownload,
   FiVolume2,
-  FiUtensils,
+  FiCoffee,
   FiBed,
   FiGrid,
   FiBox
@@ -40,7 +40,7 @@ const iconMap = {
   menu: FiMenu,
   download: FiDownload,
   sound: FiVolume2,
-  quality: FiUtensils,
+  quality: FiCoffee,
   rooms: FiBed,
   hotels: FiGrid,
   dashboard: FiBox

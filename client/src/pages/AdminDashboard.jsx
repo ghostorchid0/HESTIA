@@ -23,6 +23,7 @@ function Layout({ children }) {
   const path = location.pathname
   const [hotels, setHotels] = useState([])
   const [activeHotel, setActiveHotel] = useState(localStorage.getItem('hestia_hotel') || '')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     if (isSuperadmin) {
@@ -55,6 +56,7 @@ function Layout({ children }) {
   const NavItem = ({ to, label }) => (
     <Link
       to={to}
+      onClick={() => setMobileMenuOpen(false)}
       className={`rounded-xl px-5 py-3 text-sm font-medium transition ${
         path.startsWith(to)
           ? 'bg-hestia-gold/10 text-hestia-gold'
@@ -70,6 +72,19 @@ function Layout({ children }) {
       <header className="print:hidden sticky top-0 z-30 border-b border-hestia-linen bg-hestia-navy px-6 py-4 shadow-soft">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-white/80 hover:text-white"
+              aria-label="Menu"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {mobileMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
             <span className="font-serif text-2xl text-white">{settings?.hotelName || 'Hestia'}</span>
             <span className="rounded border border-hestia-gold/30 px-2 py-0.5 text-xs uppercase tracking-wider text-hestia-gold">{role}</span>
           </div>
@@ -88,7 +103,7 @@ function Layout({ children }) {
         </div>
       </header>
       <div className="mx-auto max-w-6xl p-6 print:max-w-none print:p-0 md:flex md:gap-8">
-        <nav className="print:hidden mb-6 flex flex-wrap gap-2 md:w-56 md:flex-col">
+        <nav className={`print:hidden mb-6 md:mb-0 md:w-56 ${mobileMenuOpen ? 'flex flex-col gap-2' : 'hidden md:flex md:flex-col md:gap-2'}`}>
           {isStaff && <NavItem to="/admin/dashboard" label={t('admin.orders')} />}
           {isAdmin && <NavItem to="/admin/menu" label={t('admin.menu')} />}
           {isAdmin && <NavItem to="/admin/rooms" label={t('admin.rooms')} />}

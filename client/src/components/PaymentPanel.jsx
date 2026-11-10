@@ -53,7 +53,7 @@ export default function PaymentPanel() {
       if (response.data.success) {
         setMessage({
           type: 'success',
-          text: '✓ Paiement vérifié avec succès ! Votre abonnement est maintenant actif.'
+          text: 'Paiement vérifié avec succès ! Votre abonnement est maintenant actif.'
         })
         setPaymentReference('')
         checkSubscriptionStatus()
@@ -128,7 +128,7 @@ export default function PaymentPanel() {
             subscriptionStatus.active ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
           }`}>
             <p className="font-semibold">
-              {subscriptionStatus.active ? '✓ Abonnement actif' : '⚠ Abonnement inactif'}
+              {subscriptionStatus.active ? 'Abonnement actif' : 'Abonnement inactif'}
             </p>
             {subscriptionStatus.expiresAt && (
               <p className="text-sm mt-1">
@@ -240,30 +240,21 @@ export default function PaymentPanel() {
       <div className="card-luxe p-6">
         <h3 className="text-lg font-semibold text-hestia-dark mb-4">Avantages de l&apos;abonnement</h3>
         <ul className="space-y-2 text-sm text-gray-700">
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>QR codes illimités pour vos chambres</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>Menu digital avec photos</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>Notifications sonores en temps réel</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>Gestion des commandes et du staff</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>Support technique 7j/7</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-500 mr-2">✓</span>
-            <span>Sans engagement, résiliable à tout moment</span>
-          </li>
+          {[
+            'QR codes illimités pour vos chambres',
+            'Menu digital avec photos',
+            'Notifications sonores en temps réel',
+            'Gestion des commandes et du staff',
+            'Support technique 7j/7',
+            'Sans engagement, résiliable à tout moment'
+          ].map((item, index) => (
+            <li key={index} className="flex items-start">
+              <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{item}</span>
+            </li>
+          ))}
         </ul>
       </div>
     </div>

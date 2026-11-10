@@ -413,7 +413,9 @@ export default function OrdersPanel() {
             <div key={room} className="card-luxe p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🏨</span>
+                  <svg className="w-6 h-6 text-hestia-navy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
                   <h2 className="text-xl font-serif text-hestia-navy">Chambre {room}</h2>
                   <span className="rounded-full bg-hestia-gold/20 px-3 py-1 text-sm font-medium text-hestia-gold">
                     {roomOrders.length} commande(s)
@@ -450,8 +452,11 @@ export default function OrdersPanel() {
                         </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
-                          <span className={`text-xs font-medium ${urgent ? 'text-red-600' : 'text-gray-500'}`}>
-                            ⏱️ {timeElapsed}
+                          <span className={`inline-flex items-center gap-1 text-xs font-medium ${urgent ? 'text-red-600' : 'text-gray-500'}`}>
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {timeElapsed}
                           </span>
                           <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
                           <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>

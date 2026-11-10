@@ -11,7 +11,7 @@ import SettingsPanel from '../components/SettingsPanel'
 import HotelsPanel from '../components/HotelsPanel'
 import StaffPanel from '../components/StaffPanel'
 import PaymentPanel from '../components/PaymentPanel'
-import LordIcon from '../components/LordIcon'
+import Icon from '../components/Icon'
 
 function Layout({ children }) {
   const { t, i18n } = useTranslation()
@@ -64,7 +64,7 @@ function Layout({ children }) {
           : 'text-gray-400 hover:bg-hestia-navy-light hover:text-white'
       }`}
     >
-      {icon && <LordIcon name={icon} size={20} trigger="hover" colors={path.startsWith(to) ? 'primary:#D4AF37' : 'primary:#9CA3AF'} />}
+      {icon && <Icon name={icon} size={20} color={path.startsWith(to) ? '#D4AF37' : '#9CA3AF'} />}
       {label}
     </Link>
   )
@@ -117,7 +117,7 @@ function Layout({ children }) {
         <main className="flex-1">{children}</main>
       </div>
       <footer className="print:hidden mt-8 border-t border-hestia-linen bg-white px-6 py-4 text-center text-xs text-gray-400">
-        Animated icons by <a href="https://lordicon.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Lordicon.com</a>
+        Icons by <a href="https://iconify.design/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Iconify</a>
       </footer>
     </div>
   )

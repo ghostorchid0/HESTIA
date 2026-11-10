@@ -6,7 +6,7 @@ import { playBeep } from '../utils/beep'
 import { formatCurrency } from '../utils/format'
 import useSettings from '../hooks/useSettings'
 import Pagination from './Pagination'
-import LordIcon from './LordIcon'
+import Icon from './Icon'
 
 const allStatuses = ['Received', 'Preparing', 'On the way', 'Delivered', 'Cancelled']
 const paymentMethodKeys = {
@@ -297,14 +297,14 @@ export default function OrdersPanel() {
             onClick={toggleSound}
             className={`inline-flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition ${soundEnabled ? 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
           >
-            <LordIcon name="sound" size={20} trigger="hover" colors={`primary:${soundEnabled ? '#B8860B' : '#4B5563'}`} />
+            <Icon name="sound" size={20} color={soundEnabled ? '#B8860B' : '#4B5563'} />
             {soundEnabled ? 'Son ON' : 'Son OFF'}
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="inline-flex items-center gap-1 rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen hover:border-hestia-gold"
           >
-            <LordIcon name="filter" size={20} trigger="hover" colors="primary:#0B1A2A" />
+            <Icon name="filter" size={20} color="#0B1A2A" />
             Filtres
           </button>
           <button onClick={downloadExcel} className="inline-flex items-center gap-1 rounded-lg border border-hestia-linen bg-white px-4 py-2 text-sm font-medium text-hestia-navy transition hover:bg-hestia-linen hover:border-hestia-gold">
@@ -403,7 +403,7 @@ export default function OrdersPanel() {
             <div key={room} className="card-luxe p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <LordIcon name="home" size={28} trigger="loop" colors="primary:#0B1A2A" />
+                  <Icon name="home" size={28} color="#0B1A2A" />
                   <h2 className="text-xl font-serif text-hestia-navy">Chambre {room}</h2>
                   <span className="rounded-full bg-hestia-gold/20 px-3 py-1 text-sm font-medium text-hestia-gold">
                     {roomOrders.length} commande(s)
@@ -441,7 +441,7 @@ export default function OrdersPanel() {
                         <div className="flex flex-col items-end gap-2">
                           <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
                           <span className={`inline-flex items-center gap-1 text-xs font-medium ${urgent ? 'text-red-600' : 'text-gray-500'}`}>
-                            <LordIcon name="order" size={16} trigger="loop" colors={`primary:${urgent ? '#DC2626' : '#6B7280'}`} />
+                            <Icon name="clock" size={16} color={urgent ? '#DC2626' : '#6B7280'} />
                             {timeElapsed}
                           </span>
                           <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>

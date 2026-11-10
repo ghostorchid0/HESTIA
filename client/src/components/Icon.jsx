@@ -17,7 +17,6 @@ import {
   FiDownload,
   FiVolume2,
   FiCoffee,
-  FiBed,
   FiGrid,
   FiBox
 } from 'react-icons/fi'
@@ -41,7 +40,7 @@ const iconMap = {
   download: FiDownload,
   sound: FiVolume2,
   quality: FiCoffee,
-  rooms: FiBed,
+  rooms: FiHome,
   hotels: FiGrid,
   dashboard: FiBox
 }

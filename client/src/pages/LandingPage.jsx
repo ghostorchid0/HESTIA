@@ -161,6 +161,9 @@ export default function LandingPage() {
 
       <footer className="border-t border-hestia-linen bg-hestia-navy px-6 py-10 text-center text-sm text-white/60">
         <p>{t('landing.footer')}</p>
+        <p className="mt-2 text-xs text-white/40">
+          Animated icons by <a href="https://lordicon.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/60">Lordicon.com</a>
+        </p>
       </footer>
     </div>
   )

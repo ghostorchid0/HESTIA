@@ -237,6 +237,41 @@ export default function OrdersPanel() {
     return `${base} ${map[status] || 'bg-gray-100 text-gray-600'}`
   }
 
+  const getTimeElapsed = (createdAt) => {
+    const now = new Date()
+    const created = new Date(createdAt)
+    const diffMs = now - created
+    const diffMinutes = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMinutes / 60)
+
+    if (diffHours > 0) {
+      return `${diffHours}h ${diffMinutes % 60}m`
+    }
+    return `${diffMinutes}m`
+  }
+
+  const isUrgent = (createdAt) => {
+    const now = new Date()
+    const created = new Date(createdAt)
+    const diffMs = now - created
+    const diffMinutes = Math.floor(diffMs / 60000)
+    return diffMinutes > 15
+  }
+
+  const groupByRoom = (orders) => {
+    const grouped = {}
+    orders.forEach(order => {
+      const room = order.roomNumber || 'N/A'
+      if (!grouped[room]) {
+        grouped[room] = []
+      }
+      grouped[room].push(order)
+    })
+    return grouped
+  }
+
+  const groupedOrders = groupByRoom(orders)
+
   return (
     <div>
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -342,83 +377,113 @@ export default function OrdersPanel() {
             <p className="text-gray-500">Aucune commande trouvée</p>
           </div>
         ) : (
-          orders.map((order) => (
-            <div key={order._id} className="card-luxe p-6 transition hover:shadow-luxe">
-              <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          Object.entries(groupedOrders).map(([room, roomOrders]) => (
+            <div key={room} className="card-luxe p-6">
+              <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedOrders.has(order._id)}
-                    onChange={() => toggleOrderSelection(order._id)}
-                    className="w-4 h-4"
-                  />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('room')}</p>
-                    <p className="font-serif text-2xl text-hestia-navy">{order.roomNumber}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
-                  <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}
+                  <span className="text-2xl">🏨</span>
+                  <h2 className="text-xl font-serif text-hestia-navy">Chambre {room}</h2>
+                  <span className="rounded-full bg-hestia-gold/20 px-3 py-1 text-sm font-medium text-hestia-gold">
+                    {roomOrders.length} commande(s)
                   </span>
-                  <span className="text-xs text-gray-400">{new Date(order.createdAt).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {roomOrders.some(o => isUrgent(o.createdAt)) && (
+                    <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                      URGENT
+                    </span>
+                  )}
                 </div>
               </div>
+              
+              <div className="space-y-4">
+                {roomOrders.map((order) => {
+                  const urgent = isUrgent(order.createdAt)
+                  const timeElapsed = getTimeElapsed(order.createdAt)
+                  
+                  return (
+                    <div key={order._id} className={`rounded-xl border p-4 ${urgent ? 'border-red-300 bg-red-50' : 'border-hestia-linen bg-white'}`}>
+                      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedOrders.has(order._id)}
+                            onChange={() => toggleOrderSelection(order._id)}
+                            className="w-4 h-4"
+                          />
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.order')}</p>
+                            <p className="font-serif text-lg text-hestia-navy">#{order._id.slice(-6)}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={statusBadge(order.status)}>{t(`status.${order.status}`)}</span>
+                          <span className={`text-xs font-medium ${urgent ? 'text-red-600' : 'text-gray-500'}`}>
+                            ⏱️ {timeElapsed}
+                          </span>
+                          <span className="text-xs text-gray-500">{t(`paymentMethods.${paymentMethodKeys[order.paymentMethod] || 'cashOnDelivery'}`)}</span>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}
+                          </span>
+                        </div>
+                      </div>
 
-              <ul className="space-y-2 border-t border-hestia-linen pt-4 text-sm text-gray-700">
-                {order.items.map((item, idx) => (
-                  <li key={idx} className="flex justify-between">
-                    <span>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</span>
-                  </li>
-                ))}
-              </ul>
-              {order.notes && <p className="mt-3 text-sm text-gray-500">{t('note')}: {order.notes}</p>}
+                      <ul className="space-y-2 border-t border-hestia-linen pt-4 text-sm text-gray-700">
+                        {order.items.map((item, idx) => (
+                          <li key={idx} className="flex justify-between">
+                            <span>{item.quantity}x {item.name} {item.notes && <span className="text-gray-400">({item.notes})</span>}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {order.notes && <p className="mt-3 text-sm text-gray-500">{t('note')}: {order.notes}</p>}
 
-              {order.history && order.history.length > 0 && (
-                <div className="mt-4">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.statusHistory')}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {order.history.map((h, idx) => (
-                      <span key={idx} className="rounded-full bg-hestia-cream px-3 py-1 text-xs text-gray-600">
-                        {t(`status.${h.status}`)} <span className="text-gray-400">({t('ordersPanel.by')} {h.changedBy})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                      {order.history && order.history.length > 0 && (
+                        <div className="mt-4">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">{t('ordersPanel.statusHistory')}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {order.history.map((h, idx) => (
+                              <span key={idx} className="rounded-full bg-hestia-cream px-3 py-1 text-xs text-gray-600">
+                                {t(`status.${h.status}`)} <span className="text-gray-400">({t('ordersPanel.by')} {h.changedBy})</span>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
-                <div>
-                  <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span></span>
-                  <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {allStatuses
-                    .filter((s) => s !== order.status)
-                    .map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => updateStatus(order._id, s)}
-                        className="rounded-lg border border-hestia-linen bg-white px-3 py-1.5 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen"
-                      >
-                        {t(`status.${s}`)}
-                      </button>
-                    ))}
-                  <button
-                    onClick={() => togglePayment(order)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${order.paymentStatus === 'Paid' ? 'border border-hestia-linen bg-white text-hestia-navy hover:bg-hestia-linen' : 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white'}`}
-                  >
-                    {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
-                  </button>
-                  <button
-                    onClick={() => deleteOrder(order._id)}
-                    className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
-                  >
-                    Supprimer
-                  </button>
-                </div>
+                      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-hestia-linen pt-4">
+                        <div>
+                          <span className="font-serif text-xl text-hestia-navy">{t('total')} <span className="text-hestia-gold">{formatCurrency(order.total, settings?.currency)}</span></span>
+                          <p className="text-xs text-gray-400">{t('ordersPanel.payment')}: {t(`paymentStatus.${order.paymentStatus || 'Pending'}`)}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {allStatuses
+                            .filter((s) => s !== order.status)
+                            .map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => updateStatus(order._id, s)}
+                                className="rounded-lg border border-hestia-linen bg-white px-3 py-1.5 text-xs font-medium text-hestia-navy transition hover:bg-hestia-linen"
+                              >
+                                {t(`status.${s}`)}
+                              </button>
+                            ))}
+                          <button
+                            onClick={() => togglePayment(order)}
+                            className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${order.paymentStatus === 'Paid' ? 'border border-hestia-linen bg-white text-hestia-navy hover:bg-hestia-linen' : 'bg-hestia-gold/10 text-hestia-gold hover:bg-hestia-gold hover:text-white'}`}
+                          >
+                            {order.paymentStatus === 'Paid' ? t('ordersPanel.markPending') : t('ordersPanel.markPaid')}
+                          </button>
+                          <button
+                            onClick={() => deleteOrder(order._id)}
+                            className="rounded-lg bg-red-100 text-red-700 px-3 py-1.5 text-xs font-medium transition hover:bg-red-200"
+                          >
+                            Supprimer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           ))

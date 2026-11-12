@@ -353,6 +353,21 @@ router.delete('/menu',
     res.json({ message: `Deleted ${result.deletedCount} items` });
   });
 
+router.patch('/menu/:id/availability',
+  requireRole('admin'),
+  param('id').isMongoId(),
+  body('available').isBoolean(),
+  async (req, res) => {
+    if (!handleValidation(req, res)) return;
+    const item = await MenuItem.findOneAndUpdate(
+      { _id: req.params.id, ...hotelFilter(req) },
+      { available: req.body.available },
+      { new: true }
+    );
+    if (!item) return res.status(404).json({ message: 'Item not found' });
+    res.json(item);
+  });
+
 router.delete('/orders/:id',
   requireRole('admin'),
   param('id').isMongoId(),

@@ -22,7 +22,8 @@ import {
   FiSearch,
   FiShoppingCart,
   FiSun,
-  FiMoon
+  FiMoon,
+  FiPlus
 } from 'react-icons/fi'
 
 const iconMap = {
@@ -50,7 +51,8 @@ const iconMap = {
   search: FiSearch,
   cart: FiShoppingCart,
   sun: FiSun,
-  moon: FiMoon
+  moon: FiMoon,
+  add: FiPlus
 }
 
 export default function Icon({ name, size = 24, color = 'currentColor', className = '' }) {

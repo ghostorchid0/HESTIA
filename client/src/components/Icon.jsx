@@ -23,7 +23,12 @@ import {
   FiShoppingCart,
   FiSun,
   FiMoon,
-  FiPlus
+  FiPlus,
+  FiLoader,
+  FiPrinter,
+  FiCopy,
+  FiPause,
+  FiPlay
 } from 'react-icons/fi'
 
 const iconMap = {
@@ -52,7 +57,12 @@ const iconMap = {
   cart: FiShoppingCart,
   sun: FiSun,
   moon: FiMoon,
-  add: FiPlus
+  add: FiPlus,
+  loading: FiLoader,
+  print: FiPrinter,
+  copy: FiCopy,
+  deactivate: FiPause,
+  activate: FiPlay
 }
 
 export default function Icon({ name, size = 24, color = 'currentColor', className = '' }) {

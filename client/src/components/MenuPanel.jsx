@@ -232,12 +232,12 @@ export default function MenuPanel() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredItems.map(item => (
-            <div key={item._id} className={`card-luxe overflow-hidden transition hover:shadow-luxe ${!item.available ? 'opacity-60' : ''}`}>
-              <div className="relative">
+            <div key={item._id} className={`card-luxe flex flex-col overflow-hidden transition hover:shadow-luxe ${!item.available ? 'opacity-60' : ''}`}>
+              <div className="relative h-40 flex-shrink-0">
                 <ImageWithFallback 
                   src={item.imageUrl} 
                   alt={item.name} 
-                  className="h-40 w-full object-cover"
+                  className="h-full w-full object-cover"
                 />
                 <div className="absolute left-3 top-3 flex gap-2">
                   <input
@@ -264,20 +264,24 @@ export default function MenuPanel() {
                 </button>
               </div>
               
-              <div className="p-4">
+              <div className="flex flex-1 flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-hestia-navy">{item.name}</h3>
-                    <p className="text-xs text-gray-500">{item.category} · {t(`staffPanel.${item.department || 'kitchen'}`)}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-hestia-navy truncate">{item.name}</h3>
+                    <p className="text-xs text-gray-500 truncate">{item.category} · {t(`staffPanel.${item.department || 'kitchen'}`)}</p>
                   </div>
-                  <span className="font-serif text-lg text-hestia-gold">
+                  <span className="font-serif text-lg text-hestia-gold whitespace-nowrap">
                     {formatCurrency(item.price, settings?.currency)}
                   </span>
                 </div>
                 
-                {item.description && (
-                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">{item.description}</p>
-                )}
+                <div className="mt-2 flex-1">
+                  {item.description ? (
+                    <p className="text-sm text-gray-600 line-clamp-2">{item.description}</p>
+                  ) : (
+                    <p className="text-sm text-gray-400 italic">Pas de description</p>
+                  )}
+                </div>
                 
                 <div className="mt-4 flex gap-2">
                   <button

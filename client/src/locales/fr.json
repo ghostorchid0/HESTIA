@@ -127,6 +127,7 @@
   "ordersPanel": {
     "title": "Commandes",
     "all": "Toutes",
+    "order": "Commande",
     "statusHistory": "Historique des statuts",
     "by": "par",
     "payment": "Paiement",

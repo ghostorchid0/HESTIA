@@ -402,8 +402,8 @@ export default function OrdersPanel() {
                         <div key={idx} className="flex items-center gap-2 text-xs text-gray-600">
                           <span className="font-medium">{t(`status.${h.status}`)}</span>
                           <span className="text-gray-400">•</span>
-                          <span>{new Date(h.at).toLocaleString('fr-FR')}</span>
-                          {h.by && <span className="text-gray-400">• {h.by}</span>}
+                          <span>{h.changedAt ? new Date(h.changedAt).toLocaleString('fr-FR') : 'N/A'}</span>
+                          {h.changedBy && h.changedBy !== 'system' && <span className="text-gray-400">• {h.changedBy}</span>}
                         </div>
                       ))}
                     </div>

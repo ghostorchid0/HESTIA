@@ -137,6 +137,7 @@
   "ordersPanel": {
     "title": "Orders",
     "all": "All",
+    "order": "Order",
     "statusHistory": "Status history",
     "by": "by",
     "payment": "Payment",

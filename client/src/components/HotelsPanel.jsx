@@ -194,9 +194,9 @@ export default function HotelsPanel() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filteredHotels.map(hotel => (
-            <div key={hotel._id} className={`card-luxe overflow-hidden transition hover:shadow-luxe ${!hotel.active ? 'opacity-60' : ''}`}>
+            <div key={hotel._id} className={`card-luxe flex flex-col overflow-hidden transition hover:shadow-luxe ${!hotel.active ? 'opacity-60' : ''}`}>
               {/* Hotel Header */}
-              <div className="border-b border-hestia-linen bg-hestia-cream p-4">
+              <div className="border-b border-hestia-linen bg-hestia-cream p-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <input
@@ -205,12 +205,12 @@ export default function HotelsPanel() {
                       onChange={() => toggleHotelSelection(hotel._id)}
                       className="w-4 h-4 rounded border-gray-300"
                     />
-                    <div>
-                      <h3 className="font-serif text-xl text-hestia-navy">{hotel.name}</h3>
-                      <p className="text-xs text-gray-500">{hotel.slug}</p>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-serif text-xl text-hestia-navy truncate">{hotel.name}</h3>
+                      <p className="text-xs text-gray-500 truncate">{hotel.slug}</p>
                     </div>
                   </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider flex-shrink-0 ${
                     hotel.active 
                       ? 'bg-green-100 text-green-700' 
                       : 'bg-gray-100 text-gray-600'
@@ -221,8 +221,8 @@ export default function HotelsPanel() {
               </div>
 
               {/* Hotel Details */}
-              <div className="p-4">
-                <div className="space-y-3">
+              <div className="flex-1 flex flex-col p-4">
+                <div className="space-y-3 flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">Devise</span>
                     <span className="font-medium text-hestia-navy">{hotel.currency}</span>
@@ -249,7 +249,8 @@ export default function HotelsPanel() {
                         hotel.subscription.status === 'trial' ? 'bg-blue-100 text-blue-700' :
                         'bg-red-100 text-red-700'
                       }`}>
-                        {hotel.subscription.plan} - {hotel.subscription.status}
+                        {hotel.subscription.status === 'active' ? 'Actif' : 
+                         hotel.subscription.status === 'trial' ? 'Essai' : 'Inactif'}
                       </span>
                     </div>
                   )}
